@@ -1,0 +1,15 @@
+[database]
+user = "mystbin"
+password = "hahayes"
+dsn = "postgresql://user:pass@address:port/database"
+schema_path = "mystbin/database/schema.sql"
+
+[apps]
+discord_application_id = ""
+discord_application_secret = ""
+google_application_id = ""
+google_application_secret = ""
+github_application = ""
+
+[site]
+base_site = "http://127.0.0.1:8000"
