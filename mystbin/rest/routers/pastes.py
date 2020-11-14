@@ -134,6 +134,7 @@ async def edit_paste(request: Request, paste_id: str, payload: PastePatch, autho
 
 
 @router.delete("/paste/{paste_id}", tags=["pastes"], responses={
+    200: {"content": {"application/json": {"example": {"deleted": "SomePasteID"}}}},
     401: {"model": Unauthorized},
     403: {"model": Forbidden}},
     status_code=200,
@@ -159,6 +160,7 @@ async def delete_paste(request: Request, paste_id: str = None, authorization: st
     return JSONResponse({"deleted": deleted['id']}, status_code=200)
 
 @router.delete("/paste", tags=["pastes"], responses={
+    200: {"content": {"application/json": {"example": {"succeeded": ["SomePasteID"], "failed": ["OtherPasteID"]}}}},
     401: {"model": Unauthorized},
     403: {"model": Forbidden}},
     status_code=200,
