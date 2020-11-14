@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Union, Dict
 
+from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
@@ -40,5 +41,5 @@ async def get_any_user(request: Request, user_id: int, authorization: str = Depe
     if not await request.app.state.db.ensure_admin(authorization.credentials):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data = await request.app.state.db.get_user(user_id)
+    data: Union[Record, int] = await request.app.state.db.get_user(user_id)
     return dict(data)

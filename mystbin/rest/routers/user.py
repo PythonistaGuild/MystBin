@@ -16,12 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Union, Dict
+from typing import Dict, Union
 
+from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from models import Forbidden, Unauthorized, User, TokenResponse
+
+from models import Forbidden, TokenResponse, Unauthorized, User
 
 
 router = APIRouter()
@@ -41,11 +43,12 @@ async def get_self(request: Request, authorization: str = Depends(auth_model)) -
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
-    data = await request.app.state.db.get_user(token=authorization.credentials)
-    if not data:
+    data: Union[Record, int] = await request.app.state.db.get_user(token=authorization.credentials)
+    if not data or data in {400, 401}:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return dict(data)
+
 
 @router.post("/user/token-gen", tags=['users'], response_model=TokenResponse, responses={
     200: {"model": TokenResponse},
@@ -57,7 +60,7 @@ async def regen_token(request: Request, authorization: str = Depends(auth_model)
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
-    token = await request.app.state.db.regen_token(token=authorization.credentials)
+    token: Optional[str] = await request.app.state.db.regen_token(token=authorization.credentials)
     if not token:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
