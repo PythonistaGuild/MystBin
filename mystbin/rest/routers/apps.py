@@ -30,11 +30,12 @@ router = APIRouter()
 
 @router.get("/apps/discord", response_model=TokenResponse, include_in_schema=False)
 async def auth_from_discord(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
+    """Allows user to authenticate from Discord OAuth."""
     if not code:
         return JSONResponse({"error": "Missing code query"}, status_code=400)
 
     existing_user = state
-    
+
     if existing_user:
         try:
             existing_user = int(existing_user)
@@ -91,11 +92,12 @@ async def auth_from_discord(request: Request, code: str = Query(None), state: Op
 
 @router.get("/apps/google", response_model=TokenResponse, include_in_schema=False)
 async def auth_from_google(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
+    """Allows user to authenticate from Google OAuth."""
     if not code:
         return JSONResponse({"error": "Missing code query"}, status_code=400)
 
     existing_user = state
-    
+
     if existing_user:
         try:
             existing_user = int(existing_user)
@@ -154,6 +156,7 @@ async def auth_from_google(request: Request, code: str = Query(None), state: Opt
 
 @router.get("/apps/github/{code}", response_model=TokenResponse, include_in_schema=False)
 async def auth_from_github(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
+    """Allows user to authenticate with GitHub OAuth."""
     if not code:
         return JSONResponse({"error": "Missing code query"}, status_code=400)
 

@@ -37,7 +37,7 @@ auth_model = HTTPBearer()
     name="Get current user"
 )
 async def get_self(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, Union[str, int, bool]]]:
-    """ Gets the User object of the currently logged in user.
+    """Gets the User object of the currently logged in user.
     * Requires authentication.
     """
     if not authorization:
@@ -57,6 +57,9 @@ async def get_self(request: Request, authorization: str = Depends(auth_model)) -
     name="Regenerate your token"
 )
 async def regen_token(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
+    """Regens the user's token.
+    * Requires authentication.
+    """
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
