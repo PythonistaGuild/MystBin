@@ -47,7 +47,7 @@ def generate_paste_id():
     status_code=201,
     name="Create paste"
 )
-async def post_paste(request: Request, payload: PastePost, authorization: Optional[str] = Security(optional_auth_model)) -> Dict[str, str]:
+async def post_paste(request: Request, payload: PastePost, authorization: Optional[str] = Security(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
     """ Post a paste to MystBin. """
     author = None
 
@@ -57,7 +57,7 @@ async def post_paste(request: Request, payload: PastePost, authorization: Option
     author: Optional[int] = author.get("id", None) if isinstance(
         author, Record) else None
 
-    paste = await request.app.state.db.put_paste(generate_paste_id(), payload.content, author, payload.nick, payload.syntax, payload.password)
+    paste: Record = await request.app.state.db.put_paste(generate_paste_id(), payload.content, author, payload.nick, payload.syntax, payload.password)
 
     return dict(paste)
 
@@ -68,9 +68,9 @@ async def post_paste(request: Request, payload: PastePost, authorization: Option
     404: {"model": NotFound}},
     name="Retrieve paste"
 )
-async def raw_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Union[JSONResponse, Dict[str, str]]:
+async def raw_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Union[JSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     """ Get a raw paste from MystBin. """
-    paste = await request.app.state.db.get_paste(paste_id, password)
+    paste: Record = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
         return JSONResponse({"error": "Not Found"}, status_code=404)
 
@@ -92,9 +92,9 @@ async def get_all_pastes(request: Request, limit: Optional[int] = None, authoriz
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
-    author = await request.app.state.db.get_user(token=authorization.credentials)
+    author: Record = await request.app.state.db.get_user(token=authorization.credentials)
 
-    pastes = await request.app.state.db.get_all_pastes(author['id'], limit)
+    pastes: Record = await request.app.state.db.get_all_pastes(author['id'], limit)
     pastes = [dict(entry) for entry in pastes]
 
     return {"pastes": pastes}
@@ -114,18 +114,18 @@ async def get_all_pastes(request: Request, limit: Optional[int] = None, authoriz
     404: {"model": NotFound}},
     name="Edit paste"
 )
-async def edit_paste(request: Request, paste_id: str, payload: PastePatch, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
+async def edit_paste(request: Request, paste_id: str, payload: PastePatch, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     """ Edit a paste on MystBin.
     * Requires authentication.
     """
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
-    author = await request.app.state.db.get_user(token=authorization.credentials)
+    author: Record = await request.app.state.db.get_user(token=authorization.credentials)
     if not author or author in {400, 401}:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    paste = await request.app.state.db.edit_paste(paste_id, author['id'], payload.new_content, payload.new_expires, payload.new_nick)
+    paste: Union[Record, int] = await request.app.state.db.edit_paste(paste_id, author['id'], payload.new_content, payload.new_expires, payload.new_nick)
     if not paste or paste == 404:
         return JSONResponse({"error": "Paste was not found or you are not it's author."}, status_code=404)
 
@@ -138,38 +138,41 @@ async def edit_paste(request: Request, paste_id: str, payload: PastePatch, autho
     status_code=200,
     name="Delete paste"
 )
-async def delete_paste(request: Request, paste_id: str = None, authorization: str = Depends(auth_model)) -> JSONResponse:
+async def delete_paste(request: Request, paste_id: str = None, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
     """ Deletes pastes on MystBin.
     * Requires authentication.
     """
     if not authorization:
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
-    author = await request.app.state.db.get_user(token=authorization.credentials)
+    author: Union[Record, int] = await request.app.state.db.get_user(token=authorization.credentials)
     if not author or author in {400, 401}:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    is_owner = await request.app.state.db.ensure_author(paste_id, author['id'])
+    is_owner: bool = await request.app.state.db.ensure_author(paste_id, author['id'])
     if not is_owner:
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    deleted = await request.app.state.db.delete_paste(paste_id, author['id'], admin=False)
-    if deleted:
-        return JSONResponse({"deleted": deleted['id']}, status_code=200)
+    deleted: Record = await request.app.state.db.delete_paste(paste_id, author['id'], admin=False)
+
+    return JSONResponse({"deleted": deleted['id']}, status_code=200)
 
 @router.delete("/paste", tags=["pastes"], responses={
+    401: {"model": Unauthorized},
     403: {"model": Forbidden}},
     status_code=200,
     name="Delete pastes"
 )
-async def delete_pastes(request: Request, payload: PasteDelete, authorization: str = Depends(auth_model)) -> JSONResponse:
+async def delete_pastes(request: Request, payload: PasteDelete, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, List[str]]]:
     """ Deletes pastes on MystBin.
     * Requires authentication.
     """
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response
     response = {"succeeded": [], "failed": []}
 
-    author = await request.app.state.db.get_user(token=authorization.credentials)
+    author: Union[Record, int] = await request.app.state.db.get_user(token=authorization.credentials)
+    if not author or author in {400, 401}:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     for paste in payload.pastes:
         if await request.app.state.db.ensure_author(paste, author['id']):
@@ -180,4 +183,4 @@ async def delete_pastes(request: Request, payload: PasteDelete, authorization: s
     for paste in response['succeeded']:
         await request.app.state.db.delete_paste(paste, author['id'], admin=False)
 
-    return JSONResponse(response)
+    return JSONResponse(response, status_code=200)
