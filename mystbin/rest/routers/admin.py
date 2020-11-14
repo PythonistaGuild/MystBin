@@ -35,7 +35,7 @@ auth_model = HTTPBearer()
     include_in_schema=False
 )
 async def get_any_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
-    """ Returns the User object of the passed user_id.
+    """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
     if not await request.app.state.db.ensure_admin(authorization.credentials):

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
 import pathlib
 from random import sample
 from typing import List, Optional, Union, Dict
@@ -38,7 +39,7 @@ optional_auth_model = HTTPBearer(auto_error=False)
 
 
 def generate_paste_id():
-    """ Generate three random words. """
+    """Generate three random words."""
     return "".join(sample([word.title() for word in WORDS_LIST if len(word) > 3], 3)).replace("\n", "")
 
 
@@ -48,7 +49,7 @@ def generate_paste_id():
     name="Create paste"
 )
 async def post_paste(request: Request, payload: PastePost, authorization: Optional[str] = Security(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
-    """ Post a paste to MystBin. """
+    """Post a paste to MystBin."""
     author = None
 
     if authorization and authorization.credentials:
@@ -69,7 +70,7 @@ async def post_paste(request: Request, payload: PastePost, authorization: Option
     name="Retrieve paste"
 )
 async def raw_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Union[JSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
-    """ Get a raw paste from MystBin. """
+    """Get a raw paste from MystBin."""
     paste: Record = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
         return JSONResponse({"error": "Not Found"}, status_code=404)
@@ -86,7 +87,7 @@ async def raw_paste(request: Request, paste_id: str, password: Optional[str] = N
     name="Get multiple pastes"
 )
 async def get_all_pastes(request: Request, limit: Optional[int] = None, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, List[Dict[str, str]]]]:
-    """ Get all pastes for a specified author.
+    """Get all pastes for a specified author.
     * Can require authentication.
     """
     if not authorization:
@@ -115,7 +116,7 @@ async def get_all_pastes(request: Request, limit: Optional[int] = None, authoriz
     name="Edit paste"
 )
 async def edit_paste(request: Request, paste_id: str, payload: PastePatch, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
-    """ Edit a paste on MystBin.
+    """Edit a paste on MystBin.
     * Requires authentication.
     """
     if not authorization:
@@ -139,7 +140,7 @@ async def edit_paste(request: Request, paste_id: str, payload: PastePatch, autho
     name="Delete paste"
 )
 async def delete_paste(request: Request, paste_id: str = None, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
-    """ Deletes pastes on MystBin.
+    """Deletes pastes on MystBin.
     * Requires authentication.
     """
     if not authorization:
@@ -164,7 +165,7 @@ async def delete_paste(request: Request, paste_id: str = None, authorization: st
     name="Delete pastes"
 )
 async def delete_pastes(request: Request, payload: PasteDelete, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, List[str]]]:
-    """ Deletes pastes on MystBin.
+    """Deletes pastes on MystBin.
     * Requires authentication.
     """
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response

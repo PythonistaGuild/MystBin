@@ -44,7 +44,7 @@ class Database:
 
     @property
     def pool(self) -> Optional[asyncpg.pool.Pool]:
-        """ Property for easier access to attr. """
+        """Property for easier access to attr."""
         return self._pool or None
 
     async def __ainit__(self):
@@ -69,7 +69,7 @@ class Database:
             return response
 
     async def get_paste(self, paste_id: str, password: Optional[str] = None) -> Optional[asyncpg.Record]:
-        """ Get the specified paste.
+        """Get the specified paste.
         Parameters
         ------------
         paste_id: :class:`str`
@@ -146,7 +146,7 @@ class Database:
                          new_content: Optional[str] = None,
                          new_expires: Optional[datetime.datetime] = None,
                          new_nick: Optional[str] = None) -> asyncpg.Record:
-        """ Edits a live paste
+        """Edits a live paste
         Parameters
         ------------
         paste_id: :class:`str`
@@ -182,7 +182,7 @@ class Database:
         return response or 404
 
     async def get_all_pastes(self, author_id: Optional[int], limit: Optional[int] = None) -> Optional[List[asyncpg.Record]]:
-        """ Get all pastes for an author and/or with a limit.
+        """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
         author_id: Optional[:class:`int`]
@@ -213,8 +213,7 @@ class Database:
                            author_id: Optional[int] = None,
                            *,
                            admin: bool = False) -> asyncpg.Record:
-        """
-        Delete a paste, with an admin override.
+        """Delete a paste, with an admin override.
 
         Parameters
         ------------
@@ -244,8 +243,7 @@ class Database:
     async def get_user(self, *,
                        user_id: int = None,
                        token: str = None) -> Optional[Union[asyncpg.Record, int]]:
-        """
-        Returns a User on successful query.
+        """Returns a User on successful query.
 
         Parameters
         ------------
@@ -291,7 +289,7 @@ class Database:
                        github_id: int = None,
                        google_id: int = None
                        ) -> asyncpg.Record:
-        """ Creates a new User record.
+        """Creates a new User record.
 
         Parameters
         ------------
@@ -329,7 +327,7 @@ class Database:
                           github_id: Optional[int] = None,
                           google_id: Optional[str] = None
                           ) -> Optional[str]:
-        """ Updates an existing user account.
+        """Updates an existing user account.
 
         Parameters
         ------------
@@ -376,7 +374,7 @@ class Database:
         return token
 
     async def check_email(self, email: str) -> Optional[int]:
-        """ Quick check to query an email. """
+        """Quick check to query an email."""
         query = """
                 SELECT id FROM users WHERE $1 = ANY(emails)
                 """
@@ -386,7 +384,7 @@ class Database:
             return data[0]['id']
 
     async def toggle_admin(self, userid: int, admin: bool) -> None:
-        """ Quick query to toggle admin privileges. """
+        """Quick query to toggle admin privileges."""
         query = """
                 UPDATE users SET admin = $1 WHERE id = $2
                 """
@@ -394,7 +392,7 @@ class Database:
         await self._do_query(query, admin, userid)
 
     async def switch_theme(self, userid: int, theme: str) -> None:
-        """ Quick query to set theme choices. """
+        """Quick query to set theme choices."""
         query = """
                 UPDATE users SET theme = $1 WHERE id = $2
                 """
@@ -402,9 +400,7 @@ class Database:
         await self._do_query(query, theme, userid)
 
     async def regen_token(self, *, userid: int=None, token: str=None) -> Optional[str]:
-        """
-        Generates a new token for the given user id or token. Returns the new token, or None if the user does not exist
-        """
+        """Generates a new token for the given user id or token. Returns the new token, or None if the user does not exist."""
         if not self._pool:
             await self.__ainit__()
 
@@ -433,7 +429,7 @@ class Database:
             return token
 
     async def ensure_authorization(self, token: str) -> bool:
-        """ Quick query against a passed token. """
+        """Quick query against a passed token."""
         if not token:
             return False
 
@@ -448,7 +444,7 @@ class Database:
         return data[0]['id']
 
     async def ensure_admin(self, token: str) -> bool:
-        """ Quick query against a token to return if admin or not. """
+        """Quick query against a token to return if admin or not."""
         if not token:
             return False
 
@@ -463,7 +459,7 @@ class Database:
         return data[0]['admin']
 
     async def ensure_author(self, paste_id: str, author_id: int) -> bool:
-        """ Quick query to ensure a paste is owned by the passed author ID. """
+        """Quick query to ensure a paste is owned by the passed author ID."""
 
         query = """
                 SELECT id
