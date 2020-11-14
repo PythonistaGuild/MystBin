@@ -7,6 +7,7 @@ license = "GPL-3.0"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+uvicorn = "^0.12.2"
 ujson = "^4.0.1"
 asyncpg = "^0.21.0"
 fastapi = "^0.61.1"
@@ -18,7 +19,6 @@ pycryptodome = "^3.9.9"
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
 autopep8 = "^1.5.4"
-uvicorn = "^0.12.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
