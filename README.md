@@ -8,7 +8,7 @@ It is currently unsupported, running it now is at your own risk.
 ## Installation and setup
 ### Pre-requisites
 - Python 3.8+
-- PostgreSQL 9.0+
+- PostgreSQL 12.0+
     - Ability to install/use the `pgcrypto` extension.
 
 NOTE: A docker-compose file has been provided for Docker use.
