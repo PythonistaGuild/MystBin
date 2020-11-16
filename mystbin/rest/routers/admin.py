@@ -16,14 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Union, Dict
+from typing import Dict, Union
 
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from ..models import responses, errors
 
+from ..models import errors, responses
 
 router = APIRouter()
 auth_model = HTTPBearer()

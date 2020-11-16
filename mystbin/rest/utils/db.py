@@ -19,12 +19,11 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
-from typing import List, Optional, Union, Dict, Any
+from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
 
 from . import tokens
-
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
@@ -146,7 +145,6 @@ class Database:
         async with self.pool.acquire() as conn:
             async with conn.transaction():
                 ...
-
 
     async def edit_paste(self,
                          paste_id: str,
@@ -407,7 +405,7 @@ class Database:
 
         await self._do_query(query, theme, userid)
 
-    async def regen_token(self, *, userid: int=None, token: str=None) -> Optional[str]:
+    async def regen_token(self, *, userid: int = None, token: str = None) -> Optional[str]:
         """Generates a new token for the given user id or token. Returns the new token, or None if the user does not exist."""
         if not self._pool:
             await self.__ainit__()

@@ -25,8 +25,8 @@ from asyncpg import Record
 from fastapi import APIRouter, Depends, Request, Security
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from ..models import errors, payloads, responses
 
+from ..models import errors, payloads, responses
 
 WORDS_LIST = open(pathlib.Path("mystbin/rest/utils/words.txt")).readlines()
 
