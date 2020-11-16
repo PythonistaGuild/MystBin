@@ -22,16 +22,16 @@ from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from models import Unauthorized, User
+from models import responses, errors
 
 
 router = APIRouter()
 auth_model = HTTPBearer()
 
 
-@router.get("/admin/user/{user_id}", tags=["admin"], response_model=User, responses={
-    200: {"model": User},
-    401: {"model": Unauthorized}},
+@router.get("/admin/user/{user_id}", tags=["admin"], response_model=responses.User, responses={
+    200: {"model": responses.User},
+    401: {"model": errors.Unauthorized}},
     include_in_schema=False
 )
 async def get_any_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
