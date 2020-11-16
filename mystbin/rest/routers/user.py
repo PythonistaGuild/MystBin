@@ -22,7 +22,7 @@ from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from models import errors, responses
+from ..models import errors, responses
 
 router = APIRouter()
 auth_model = HTTPBearer()

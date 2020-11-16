@@ -24,8 +24,8 @@ import aiohttp
 import toml
 from fastapi import FastAPI
 
-from routers import admin, apps, pastes, user
-from utils.db import Database
+from .routers import admin, apps, pastes, user
+from .utils.db import Database
 
 
 class MystbinApp(FastAPI):
@@ -34,7 +34,7 @@ class MystbinApp(FastAPI):
     def __init__(self, *, loop: asyncio.AbstractEventLoop = None):
         loop = loop or asyncio.get_event_loop()
         self.config: Dict[str, Dict[str, Any]] = toml.load(
-            pathlib.Path("../../config.toml"))
+            pathlib.Path("config.toml"))
         super().__init__(
             title="Mystbin",
             version="3.0.0",

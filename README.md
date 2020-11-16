@@ -21,6 +21,6 @@ NOTE: A docker-compose file has been provided for Docker use.
 3. Install Python dependencies from spec. (see `requirements.txt` or `pyproject.toml`)
 4. Run the app. This will involve changing directory to `mystbin/rest/` and running the following command:
 ```sh
-python -m uvicorn main:app # --host 127.0.01 --port 8000
+python -m uvicorn mystbin.rest.main:app # --host 127.0.01 --port 8000
 ```
 You can uncomment the rest of the line to edit the default values.
