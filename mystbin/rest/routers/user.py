@@ -22,18 +22,16 @@ from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-
-from models import Forbidden, TokenResponse, Unauthorized, User
-
+from models import errors, responses
 
 router = APIRouter()
 auth_model = HTTPBearer()
 
 
-@router.get("/user", tags=["users"], response_model=User, responses={
-    200: {"model": User},
-    401: {"model": Unauthorized},
-    403: {"model": Forbidden}},
+@router.get("/user", tags=["users"], response_model=responses.User, responses={
+    200: {"model": responses.User},
+    401: {"model": errors.Unauthorized},
+    403: {"model": errors.Forbidden}},
     name="Get current user"
 )
 async def get_self(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, Union[str, int, bool]]]:
@@ -50,10 +48,10 @@ async def get_self(request: Request, authorization: str = Depends(auth_model)) -
     return dict(data)
 
 
-@router.post("/user/token-gen", tags=['users'], response_model=TokenResponse, responses={
-    200: {"model": TokenResponse},
-    401: {"model": Unauthorized},
-    403: {"model": Forbidden}},
+@router.post("/user/token-gen", tags=['users'], response_model=responses.TokenResponse, responses={
+    200: {"model": responses.TokenResponse},
+    401: {"model": errors.Unauthorized},
+    403: {"model": errors.Forbidden}},
     name="Regenerate your token"
 )
 async def regen_token(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:

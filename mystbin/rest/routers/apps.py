@@ -22,13 +22,13 @@ from typing import Dict, Optional, Union
 import yarl
 from fastapi import APIRouter, Request, Query
 from fastapi.responses import JSONResponse
-from models import TokenResponse
+from models import responses
 
 
 router = APIRouter()
 
 
-@router.get("/apps/discord", response_model=TokenResponse, include_in_schema=False)
+@router.get("/apps/discord", response_model=responses.TokenResponse, include_in_schema=False)
 async def auth_from_discord(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
     if not code:
@@ -90,7 +90,7 @@ async def auth_from_discord(request: Request, code: str = Query(None), state: Op
         return {"token": data['token']}
 
 
-@router.get("/apps/google", response_model=TokenResponse, include_in_schema=False)
+@router.get("/apps/google", response_model=responses.TokenResponse, include_in_schema=False)
 async def auth_from_google(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
     """Allows user to authenticate from Google OAuth."""
     if not code:
@@ -154,7 +154,7 @@ async def auth_from_google(request: Request, code: str = Query(None), state: Opt
         return {"token": data['token']}
 
 
-@router.get("/apps/github/{code}", response_model=TokenResponse, include_in_schema=False)
+@router.get("/apps/github/{code}", response_model=responses.TokenResponse, include_in_schema=False)
 async def auth_from_github(request: Request, code: str = Query(None), state: Optional[str] = Query(None)) -> Union[Dict[str, str], JSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
     if not code:
