@@ -20,10 +20,10 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional, Union
 
 import yarl
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
-from ..models import responses
 
+from ..models import responses
 
 router = APIRouter()
 
