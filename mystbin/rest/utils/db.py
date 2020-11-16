@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 
 import asyncpg
 
@@ -95,7 +95,7 @@ class Database:
         resp = await self._do_query(query, paste_id, password or "")
 
         if resp:
-            return resp[0]
+            return resp
         return None
 
     async def put_paste(self,
@@ -139,6 +139,14 @@ class Database:
         resp = await self._do_query(query, paste_id, author, nick, syntax, password, loc, chars, content)
 
         return resp[0]
+
+    async def put_pastes(self, pastes: List[Dict[str, Any]]):
+        ...
+        # Lets acquire a connection
+        async with self.pool.acquire() as conn:
+            async with conn.transaction():
+                ...
+
 
     async def edit_paste(self,
                          paste_id: str,
