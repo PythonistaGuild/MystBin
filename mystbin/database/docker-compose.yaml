@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:12-alpine
+    ports:
+      - 32932:5432
+    environment:
+      POSTGRES_DB: "${USER}"
+      POSTGRES_PASSWORD: "${PASSWORD}"
+      POSTGRES_USER: mystbin
