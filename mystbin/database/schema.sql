@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
     token TEXT,
@@ -14,16 +15,21 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS pastes (
     id TEXT PRIMARY KEY,
-    author BIGINT REFERENCES users(id),
-    nick TEXT DEFAULT '',
-    syntax TEXT DEFAULT '',
+    author_id BIGINT REFERENCES users(id),
+    nick TEXT,
+    syntax TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     expires TIMESTAMP WITH TIME ZONE,
     last_edited TIMESTAMP WITH TIME ZONE,
     password TEXT,
-    views INT DEFAULT 0,
-    loc INT,
-    charcount INT,
-    content TEXT,
-    index SERIAL
+    views INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS paste_content (
+    parent_id TEXT REFERENCES pastes(id),
+    index SERIAL,
+    content TEXT NOT NULL,
+    loc INTEGER NOT NULL,
+    charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
+    PRIMARY KEY (parent_id, index)
 );
