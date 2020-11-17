@@ -1,0 +1,26 @@
+{
+  "name": "mystbin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.11.0",
+    "@material-ui/icons": "^4.9.1",
+    "@monaco-editor/react": "^3.7.0",
+    "bootstrap": "^4.5.3",
+    "next": "10.0.1",
+    "react": "17.0.1",
+    "react-bootstrap": "^1.4.0",
+    "react-dom": "17.0.1",
+    "react-tabs": "^3.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.7",
+    "@types/react": "^16.9.56",
+    "typescript": "^4.0.5"
+  }
+}
