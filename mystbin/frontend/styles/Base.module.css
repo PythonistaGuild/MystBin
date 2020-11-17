@@ -1,0 +1,25 @@
+.Base {
+    grid-template-areas: "n n n n n n" /* navbar */
+                         "c c c c c c" /* content */
+                         "f f f f f f"; /* footer */
+    grid-template-rows: min-content min-content auto;
+    grid-template-columns: min-content;
+    display: grid;
+    height: 100vh;
+}
+
+.Base > nav {
+    grid-area: n;
+}
+
+.Base > main {
+    grid-area: c;
+    background-color: #1B1B1B;
+    max-width: 1920px;
+}
+
+.Base > footer {
+    grid-area: f;
+    background-color: #1B1B1B;
+    color: white;
+}
