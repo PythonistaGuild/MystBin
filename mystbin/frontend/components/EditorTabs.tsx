@@ -30,13 +30,13 @@ export default function EditorTabs() {
                       }
                   }}
                   onBlur={(e) => {
-                      const button = e.currentTarget
+                      const filename = e.currentTarget.children[0]
 
-                      if(button.textContent === '') {
-                          button.children[0].textContent = `file_${i}`
+                      if(filename.textContent === '') {
+                          filename.textContent = `file_${i}`
                       }
 
-                      if(button.textContent.endsWith(".py")) {
+                      if(filename.textContent.endsWith(".py")) {
                           let langCopy = [...lang]
                           langCopy[currTab] = 'python'
 
@@ -56,6 +56,7 @@ export default function EditorTabs() {
                       }}
                   >file_{i}
                   </text>
+                  <button className={styles.tabsCloseButton}>X</button>
               </div>
           ))}
 

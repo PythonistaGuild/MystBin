@@ -11,7 +11,7 @@
     border-radius: 5px 5px 0 0;
     padding: 0.5rem;
     min-width: 4rem;
-    display: inline-block;
+    display: inline-flex;
     margin-left: 1.9rem;
     margin-right: -1.9rem;
     text-align: center;
@@ -26,7 +26,7 @@
     border-radius: 5px 5px 0 0;
     padding: 0.75rem 0.5rem 0.5rem 0.5rem;
     min-width: 4rem;
-    display: inline-block;
+    display: inline-flex;
     margin-left: 1.9rem;
     margin-right: -1.9rem;
     min-height: 2.5rem;
@@ -52,4 +52,10 @@
     outline: none !important;
     border: none;
     display: block;
+}
+
+.tabsCloseButton {
+    outline: none !important;
+    border: none;
+    margin-left: 1rem;
 }
