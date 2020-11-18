@@ -30,7 +30,7 @@ export default function EditorTabs() {
                         }
 
                         if(button.textContent.endsWith(".py")) {
-                            let langCopy = Object.assign({}, lang)
+                            let langCopy = [...lang]
                             langCopy[currTab] = 'python'
 
                             setLang(langCopy)
