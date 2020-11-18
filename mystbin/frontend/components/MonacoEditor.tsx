@@ -2,7 +2,6 @@ import {
   monaco,
   ControlledEditor,
   ControlledEditorOnChange,
-  EditorDidMount,
 } from "@monaco-editor/react";
 import { PropsWithoutRef } from "react";
 
@@ -78,10 +77,9 @@ export default function MonacoEditor(
     language: string;
     onChange: ControlledEditorOnChange;
     theme: string;
-    onMount: EditorDidMount;
   }>
 ) {
-  let { value, onChange, onMount, theme, language } = props;
+  let { value, onChange, theme, language } = props;
 
   return (
     <ControlledEditor
@@ -89,7 +87,6 @@ export default function MonacoEditor(
       value={value}
       theme={theme}
       onChange={onChange}
-      editorDidMount={onMount}
       language={language}
       options={{
         contextmenu: false,
