@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useRef, useState} from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from '../styles/EditorTabs.module.css'
 
@@ -8,6 +8,10 @@ export default function EditorTabs() {
   const [currTab, setCurrTab] = useState(0);
   const [tabCount, setTabCount] = useState(0);
   const [lang, setLang] = useState(Array(5).fill('none'))
+
+  for(let i = 0; i < 5; i++) {
+      EditorTabs[`editorDiv-${i}`] = useRef()
+  }
 
   function onMount(_, editor) {
       setTabCount( tabCount + 1)
@@ -56,7 +60,25 @@ export default function EditorTabs() {
                       }}
                   >file_{i}
                   </text>
-                  <button className={styles.tabsCloseButton}>X</button>
+                  <button
+                      className={styles.tabsCloseButton}
+                      onClick={(event) => {
+                          let newValue = [...value];
+                          let newLang = [...lang]
+                          let newEditorDiv = EditorTabs[`editorDiv-${i - 1}`].current
+
+                          newValue.splice(i, 1)
+                          newLang[i] = "none"
+
+                          setLang(newLang)
+                          setValue(newValue);
+                          setCurrTab(currTab - 1)
+                          setTabCount(tabCount - 1)
+
+                          newEditorDiv.style.display = "block"
+                      }}
+                  >X
+                  </button>
               </div>
           ))}
 
@@ -80,6 +102,7 @@ export default function EditorTabs() {
             display: currTab === i ? "block" : "none",
           }}
           className={'maxed'}
+          ref={EditorTabs[`editorDiv-${i}`]}
         >
           <MonacoEditor
             onMount={onMount}
