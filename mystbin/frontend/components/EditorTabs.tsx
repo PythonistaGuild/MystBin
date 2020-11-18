@@ -16,33 +16,41 @@ export default function EditorTabs() {
   return (
     <>
       <div className={styles.tabsContainer}>
-      {value.map((v, i) => (
-        <button contentEditable={true}
-                onClick={() => setCurrTab(i)} className={ currTab === i ? styles.tabsSelected : styles.tabs }
-                onKeyDown={(e) => {
-                    const button = e.currentTarget
 
-                    if(e.code == 'Enter') {
-                        button.blur()  // Lose focus...
-                    }
-                }}
-                onBlur={(e) => {
-                    const button = e.currentTarget
+          {value.map((v, i) => (
+              <div
+                  contentEditable={true}
+                  onClick={() => setCurrTab(i)}
+                  className={currTab === i ? styles.tabsSelected : styles.tabs}
+                  onKeyDown={(e) => {
+                      const button = e.currentTarget
 
-                    if(button.textContent === '') {
-                        button.textContent = `File ${currTab}`
-                    }
+                      if(e.code == 'Enter') {
+                          button.blur()  // Lose focus...
+                      }
 
-                    if(button.textContent.endsWith(".py")) {
-                        let langCopy = [...lang]
-                        langCopy[currTab] = 'python'
+                  }}
+                  onBlur={(e) => {
+                      const button = e.currentTarget
 
-                        setLang(langCopy)
-                    }
-                }}
-        >File {i}</button>
-      ))}
+                      if(button.textContent === '') {
+                          button.textContent = `file_${currTab}`
+                      }
+
+                      if(button.textContent.endsWith(".py")) {
+                          let langCopy = [...lang]
+                          langCopy[currTab] = 'python'
+
+                          setLang(langCopy)
+                      }
+                  }}
+
+              >
+                  file_{i}
+              </div>
+          ))}
       <button
+          className={styles.tabsNew}
         onClick={() => {
           if (tabCount <= 4) {
           let newValue = [...value];
