@@ -48,6 +48,12 @@ export default function EditorTabs() {
                   <text
                       contentEditable={true}
                       className={styles.tabsFilename}
+                      onKeyDown={(e) => {
+                          if(e.code === 'Enter') {
+                              e.preventDefault()
+                              e.currentTarget.blur()
+                          }
+                      }}
                   >file_{i}
                   </text>
               </div>
