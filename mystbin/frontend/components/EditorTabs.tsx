@@ -51,7 +51,6 @@ export default function EditorTabs() {
         +
       </button>
       {value.map((v, i) => (
-          i <= 4 ?
         <div
           style={{
             display: currTab === i ? "block" : "none",
@@ -70,8 +69,6 @@ export default function EditorTabs() {
             theme={"mystBinDark"}
           />
         </div>
-              :
-              null
       ))}
       </div>
     </>
