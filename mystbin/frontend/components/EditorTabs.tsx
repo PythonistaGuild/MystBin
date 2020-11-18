@@ -4,7 +4,7 @@ import styles from '../styles/EditorTabs.module.css'
 
 
 export default function EditorTabs() {
-  const [value, setValue] = useState(["// write here", "// write here"]);
+  const [value, setValue] = useState(["..."]);
   const [currTab, setCurrTab] = useState(0);
   const [tabCount, setTabCount] = useState(0);
   const [lang, setLang] = useState(Array(5).fill('none'))
@@ -24,17 +24,20 @@ export default function EditorTabs() {
 
                     if(e.code == 'Enter') {
                         button.blur()  // Lose focus...
+                    }
+                }}
+                onBlur={(e) => {
+                    const button = e.currentTarget
 
-                        if(button.textContent === '') {
-                            button.textContent = `File ${currTab}`
-                        }
+                    if(button.textContent === '') {
+                        button.textContent = `File ${currTab}`
+                    }
 
-                        if(button.textContent.endsWith(".py")) {
-                            let langCopy = [...lang]
-                            langCopy[currTab] = 'python'
+                    if(button.textContent.endsWith(".py")) {
+                        let langCopy = [...lang]
+                        langCopy[currTab] = 'python'
 
-                            setLang(langCopy)
-                        }
+                        setLang(langCopy)
                     }
                 }}
         >File {i}</button>
