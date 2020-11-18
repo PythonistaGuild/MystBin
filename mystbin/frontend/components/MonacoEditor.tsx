@@ -92,6 +92,9 @@ export default function MonacoEditor(
         contextmenu: false,
         suggest: false,
         quickSuggestions: false,
+        minimap: {
+          enabled: false,
+        },
       }}
     />
   );
