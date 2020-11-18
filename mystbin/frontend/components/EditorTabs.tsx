@@ -20,7 +20,6 @@ export default function EditorTabs() {
 
           {value.map((v, i) => (
               <div
-                  contentEditable={true}
                   onClick={() => setCurrTab(i)}
                   className={currTab === i ? styles.tabsSelected : styles.tabs}
                   onKeyDown={(e) => {
@@ -34,7 +33,7 @@ export default function EditorTabs() {
                       const button = e.currentTarget
 
                       if(button.textContent === '') {
-                          button.textContent = `file_${currTab}`
+                          button.children[0].textContent = `file_${i}`
                       }
 
                       if(button.textContent.endsWith(".py")) {
@@ -46,7 +45,11 @@ export default function EditorTabs() {
                   }}
 
               >
-                  file_{i}
+                  <text
+                      contentEditable={true}
+                      className={styles.tabsFilename}
+                  >file_{i}
+                  </text>
               </div>
           ))}
 
