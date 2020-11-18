@@ -14,6 +14,7 @@
     display: inline-block;
     margin-left: 1.9rem;
     margin-right: -1.9rem;
+    text-align: center;
 }
 
 .tabsSelected {
@@ -28,12 +29,26 @@
     display: inline-block;
     margin-left: 1.9rem;
     margin-right: -1.9rem;
+    min-height: 2.5rem;
+    text-align: center;
 }
 
 .tabsNew {
+    background-color: #286395;
     margin-left: 1.9rem;
     outline: none !important;
     border: none;
     font-weight: bolder;
     border-radius: 0 3px 3px 0;
+    padding: 0.3rem;
+    vertical-align: bottom;
+}
+
+.tabsNew:hover {
+    filter: brightness(120%);
+}
+
+.tabsFilename {
+    outline: none !important;
+    border: none;
 }
