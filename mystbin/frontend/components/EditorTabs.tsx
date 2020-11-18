@@ -32,7 +32,7 @@ export default function EditorTabs() {
         >
           <MonacoEditor
             value={value[i]}
-            language={"javascript"}
+            language={"none"}
             onChange={(ev, newVal) => {
               let newValue = [...value];
               newValue[i] = newVal;
