@@ -2,6 +2,10 @@
     margin-top: 1.25rem;
 }
 
+.tabs:hover, .tabsSelected:hover {
+    cursor: pointer;
+}
+
 .tabs {
     background: #36393F;
     color: rgba(255, 255, 255, .6);

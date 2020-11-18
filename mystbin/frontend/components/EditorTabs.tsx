@@ -1,123 +1,116 @@
-import {useRef, useState} from "react";
+import { useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
-import styles from '../styles/EditorTabs.module.css'
-
+import styles from "../styles/EditorTabs.module.css";
 
 export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
   const [currTab, setCurrTab] = useState(0);
-  const [tabCount, setTabCount] = useState(0);
-  const [lang, setLang] = useState(Array(5).fill('none'))
-
-  for(let i = 0; i < 5; i++) {
-      EditorTabs[`editorDiv-${i}`] = useRef()
-  }
-
-  function onMount(_, editor) {
-      setTabCount( tabCount + 1)
-  }
+  const [lang, setLang] = useState(Array(5).fill("none"));
 
   return (
     <>
-        <div>
-      <div className={styles.tabsContainer}>
-
+      <div>
+        <div className={styles.tabsContainer}>
           {value.map((v, i) => (
+            <div className={currTab === i ? styles.tabsSelected : styles.tabs}>
               <div
-                  onClick={() => setCurrTab(i)}
-                  className={currTab === i ? styles.tabsSelected : styles.tabs}
-                  onKeyDown={(e) => {
-                      const button = e.currentTarget
+                onClick={() => setCurrTab(i)}
+                onKeyDown={(e) => {
+                  const button = e.currentTarget;
 
-                      if(e.code == 'Enter') {
-                          button.blur()  // Lose focus...
-                      }
-                  }}
-                  onBlur={(e) => {
-                      const filename = e.currentTarget.children[0]
+                  if (e.key == "Enter") {
+                    button.blur(); // Lose focus...
+                  }
+                }}
+                onBlur={(e) => {
+                  const filename = e.currentTarget.children[0];
 
-                      if(filename.textContent === '') {
-                          filename.textContent = `file_${i}`
-                      }
+                  if (filename.textContent === "") {
+                    filename.textContent = `file_${i}`;
+                  }
 
-                      if(filename.textContent.endsWith(".py")) {
-                          let langCopy = [...lang]
-                          langCopy[currTab] = 'python'
+                  if (filename.textContent.endsWith(".py")) {
+                    let langCopy = [...lang];
+                    langCopy[currTab] = "python";
 
-                          setLang(langCopy)
-                      }
-                  }}
-
+                    setLang(langCopy);
+                  }
+                }}
               >
-                  <text
-                      contentEditable={true}
-                      className={styles.tabsFilename}
-                      onKeyDown={(e) => {
-                          if(e.code === 'Enter') {
-                              e.preventDefault()
-                              e.currentTarget.blur()
-                          }
-                      }}
-                  >file_{i}
-                  </text>
-                  <button
-                      className={styles.tabsCloseButton}
-                      onClick={(event) => {
-                          let newValue = [...value];
-                          let newLang = [...lang]
-                          let newEditorDiv = EditorTabs[`editorDiv-${i - 1}`].current
-
-                          newValue.splice(i, 1)
-                          newLang[i] = "none"
-
-                          setLang(newLang)
-                          setValue(newValue);
-                          setCurrTab(currTab - 1)
-                          setTabCount(tabCount - 1)
-
-                          newEditorDiv.style.display = "block"
-                      }}
-                  >X
-                  </button>
+                <span
+                  contentEditable={true}
+                  className={styles.tabsFilename}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                  }}
+                >
+                  file_{i}
+                </span>
               </div>
+              {value.length > 1 ? (
+                <button
+                  className={styles.tabsCloseButton}
+                  onClick={(event) => {
+                    let newValue = [...value];
+                    let newLang = [...lang];
+
+                    newValue.splice(i, 1);
+                    newLang[i] = "none";
+
+                    setCurrTab(
+                      currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
+                    );
+                    setLang(newLang);
+                    setValue(newValue);
+                  }}
+                >
+                  X
+                </button>
+              ) : (
+                <></>
+              )}
+            </div>
           ))}
-
-      <button
-          className={styles.tabsNew}
-        onClick={() => {
-          if (tabCount <= 4) {
-          let newValue = [...value];
-          newValue.push("");
-          setValue(newValue);
-          }
-        }}
-      >
-        +
-      </button>
-      </div>
-
-      {value.map((v, i) => (
-        <div
-          style={{
-            display: currTab === i ? "block" : "none",
-          }}
-          className={'maxed'}
-          ref={EditorTabs[`editorDiv-${i}`]}
-        >
-          <MonacoEditor
-            onMount={onMount}
-            value={value[i]}
-            language={lang[i]}
-            onChange={(ev, newVal) => {
-              let newValue = [...value];
-              newValue[i] = newVal;
-              setValue(newValue);
-            }}
-            theme={"mystBinDark"}
-          />
+          {value.length <= 4 ? (
+            <button
+              className={styles.tabsNew}
+              onClick={() => {
+                if (value.length <= 4) {
+                  let newValue = [...value];
+                  newValue.push("");
+                  setValue(newValue);
+                }
+              }}
+            >
+              +
+            </button>
+          ) : (
+            <></>
+          )}
         </div>
-      ))}
 
+        {value.map((v, i) => (
+          <div
+            style={{
+              display: currTab === i ? "block" : "none",
+            }}
+            className={"maxed"}
+          >
+            <MonacoEditor
+              value={value[i]}
+              language={lang[i]}
+              onChange={(ev, newVal) => {
+                let newValue = [...value];
+                newValue[i] = newVal;
+                setValue(newValue);
+              }}
+              theme={"mystBinDark"}
+            />
+          </div>
+        ))}
       </div>
     </>
   );
