@@ -42,7 +42,6 @@
     border-radius: 0 3px 3px 0;
     padding: 0.3rem;
     vertical-align: bottom;
-    display: block;
 }
 
 .tabsNew:hover {
@@ -52,4 +51,5 @@
 .tabsFilename {
     outline: none !important;
     border: none;
+    display: block;
 }
