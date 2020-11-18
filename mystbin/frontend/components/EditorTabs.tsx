@@ -15,6 +15,7 @@ export default function EditorTabs() {
 
   return (
     <>
+        <div>
       <div className={styles.tabsContainer}>
 
           {value.map((v, i) => (
@@ -28,7 +29,6 @@ export default function EditorTabs() {
                       if(e.code == 'Enter') {
                           button.blur()  // Lose focus...
                       }
-
                   }}
                   onBlur={(e) => {
                       const button = e.currentTarget
@@ -49,6 +49,7 @@ export default function EditorTabs() {
                   file_{i}
               </div>
           ))}
+
       <button
           className={styles.tabsNew}
         onClick={() => {
@@ -61,6 +62,8 @@ export default function EditorTabs() {
       >
         +
       </button>
+      </div>
+
       {value.map((v, i) => (
         <div
           style={{
@@ -81,6 +84,7 @@ export default function EditorTabs() {
           />
         </div>
       ))}
+
       </div>
     </>
   );
