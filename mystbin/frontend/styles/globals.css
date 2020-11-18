@@ -15,6 +15,10 @@ body .monaco-aria-container {
   display: none; /* it breaks on firefox and isn't needed */
 }
 
+.maxed {
+  border-top: .75rem solid #202225;
+}
+
 .maxed > section {
   max-height: 87.5vh;
 }
