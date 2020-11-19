@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
+import CloseIcon from '@material-ui/icons/Close';
 
 export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
@@ -79,7 +80,7 @@ export default function EditorTabs() {
                     setTabName(newNames);
                   }}
                 >
-                  X
+                  <CloseIcon className={styles.tabsCloseButton}/>
                 </button>
               ) : (
                 <></>
