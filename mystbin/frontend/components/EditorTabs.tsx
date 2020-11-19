@@ -47,7 +47,7 @@ export default function EditorTabs() {
                     }
                   }}
                 >
-                  file_{i}
+                    file_{i}
                 </span>
               </div>
               {value.length > 1 ? (
@@ -58,7 +58,8 @@ export default function EditorTabs() {
                     let newLang = [...lang];
 
                     newValue.splice(i, 1);
-                    newLang[i] = "none";
+                    newLang.splice(i, 1)
+                    newLang.push("none")
 
                     setCurrTab(
                       currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
