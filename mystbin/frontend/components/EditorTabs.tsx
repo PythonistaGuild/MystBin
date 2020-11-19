@@ -6,6 +6,7 @@ export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
   const [currTab, setCurrTab] = useState(0);
   const [lang, setLang] = useState(Array(5).fill("none"));
+  const [tabNames, setTabName] = useState(Array(5).fill("default_name.ext"))
 
   return (
     <>
@@ -26,8 +27,12 @@ export default function EditorTabs() {
                   const filename = e.currentTarget.children[0];
 
                   if (filename.textContent === "") {
-                    filename.textContent = `file_${i}`;
+                    filename.textContent = `default_name.ext`;
                   }
+
+                  let newNames = tabNames;
+                  newNames[i] = filename.textContent;
+                  setTabName(newNames);
 
                   if (filename.textContent.endsWith(".py")) {
                     let langCopy = [...lang];
@@ -47,7 +52,7 @@ export default function EditorTabs() {
                     }
                   }}
                 >
-                    file_{i}
+                    { tabNames[i] }
                 </span>
               </div>
               {value.length > 1 ? (
@@ -56,16 +61,22 @@ export default function EditorTabs() {
                   onClick={(event) => {
                     let newValue = [...value];
                     let newLang = [...lang];
+                    let newNames = [...tabNames]
 
                     newValue.splice(i, 1);
                     newLang.splice(i, 1)
+                    newNames.splice(i, 1)
+
                     newLang.push("none")
+                    newNames.push("default_name.ext")
 
                     setCurrTab(
                       currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
                     );
+
                     setLang(newLang);
                     setValue(newValue);
+                    setTabName(newNames);
                   }}
                 >
                   X
