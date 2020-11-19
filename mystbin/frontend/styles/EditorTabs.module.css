@@ -22,13 +22,14 @@
 }
 
 .tabsSelected {
-    background: rgba(255, 255, 255, .7);
-    color: #2F3136;
+    background: #36393F;
+    color: rgba(255, 255, 255, .6);
     border: none;
+    border-top: 3px solid #2273AB;
     outline: none !important;
     font-size: 1em;
     border-radius: 5px 5px 0 0;
-    padding: 0.75rem 0.5rem 0.5rem 0.5rem;
+    padding: 0.5rem;
     min-width: 4rem;
     display: inline-flex;
     margin-left: 1.9rem;
@@ -59,7 +60,16 @@
 }
 
 .tabsCloseButton {
+    background: transparent;
+    color: #2273AB;
     outline: none !important;
     border: none;
-    margin-left: 1rem;
+    margin-left: 0.4rem;
+    display: contents;
+    font-size: 1em;
 }
+
+.tabsCloseButton:hover {
+    filter: brightness(180%);
+}
+
