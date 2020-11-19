@@ -94,6 +94,7 @@ export default function EditorTabs() {
                   let newValue = [...value];
                   newValue.push("");
                   setValue(newValue);
+                  setCurrTab(currTab + 1)
                 }
               }}
             >
