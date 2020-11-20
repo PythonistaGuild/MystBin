@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from "@material-ui/icons/Close";
 import Toast from "react-bootstrap/Toast";
-
 
 export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
@@ -56,7 +55,7 @@ export default function EditorTabs() {
                     }
                   }}
                 >
-                    { tabNames[i] }
+                  {tabNames[i]}
                 </span>
               </div>
               {value.length > 1 ? (
@@ -65,14 +64,14 @@ export default function EditorTabs() {
                   onClick={(event) => {
                     let newValue = [...value];
                     let newLang = [...lang];
-                    let newNames = [...tabNames]
+                    let newNames = [...tabNames];
 
                     newValue.splice(i, 1);
-                    newLang.splice(i, 1)
-                    newNames.splice(i, 1)
+                    newLang.splice(i, 1);
+                    newNames.splice(i, 1);
 
-                    newLang.push("none")
-                    newNames.push("default_name.ext")
+                    newLang.push("none");
+                    newNames.push("default_name.ext");
 
                     setCurrTab(
                       currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
@@ -83,7 +82,7 @@ export default function EditorTabs() {
                     setTabName(newNames);
                   }}
                 >
-                  <CloseIcon className={styles.tabsCloseButton}/>
+                  <CloseIcon className={styles.tabsCloseButton} />
                 </button>
               ) : (
                 <></>
@@ -98,7 +97,7 @@ export default function EditorTabs() {
                   let newValue = [...value];
                   newValue.push("");
                   setValue(newValue);
-                  setCurrTab(currTab + 1)
+                  setCurrTab(currTab + 1);
                 }
               }}
             >
@@ -119,14 +118,14 @@ export default function EditorTabs() {
             <MonacoEditor
               language={lang[i]}
               onChange={(ev, newVal) => {
-                if(newVal.length > 300000) {
-                    setCharCountToast(true)
-                    newVal = newVal.slice(0, 300000)
+                if (newVal.length > 300000) {
+                  setCharCountToast(true);
+                  newVal = newVal.slice(0, 300000);
                 }
                 let newValue = [...value];
                 newValue[i] = newVal;
                 setValue(newValue);
-                return `${newVal}`
+                return `${newVal}`;
               }}
               value={value[i]}
               theme={"mystBinDark"}
@@ -136,16 +135,20 @@ export default function EditorTabs() {
         ))}
       </div>
 
-      <Toast className={styles.maxCountToast}
-             onClose={() => setCharCountToast(false)}
-             show={charCountToast}
-             delay={5000}
-             autohide>
+      <Toast
+        className={styles.maxCountToast}
+        onClose={() => setCharCountToast(false)}
+        show={charCountToast}
+        delay={5000}
+        autohide
+      >
         <Toast.Header className={styles.maxCountToastHeader}>
           <strong className="mr-auto">Max Character Count</strong>
           <small>Max count: 300,000</small>
         </Toast.Header>
-        <Toast.Body>You've reached the max character count for this file.</Toast.Body>
+        <Toast.Body>
+          You've reached the max character count for this file.
+        </Toast.Body>
       </Toast>
     </>
   );

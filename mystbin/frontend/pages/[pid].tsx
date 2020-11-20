@@ -1,13 +1,13 @@
-import { GetServerSideProps } from 'next'
-import Head from 'next/head'
-import { useRouter } from 'next/router'
-import { PropsWithoutRef } from 'react'
-import styles from '../styles/Home.module.css'
+import { GetServerSideProps } from "next";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { PropsWithoutRef } from "react";
+import styles from "../styles/Home.module.css";
 
-export default function Home(props: PropsWithoutRef<{authorized: boolean}>) {
-    const { authorized } = props;
-    const router = useRouter()
-    const { pid } = router.query
+export default function Home(props: PropsWithoutRef<{ authorized: boolean }>) {
+  const { authorized } = props;
+  const router = useRouter();
+  const { pid } = router.query;
 
   return (
     <div className={styles.container}>
@@ -17,16 +17,15 @@ export default function Home(props: PropsWithoutRef<{authorized: boolean}>) {
       </Head>
       {authorized ? pid : "No."}
     </div>
-  )
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-    let authorized = false;
+  let authorized = false;
 
-
-    return {
-        props: {
-            authorized,
-        },
-    }
-  }
+  return {
+    props: {
+      authorized,
+    },
+  };
+};
