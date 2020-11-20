@@ -119,9 +119,9 @@ export default function EditorTabs() {
             <MonacoEditor
               language={lang[i]}
               onChange={(ev, newVal) => {
-                if(newVal.length > 100000) {
+                if(newVal.length > 300000) {
                     setCharCountToast(true)
-                    newVal = newVal.slice(0, 100000)
+                    newVal = newVal.slice(0, 300000)
                 }
                 let newValue = [...value];
                 newValue[i] = newVal;
@@ -143,7 +143,7 @@ export default function EditorTabs() {
              autohide>
         <Toast.Header className={styles.maxCountToastHeader}>
           <strong className="mr-auto">Max Character Count</strong>
-          <small>Max count: 600,000</small>
+          <small>Max count: 300,000</small>
         </Toast.Header>
         <Toast.Body>You've reached the max character count for this file.</Toast.Body>
       </Toast>
