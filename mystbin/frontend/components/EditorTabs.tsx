@@ -2,12 +2,15 @@ import { useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from '@material-ui/icons/Close';
+import Toast from "react-bootstrap/Toast";
+
 
 export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
   const [currTab, setCurrTab] = useState(0);
   const [lang, setLang] = useState(Array(5).fill("none"));
-  const [tabNames, setTabName] = useState(Array(5).fill("default_name.ext"))
+  const [tabNames, setTabName] = useState(Array(5).fill("default_name.ext"));
+  const [charCountToast, setCharCountToast] = useState(false);
 
   return (
     <>
@@ -114,19 +117,37 @@ export default function EditorTabs() {
             className={"maxed"}
           >
             <MonacoEditor
-              value={value[i]}
               language={lang[i]}
               onChange={(ev, newVal) => {
+                if(newVal.length > 600000) {
+                    setCharCountToast(true)
+
+                    let over = (600000 - newVal.length) - 2
+                    newVal = newVal.slice(0, over)
+                }
                 let newValue = [...value];
                 newValue[i] = newVal;
                 setValue(newValue);
               }}
+              value={value[i]}
               theme={"mystBinDark"}
               readOnly={false}
             />
           </div>
         ))}
       </div>
+
+      <Toast className={styles.maxCountToast}
+             onClose={() => setCharCountToast(false)}
+             show={charCountToast}
+             delay={5000}
+             autohide>
+        <Toast.Header className={styles.maxCountToastHeader}>
+          <strong className="mr-auto">Max Character Count</strong>
+          <small>Max count: 600,000</small>
+        </Toast.Header>
+        <Toast.Body>You've reached the max character count for this file.</Toast.Body>
+      </Toast>
     </>
   );
 }
