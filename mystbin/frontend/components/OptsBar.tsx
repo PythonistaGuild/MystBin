@@ -10,8 +10,8 @@ export default function OptsBar() {
                   {title: "Create Expiry", content: "Create a expiry date for this paste and all its files.", optional: false, icon: <HourglassFullIcon style={{marginLeft: "0.5rem"}} />}]
 
     return (
-        <Navbar>
-            <Nav className="mr-auto">
+        <Navbar className="justify-content-center">
+            <Nav className={styles.optsNavContainer}>
                 {opts.map((obj) => (
                     <OverlayTrigger
                         key={`opt-${obj.title}`}
