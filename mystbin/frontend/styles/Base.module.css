@@ -23,7 +23,7 @@
 .Base > main {
     grid-area: c;
     background-color: #1B1B1B;
-    max-width: 1920px;
+    max-width: 100%;
 }
 
 .Base > footer {
