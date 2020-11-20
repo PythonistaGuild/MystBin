@@ -6,10 +6,20 @@
 .optsNavContainer {}
 
 .optsNavContainer > svg {
-    margin-left: 0.75rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 .optsNavContainer > svg:hover {
     opacity: 70%;
     cursor: pointer;
+}
+
+.optsDivider {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1px;
+    height: 40px;
+    margin-top: -8px;
+    margin-right: 1rem;
+    margin-left: 1rem;
 }
