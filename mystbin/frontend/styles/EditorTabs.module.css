@@ -7,8 +7,8 @@
 }
 
 .tabs {
-    background: #36393F;
-    color: rgba(255, 255, 255, .6);
+    background: #202225;
+    color: rgba(255, 255, 255, .3);
     border: none;
     outline: none !important;
     font-size: 1em;
@@ -22,10 +22,10 @@
 }
 
 .tabsSelected {
-    background: #36393F;
-    color: rgba(255, 255, 255, .6);
+    background: #202225;
+    color: rgba(255, 255, 255, .9);
     border: none;
-    border-top: 3px solid #2273AB;
+    border-bottom: 2px solid #2273AB;
     outline: none !important;
     font-size: 1em;
     border-radius: 5px 5px 0 0;
@@ -36,6 +36,10 @@
     min-height: 2.5rem;
     text-align: center;
     vertical-align: bottom;
+}
+
+.tabs:hover {
+    color: rgba(255, 255, 255, .6);
 }
 
 .tabsNew {
