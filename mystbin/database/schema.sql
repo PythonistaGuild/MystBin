@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS pastes (
 );
 
 CREATE TABLE IF NOT EXISTS paste_content (
-    parent_id TEXT REFERENCES pastes(id),
+    parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
     index SERIAL,
     content TEXT NOT NULL,
     loc INTEGER NOT NULL,
