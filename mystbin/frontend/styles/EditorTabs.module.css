@@ -99,3 +99,16 @@
 .maxCountToastHeader > button {
     outline: none;
 }
+
+.passwordModal {
+    background-color: #202225;
+}
+
+.passwordModalHeader {
+    background-color: #F7665E;
+}
+
+.passwordModalTitle > svg {
+    margin-bottom: 0.4rem;
+    margin-left: 1rem;
+}
