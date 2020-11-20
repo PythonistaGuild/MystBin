@@ -126,6 +126,7 @@ export default function EditorTabs() {
                 let newValue = [...value];
                 newValue[i] = newVal;
                 setValue(newValue);
+                return `${newVal}`
               }}
               value={value[i]}
               theme={"mystBinDark"}
