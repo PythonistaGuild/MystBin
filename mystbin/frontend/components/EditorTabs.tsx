@@ -122,6 +122,7 @@ export default function EditorTabs() {
                 setValue(newValue);
               }}
               theme={"mystBinDark"}
+              readOnly={false}
             />
           </div>
         ))}
