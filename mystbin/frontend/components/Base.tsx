@@ -1,5 +1,6 @@
 import { PropsWithChildren } from "react";
 import NavBar from "./NavBar";
+import OptsBar from "./optsBar";
 import styles from "../styles/Base.module.css";
 
 export default function Base(props: PropsWithChildren<{ className: string }>) {
@@ -10,8 +11,11 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
       <nav>
         <NavBar />
       </nav>
+        <opts>
+            <OptsBar />
+        </opts>
       <main className={className}>{children}</main>
-      <footer>myst gae</footer>
+      <footer></footer>
     </div>
   );
 }
