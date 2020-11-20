@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import NavBar from "./NavBar";
-import OptsBar from "./optsBar";
+import OptsBar from "./OptsBar";
 import styles from "../styles/Base.module.css";
 
 export default function Base(props: PropsWithChildren<{ className: string }>) {
