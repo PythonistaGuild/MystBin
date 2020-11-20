@@ -1,8 +1,11 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
+import LockIcon from '@material-ui/icons/Lock';
 import Toast from "react-bootstrap/Toast";
+import {Form, Modal} from "react-bootstrap";
+import Link from "next/link";
 
 export default function EditorTabs() {
   const [value, setValue] = useState(["..."]);
@@ -10,9 +13,47 @@ export default function EditorTabs() {
   const [lang, setLang] = useState(Array(5).fill("none"));
   const [tabNames, setTabName] = useState(Array(5).fill("default_name.ext"));
   const [charCountToast, setCharCountToast] = useState(false);
+  const [passwordModal, setPasswordModal] = useState(true);
+
+  const password = "1234567890";
 
   return (
     <>
+      <Modal
+          show={passwordModal}
+          backdrop="static"
+          keyboard={false}
+          aria-labelledby="contained-modal-title-vcenter"
+          centered
+          className={styles.passwordModal}
+      >
+        <Modal.Header className={styles.passwordModalHeader}>
+          <Modal.Title
+              id={"contained-modal-title-vcenter"}
+              className={styles.passwordModalTitle}>
+            Password Protected<LockIcon/>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          This paste is password protected. Please enter the password to continue.
+          <Form>
+            <Form.Group controlId="pastePassword">
+              <Form.Control
+                  type="password"
+                  placeholder="Password"
+                  onChange={(e) => {
+                    if(e.currentTarget.value === password) {
+                      setPasswordModal(false);
+                    }
+                  }}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Link href={"/"}>Return to home</Link>
+        </Modal.Footer>
+      </Modal>
       <div>
         <div className={styles.tabsContainer}>
           {value.map((v, i) => (
