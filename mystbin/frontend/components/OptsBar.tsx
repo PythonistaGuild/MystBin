@@ -7,7 +7,7 @@ import styles from "../styles/OptsBar.module.css"
 
 export default function OptsBar() {
     const opts = [{title: "Create Password", content: "Create a password for this paste and all its files.", optional: true, icon: <EnhancedEncryptionIcon/>},
-                  {title: "Create Expiry", content: "Create a expiry date for this paste and all its files.", optional: false, icon: <HourglassFullIcon style={{marginLeft: "0.5rem"}} />}]
+                  {title: "Create Expiry", content: "Create a expiry date for this paste and all its files.", optional: false, icon: <HourglassFullIcon />}]
 
     return (
         <Navbar className="justify-content-center">
