@@ -119,11 +119,9 @@ export default function EditorTabs() {
             <MonacoEditor
               language={lang[i]}
               onChange={(ev, newVal) => {
-                if(newVal.length > 600000) {
+                if(newVal.length > 100000) {
                     setCharCountToast(true)
-
-                    let over = (600000 - newVal.length) - 2
-                    newVal = newVal.slice(0, over)
+                    newVal = newVal.slice(0, 100000)
                 }
                 let newValue = [...value];
                 newValue[i] = newVal;
