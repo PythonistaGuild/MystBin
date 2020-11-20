@@ -2,9 +2,9 @@ import { useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
-import LockIcon from '@material-ui/icons/Lock';
+import LockIcon from "@material-ui/icons/Lock";
 import Toast from "react-bootstrap/Toast";
-import {Form, Modal} from "react-bootstrap";
+import { Form, Modal } from "react-bootstrap";
 import Link from "next/link";
 
 export default function EditorTabs() {
@@ -20,32 +20,35 @@ export default function EditorTabs() {
   return (
     <>
       <Modal
-          show={passwordModal}
-          backdrop="static"
-          keyboard={false}
-          aria-labelledby="contained-modal-title-vcenter"
-          centered
-          className={styles.passwordModal}
+        show={passwordModal}
+        backdrop="static"
+        keyboard={false}
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        className={styles.passwordModal}
       >
         <Modal.Header className={styles.passwordModalHeader}>
           <Modal.Title
-              id={"contained-modal-title-vcenter"}
-              className={styles.passwordModalTitle}>
-            Password Protected<LockIcon/>
+            id={"contained-modal-title-vcenter"}
+            className={styles.passwordModalTitle}
+          >
+            Password Protected
+            <LockIcon />
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          This paste is password protected. Please enter the password to continue.
+          This paste is password protected. Please enter the password to
+          continue.
           <Form>
             <Form.Group controlId="pastePassword">
               <Form.Control
-                  type="password"
-                  placeholder="Password"
-                  onChange={(e) => {
-                    if(e.currentTarget.value === password) {
-                      setPasswordModal(false);
-                    }
-                  }}
+                type="password"
+                placeholder="Password"
+                onChange={(e) => {
+                  if (e.currentTarget.value === password) {
+                    setPasswordModal(false);
+                  }
+                }}
               />
             </Form.Group>
           </Form>
