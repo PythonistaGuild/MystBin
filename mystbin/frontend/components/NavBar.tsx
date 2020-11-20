@@ -12,7 +12,9 @@ export default function NavBar() {
     >
       <Navbar.Brand href="#home">MystBin</Navbar.Brand>
       <Nav className="ml-auto">
-        <Nav.Link href="#deets"><LoginIcon /></Nav.Link>
+        <Nav.Link href="#deets">
+          <LoginIcon />
+        </Nav.Link>
       </Nav>
     </Navbar>
   );

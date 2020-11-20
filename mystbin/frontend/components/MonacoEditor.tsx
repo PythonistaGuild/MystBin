@@ -77,7 +77,7 @@ export default function MonacoEditor(
     language: string;
     onChange: ControlledEditorOnChange;
     theme: string;
-    readOnly: boolean,
+    readOnly: boolean;
   }>
 ) {
   let { value, onChange, theme, language, readOnly } = props;
@@ -93,7 +93,7 @@ export default function MonacoEditor(
         contextmenu: false,
         suggest: false,
         quickSuggestions: false,
-        minimap: {enabled: false},
+        minimap: { enabled: false },
         readOnly: readOnly,
       }}
     />
