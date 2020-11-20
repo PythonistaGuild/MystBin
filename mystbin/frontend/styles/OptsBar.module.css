@@ -1,0 +1,15 @@
+.popoverHeader {
+    background-color: #286395;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.optsNavContainer {}
+
+.optsNavContainer > svg {
+    margin-left: 0.75rem;
+}
+
+.optsNavContainer > svg:hover {
+    opacity: 70%;
+    cursor: pointer;
+}
