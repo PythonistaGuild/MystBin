@@ -43,6 +43,11 @@ export default function EditorTabs({ password, initialData, dummyData }) {
               <Form.Control
                 type="password"
                 placeholder="Password"
+                onKeyDown={(e) => {
+                  if(e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
                 onChange={(e) => {
                   if (e.currentTarget.value === password) {
                     setPasswordModal(false);
