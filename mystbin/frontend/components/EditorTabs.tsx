@@ -141,7 +141,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
                   let newValue = [...value];
                   newValue.push({title: "default_name.ext", content: ""});
                   setValue(newValue);
-                  setCurrTab(currTab + 1);
+                  setCurrTab(value.length);
                 }
               }}
             >
