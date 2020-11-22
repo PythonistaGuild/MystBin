@@ -1,4 +1,4 @@
-import {PropsWithoutRef, useState} from "react";
+import { PropsWithoutRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
@@ -13,7 +13,6 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [lang, setLang] = useState(Array(5).fill("none"));
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(true);
-
 
   return (
     <>
@@ -43,7 +42,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
                 type="password"
                 placeholder="Password"
                 onKeyDown={(e) => {
-                  if(e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                   }
                 }}
@@ -139,7 +138,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
               onClick={() => {
                 if (value.length <= 4) {
                   let newValue = [...value];
-                  newValue.push({title: "default_name.ext", content: ""});
+                  newValue.push({ title: "default_name.ext", content: "" });
                   setValue(newValue);
                   setCurrTab(value.length);
                 }
