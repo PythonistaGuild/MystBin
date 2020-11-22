@@ -8,7 +8,6 @@ import { Form, Modal } from "react-bootstrap";
 import Link from "next/link";
 
 export default function EditorTabs({ password, initialData, dummyData }) {
-  console.log(initialData)
   const [value, setValue] = useState(initialData);
   const [currTab, setCurrTab] = useState(0);
   const [lang, setLang] = useState(Array(5).fill("none"));
