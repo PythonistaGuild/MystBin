@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {PropsWithoutRef, useState} from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
@@ -7,15 +7,14 @@ import Toast from "react-bootstrap/Toast";
 import { Form, Modal } from "react-bootstrap";
 import Link from "next/link";
 
-export default function EditorTabs() {
-  const [value, setValue] = useState(["..."]);
+export default function EditorTabs({ password, initialData, dummyData }) {
+  console.log(initialData)
+  const [value, setValue] = useState(initialData);
   const [currTab, setCurrTab] = useState(0);
   const [lang, setLang] = useState(Array(5).fill("none"));
-  const [tabNames, setTabName] = useState(Array(5).fill("default_name.ext"));
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(true);
 
-  const password = "1234567890";
 
   return (
     <>
@@ -47,6 +46,8 @@ export default function EditorTabs() {
                 onChange={(e) => {
                   if (e.currentTarget.value === password) {
                     setPasswordModal(false);
+
+                    setValue(dummyData);
                   }
                 }}
               />
@@ -77,9 +78,9 @@ export default function EditorTabs() {
                     filename.textContent = `default_name.ext`;
                   }
 
-                  let newNames = tabNames;
-                  newNames[i] = filename.textContent;
-                  setTabName(newNames);
+                  let newValue = value;
+                  newValue[i]["title"] = filename.textContent;
+                  setValue(newValue);
 
                   if (filename.textContent.endsWith(".py")) {
                     let langCopy = [...lang];
@@ -99,7 +100,7 @@ export default function EditorTabs() {
                     }
                   }}
                 >
-                  {tabNames[i]}
+                  {value[i]["title"]}
                 </span>
               </div>
               {value.length > 1 ? (
@@ -108,14 +109,10 @@ export default function EditorTabs() {
                   onClick={(event) => {
                     let newValue = [...value];
                     let newLang = [...lang];
-                    let newNames = [...tabNames];
 
                     newValue.splice(i, 1);
                     newLang.splice(i, 1);
-                    newNames.splice(i, 1);
-
                     newLang.push("none");
-                    newNames.push("default_name.ext");
 
                     setCurrTab(
                       currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
@@ -123,7 +120,6 @@ export default function EditorTabs() {
 
                     setLang(newLang);
                     setValue(newValue);
-                    setTabName(newNames);
                   }}
                 >
                   <CloseIcon className={styles.tabsCloseButton} />
@@ -139,7 +135,7 @@ export default function EditorTabs() {
               onClick={() => {
                 if (value.length <= 4) {
                   let newValue = [...value];
-                  newValue.push("");
+                  newValue.push({title: "default_name.ext", content: ""});
                   setValue(newValue);
                   setCurrTab(currTab + 1);
                 }
@@ -167,11 +163,11 @@ export default function EditorTabs() {
                   newVal = newVal.slice(0, 300000);
                 }
                 let newValue = [...value];
-                newValue[i] = newVal;
+                newValue[i]["content"] = newVal;
                 setValue(newValue);
                 return `${newVal}`;
               }}
-              value={value[i]}
+              value={value[i]["content"]}
               theme={"mystBinDark"}
               readOnly={false}
             />
