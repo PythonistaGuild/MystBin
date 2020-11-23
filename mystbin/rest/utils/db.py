@@ -83,28 +83,55 @@ class Database:
         """
         async with self._pool.acquire() as conn:
             query = """
-                    SELECT *,
+                    UPDATE pastes SET views = views + 1 WHERE id = $1
+                    RETURNING *,
                     CASE WHEN password IS NOT NULL THEN true
                     ELSE false END AS has_password,
                     CASE WHEN password = CRYPT($2, password) THEN true
                     ELSE false END AS password_ok
-    
-                    FROM pastes WHERE id = $1
                     """
 
             resp = await self._do_query(query, paste_id, password or "", conn=conn)
 
             if resp:
                 query = """
-                SELECT * FROM paste_content WHERE parent_id = $1
+                SELECT * FROM files WHERE parent_id = $1
                 """
                 contents = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
-                resp['pastes'] = [dict(x) for x in contents]
+                resp['pastes'] = [{a: str(b) for a, b in x.items()} for x in contents]
 
                 return resp
             else:
                 return None
+
+    async def get_paste_compat(self, paste_id: str) -> Optional[Dict[str, str]]:
+        async with self._pool.acquire() as conn:
+            query = """
+                    UPDATE pastes SET views = views + 1 WHERE id = $1
+                    RETURNING *,
+                    CASE WHEN password IS NOT NULL THEN true
+                    ELSE false END AS has_password
+                    """
+
+            resp = await self._do_query(query, paste_id, conn=conn)
+
+            if resp:
+                query = """
+                SELECT content, syntax FROM files WHERE parent_id = $1 LIMIT 1
+                """
+                contents = await self._do_query(query, paste_id, conn=conn)
+                ret = {
+                    "key": paste_id,
+                    "data": contents[0]['content'],
+                    "has_password": resp[0]['has_password'],
+                    "syntax": contents[0]['syntax']
+                }
+
+                return ret
+            else:
+                return None
+
 
     async def put_paste(self,
                         paste_id: str,
@@ -112,8 +139,9 @@ class Database:
                         author: Optional[int] = None,
                         nick: str = "",
                         syntax: str = "",
+                        expires_at: datetime.datetime = None,
                         password: Optional[str] = None
-                        ) -> asyncpg.Record:
+                        ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -127,6 +155,8 @@ class Database:
             The nickname of the paste, if present.
         syntax: Optional[:class:`str`]
             The paste syntax, if present.
+        expires_at: Optional[:class:`datetime.datetime`]
+            when the paste should expire, in UTC
         password: Optioanl[:class:`str`]
             The password used to encrypt the paste, if present.
 
@@ -136,74 +166,84 @@ class Database:
             The paste record that was created.
         """
         query = """
-                INSERT INTO pastes (id, author, nick, syntax, password, loc, charcount, content)
-                VALUES ($1, $2, $3, $4, (SELECT crypt($5, gen_salt('bf')) WHERE $5 is not null), $6, $7, $8)
-                RETURNING *
+                WITH file AS (
+                    INSERT INTO pastes (id, author_id, password, expires)
+                    VALUES
+                    ($1, $2, (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null), $4)
+                    RETURNING id
+                )
+                INSERT INTO files VALUES ((select id from file), $5, $6, $7, $8) RETURNING index
                 """
 
         loc = content.count("\n") + 1
         chars = len(content)
 
-        resp = await self._do_query(query, paste_id, author, nick, syntax, password, loc, chars, content)
-
-        return resp[0]
+        val = await self._do_query(query, paste_id, author, password, expires_at, content, nick, syntax, loc)
+        # we need to generate our own response here, as we cant get the full response from the single query
+        resp = {
+            "id": paste_id,
+            "author_id": author,
+            "files": [
+                {
+                    "content": content,
+                    "nick": nick,
+                    "syntax": syntax,
+                    "loc": loc,
+                    "charcount": chars,
+                    "index": val[0]['index']
+                }
+            ]
+        }
+        return resp
 
     async def put_pastes(self,
                         paste_id: str,
-                        pages: List[str],
+                        pages: List[Dict[str, str]],
                         author: Optional[int] = None,
-                        nick: str = "",
-                        syntax: str = "",
                         password: Optional[str] = None
-                        ) -> Dict[str, Union[str, List[Dict[str, str]]]]:
+                        ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
         paste_id: :class:`str:
             The paste ID we are storing.
-        pages: List[:class:`str`]
-            The paste content.
+        pages: List[Dict[:class:`str`, :class:`str`]]
+            The paste content. A list of dictionaries containing `content`, `nick` (optional), and `syntax` (optional) keys
         author: Optional[:class:`int`]
             The ID of the author, if present.
-        nick: Optional[:class:`str`]
-            The nickname of the paste, if present.
-        syntax: Optional[:class:`str`]
-            The paste syntax, if present.
         password: Optioanl[:class:`str`]
             The password used to encrypt the paste, if present.
 
         Returns
         ---------
-        :class:`asyncpg.Record`
-            The paste record that was created.
+        Dict[:class:`str`, Any]
         """
         async with self._pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, nick, syntax, password)
-                    VALUES ($1, $2, $3, $4, (SELECT crypt($5, gen_salt('bf')) WHERE $5 is not null))
-                    RETURNING *
+                    INSERT INTO pastes (id, author_id, password)
+                    VALUES ($1, $2, (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null))
+                    RETURNING id, author_id
                     """
 
-            resp = await self._do_query(query, paste_id, author, nick, syntax, password, conn=conn)
+            resp = await self._do_query(query, paste_id, author, password, conn=conn)
 
             resp = resp[0]
             qs = []
             for page in pages:
-                qs.append((resp['id'], page, page.count("\n")))
+                qs.append((resp['id'], page['content'], page.get("nick", None), page.get("syntax", None), page['content'].count("\n")))
 
-            query = "INSERT INTO paste_content (parent_id, content, loc) VALUES ($1, $2, $3) RETURNING index, content, loc, charcount"
+            query = "INSERT INTO paste_content (parent_id, content, nick, syntax, loc) VALUES ($1, $2, $3, $4, $5) RETURNING index, content, loc, charcount, nick, syntax"
             data = await conn.executemany(query, qs)
 
             resp = dict(resp)
-            resp['pages'] = [{a: str(b) for a, b in x.items()} for x in data]
+            resp['files'] = [dict(x) for x in data]
 
             return resp
 
     async def edit_paste(self,
                          paste_id: str,
                          author_id: int,
-                         new_content: Optional[str] = None,
-                         new_expires: Optional[datetime.datetime] = None,
+                         new_content: str,
                          new_nick: Optional[str] = None) -> Optional[asyncpg.Record]:
         """Edits a live paste
         Parameters
@@ -214,8 +254,6 @@ class Database:
             The paste author.
         new_content: Optional[:class:`str`]
             The new paste content we are inserting.
-        new_expires: Optional[:class:`datetime.datetime`]
-            The new expiration time.
         new_nick: Optional[:class:`str`]
             The new nickname of the paste.
 
@@ -225,18 +263,19 @@ class Database:
             The paste record which was edited.
         """
         query = """
-                UPDATE pastes
-                SET content = COALESCE($3, content),
-                expires = COALESCE($4, expires),
-                nick = COALESCE($5, nick)
-                WHERE id = $1
-                AND author_id = $2
-                RETURNING *;
+                UPDATE files SET
+                    content = $1, loc = $2, nick = COALESCE($3, nick)
+                WHERE parent_id = $4 AND (
+                    SELECT author_id
+                    FROM pastes
+                    WHERE paste_id = $4
+                ) = $5
+                RETURNING *
                 """
 
-        response = await self._do_query(query, paste_id, author_id, new_content, new_expires, new_nick)
+        response = await self._do_query(query, new_content, new_content.count("\n"), new_nick, paste_id, author_id)
 
-        return response or None
+        return response[0] if response else None
 
     async def edit_pastes(self,
                         paste_id: str,
