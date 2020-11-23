@@ -24,31 +24,39 @@ from pydantic import BaseModel
 
 class PastePost(BaseModel):
     content: str
+    filename: str
     syntax: Optional[str] = None
-    nick: Optional[str] = None
     password: Optional[str] = None
     expires: Optional[datetime.datetime] = None
 
 
+class _PastePut(BaseModel):
+    content: str
+    filename: str
+    syntax: Optional[str] = None
+    password: Optional[str] = None
+
 class ListedPastePut(BaseModel):
-    data: List[PastePost]
+    workspace_name: Optional[str] = None
+    expires: Optional[datetime.datetime] = None
+    data: List[_PastePut]
 
     class Config:
         schema_extra = {
             "example": {
+                "workspace_name": "string",
+                "expires": "2020-11-16T13:46:49.215Z",
                 "data": [{
                     "content": "string",
+                    "filename": "string",
                     "syntax": "string",
-                    "nick": "string",
                     "password": "string",
-                    "expires": "2020-11-16T13:46:49.215Z"
                 },
                     {
                     "content": "another_string",
+                    "filename": "another_string",
                     "syntax": "another_string",
-                    "nick": "another_string",
                     "password": "another_string",
-                    "expires": "2020-11-16T13:46:49.215Z"
                 }
                 ]
             }
@@ -57,7 +65,7 @@ class ListedPastePut(BaseModel):
 
 class PastePatch(BaseModel):
     new_content: Optional[str] = None
-    new_nick: Optional[str] = None
+    new_filename: Optional[str] = None
     new_expires: Optional[datetime.datetime] = None
 
 

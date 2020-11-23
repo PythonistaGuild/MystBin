@@ -20,7 +20,7 @@ from typing import Dict, Union
 
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 
 from ..models import errors, responses
@@ -35,16 +35,16 @@ auth_model = HTTPBearer()
     403: {"model": errors.Forbidden}},
     name="Get current user"
 )
-async def get_self(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, Union[str, int, bool]]]:
+async def get_self(request: Request, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, Union[str, int, bool]]]:
     """Gets the User object of the currently logged in user.
     * Requires authentication.
     """
     if not authorization:
-        return JSONResponse({"error": "Forbidden"}, status_code=403)
+        return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
     data: Union[Record, int] = await request.app.state.db.get_user(token=authorization.credentials)
     if not data or data in {400, 401}:
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return dict(data)
 
@@ -55,15 +55,15 @@ async def get_self(request: Request, authorization: str = Depends(auth_model)) -
     403: {"model": errors.Forbidden}},
     name="Regenerate your token"
 )
-async def regen_token(request: Request, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
+async def regen_token(request: Request, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, str]]:
     """Regens the user's token.
     * Requires authentication.
     """
     if not authorization:
-        return JSONResponse({"error": "Forbidden"}, status_code=403)
+        return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
     token: Optional[str] = await request.app.state.db.regen_token(token=authorization.credentials)
     if not token:
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return {"token": token}

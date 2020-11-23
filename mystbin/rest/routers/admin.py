@@ -16,11 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 
 from ..models import errors, responses
@@ -34,12 +34,14 @@ auth_model = HTTPBearer()
     401: {"model": errors.Unauthorized}},
     include_in_schema=False
 )
-async def get_any_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> Union[JSONResponse, Dict[str, str]]:
+async def get_any_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, str]]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
     if not await request.app.state.db.ensure_admin(authorization.credentials):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data: Union[Record, int] = await request.app.state.db.get_user(user_id)
-    return dict(data)
+    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id)
+    if data:
+        return dict(data)
+    return None

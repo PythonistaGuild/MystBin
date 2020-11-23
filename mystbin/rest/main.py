@@ -36,9 +36,9 @@ class MystbinApp(FastAPI):
         self.config: Dict[str, Dict[str, Any]] = toml.load(
             pathlib.Path("config.toml"))
         super().__init__(
-            title="Mystbin",
+            title="MystBin",
             version="3.0.0",
-            description="Mystbin backend server",
+            description="MystBin backend server",
             loop=loop
         )
 
