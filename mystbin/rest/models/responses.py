@@ -22,12 +22,19 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+class _File(BaseModel):
+    content: str
+    filename: str
+    syntax: Optional[str] = None
+    loc: int
+    charcount: int
+
 class PastePostResponse(BaseModel):
     id: str
-    nick: Optional[str] = None
-    syntax: Optional[str] = None
+    author_id: Optional[int] = None
     created_at: datetime
     expires: Optional[datetime] = None
+    files: List[_File]
 
 
 class PastePatchResponse(BaseModel):

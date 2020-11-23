@@ -136,8 +136,8 @@ class Database:
     async def put_paste(self,
                         paste_id: str,
                         content: str,
+                        filename: str = "file.txt",
                         author: Optional[int] = None,
-                        nick: str = "",
                         syntax: str = "",
                         expires_at: datetime.datetime = None,
                         password: Optional[str] = None
@@ -149,10 +149,10 @@ class Database:
             The paste ID we are storing.
         content: :class:`str`
             The paste content.
+        filename: :class:`str`
+            The name of the file.
         author: Optional[:class:`int`]
             The ID of the author, if present.
-        nick: Optional[:class:`str`]
-            The nickname of the paste, if present.
         syntax: Optional[:class:`str`]
             The paste syntax, if present.
         expires_at: Optional[:class:`datetime.datetime`]
@@ -167,26 +167,40 @@ class Database:
         """
         query = """
                 WITH file AS (
-                    INSERT INTO pastes (id, author_id, password, expires)
+                    INSERT INTO pastes (id, author_id, created_at, expires)
                     VALUES
-                    ($1, $2, (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null), $4)
+                    ($1, $2, $3, $4)
                     RETURNING id
                 )
-                INSERT INTO files VALUES ((select id from file), $5, $6, $7, $8) RETURNING index
+                INSERT INTO files (parent_id, content, password, filename, syntax, loc)
+                VALUES ((select id from file), $5, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null), $7, $8, $9)
+                RETURNING index;
                 """
 
         loc = content.count("\n") + 1
         chars = len(content)
+        now = datetime.datetime.utcnow()
 
-        val = await self._do_query(query, paste_id, author, password, expires_at, content, nick, syntax, loc)
+        val = await self._do_query(query,
+                                   paste_id,
+                                   author,
+                                   now,
+                                   expires_at,
+                                   content,
+                                   password,
+                                   filename,
+                                   syntax,
+                                   loc)
+
         # we need to generate our own response here, as we cant get the full response from the single query
         resp = {
             "id": paste_id,
             "author_id": author,
+            "created_at": now,
             "files": [
                 {
                     "content": content,
-                    "nick": nick,
+                    "filename": filename,
                     "syntax": syntax,
                     "loc": loc,
                     "charcount": chars,
