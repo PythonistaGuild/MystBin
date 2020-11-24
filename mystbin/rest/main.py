@@ -48,6 +48,7 @@ app = MystbinApp()
 
 @app.on_event("startup")
 async def app_startup():
+    """ Async app startup. """
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
 
