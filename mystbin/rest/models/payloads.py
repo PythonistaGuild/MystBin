@@ -34,29 +34,28 @@ class _PastePut(BaseModel):
     content: str
     filename: str
     syntax: Optional[str] = None
-    password: Optional[str] = None
 
 class ListedPastePut(BaseModel):
     workspace_name: Optional[str] = None
     expires: Optional[datetime.datetime] = None
-    data: List[_PastePut]
+    password: Optional[str] = None
+    files: List[_PastePut]
 
     class Config:
         schema_extra = {
             "example": {
                 "workspace_name": "string",
                 "expires": "2020-11-16T13:46:49.215Z",
-                "data": [{
+                "password": "string",
+                "files": [{
                     "content": "string",
                     "filename": "string",
                     "syntax": "string",
-                    "password": "string",
                 },
                     {
                     "content": "another_string",
                     "filename": "another_string",
                     "syntax": "another_string",
-                    "password": "another_string",
                 }
                 ]
             }

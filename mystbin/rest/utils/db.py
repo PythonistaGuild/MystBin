@@ -134,12 +134,13 @@ class Database:
 
 
     async def put_paste(self,
+                        *,
                         paste_id: str,
                         content: str,
                         filename: str = "file.txt",
                         author: Optional[int] = None,
                         syntax: str = "",
-                        expires_at: datetime.datetime = None,
+                        expires: datetime.datetime = None,
                         password: Optional[str] = None
                         ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
@@ -155,7 +156,7 @@ class Database:
             The ID of the author, if present.
         syntax: Optional[:class:`str`]
             The paste syntax, if present.
-        expires_at: Optional[:class:`datetime.datetime`]
+        expires: Optional[:class:`datetime.datetime`]
             when the paste should expire, in UTC
         password: Optioanl[:class:`str`]
             The password used to encrypt the paste, if present.
@@ -185,7 +186,7 @@ class Database:
                                    paste_id,
                                    author,
                                    now,
-                                   expires_at,
+                                   expires,
                                    content,
                                    password,
                                    filename,
@@ -197,6 +198,7 @@ class Database:
             "id": paste_id,
             "author_id": author,
             "created_at": now,
+            "expires": expires,
             "files": [
                 {
                     "content": content,
@@ -211,18 +213,25 @@ class Database:
         return resp
 
     async def put_pastes(self,
-                        paste_id: str,
-                        pages: List[Dict[str, str]],
-                        author: Optional[int] = None,
-                        password: Optional[str] = None
-                        ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
+                         *,
+                         paste_id: str,
+                         workspace_name: str,
+                         pages: List[Dict[str, str]],
+                         expires: Optional[datetime.datetime] = None,
+                         author: Optional[int] = None,
+                         password: Optional[str] = None
+                         ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
         paste_id: :class:`str:
             The paste ID we are storing.
+        workspace_name: :class:`str`
+            The workspace name of this Paste.
         pages: List[Dict[:class:`str`, :class:`str`]]
-            The paste content. A list of dictionaries containing `content`, `nick` (optional), and `syntax` (optional) keys
+            The paste content. A list of dictionaries containing `content`, `nick` (optional), and `syntax` (optional) keys.
+        expires: Optional[:class:`datetime.datetime`]
+            The expiry time of this paste, if present.
         author: Optional[:class:`int`]
             The ID of the author, if present.
         password: Optioanl[:class:`str`]
@@ -234,23 +243,27 @@ class Database:
         """
         async with self._pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, password)
-                    VALUES ($1, $2, (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null))
-                    RETURNING id, author_id
+                    INSERT INTO pastes (id, author_id, workspace_name, expires, password)
+                    VALUES ($1, $2, $3, $4, (SELECT crypt($5, gen_salt('bf')) WHERE $5 is not null))
+                    RETURNING id, author_id, created_at, expires
                     """
 
-            resp = await self._do_query(query, paste_id, author, password, conn=conn)
+            resp = await self._do_query(query, paste_id, author, workspace_name, expires, password, conn=conn)
 
             resp = resp[0]
-            qs = []
+            to_insert = []
             for page in pages:
-                qs.append((resp['id'], page['content'], page.get("nick", None), page.get("syntax", None), page['content'].count("\n")))
+                to_insert.append((resp['id'], page.content, page.filename, page.syntax, page.content.count("\n")))
 
-            query = "INSERT INTO paste_content (parent_id, content, nick, syntax, loc) VALUES ($1, $2, $3, $4, $5) RETURNING index, content, loc, charcount, nick, syntax"
-            data = await conn.executemany(query, qs)
+            files_query = "INSERT INTO files (parent_id, content, filename, syntax, loc) VALUES ($1, $2, $3, $4, $5) RETURNING index, filename, loc, charcount, syntax"
+            inserted = []
+            async with conn.transaction():
+                for insert in to_insert:
+                    row = await conn.fetchrow(files_query, *insert)
+                    inserted.append(row)
 
             resp = dict(resp)
-            resp['files'] = [dict(x) for x in data]
+            resp['files'] = [dict(file) for file in inserted]
 
             return resp
 

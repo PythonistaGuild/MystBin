@@ -23,7 +23,6 @@ from pydantic import BaseModel
 
 
 class _File(BaseModel):
-    content: str
     filename: str
     syntax: Optional[str] = None
     loc: int
