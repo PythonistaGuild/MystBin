@@ -61,19 +61,21 @@ async def post_paste(request: Request, payload: payloads.PastePost, authorizatio
     author: Optional[int] = author.get("id", None) if isinstance(
         author, Record) else None
 
-    paste: Record = await request.app.state.db.put_paste(generate_paste_id(),
-                                                         payload.content,
-                                                         payload.filename,
-                                                         author,
-                                                         payload.syntax,
-                                                         payload.expires,
-                                                         payload.password)
+    paste: Record = await request.app.state.db.put_paste(paste_id=generate_paste_id(),
+                                                         content=payload.content,
+                                                         filename=payload.filename,
+                                                         author=author,
+                                                         syntax=payload.syntax,
+                                                         expires=payload.expires,
+                                                         password=payload.password)
 
     return dict(paste)
 
 
-@router.put("/paste", tags=["pastes"], response_model=payloads.ListedPastePut, responses={
-    201: {"model": responses.PastePostResponse}},
+@router.put("/paste", tags=["pastes"], response_model=responses.PastePostResponse, responses={
+    201: {"model": responses.PastePostResponse},
+    400: {"content": {"application/json": {"example": {"error": "You have not supplied any files to insert into a paste."}}}},
+},
     status_code=201,
     name="Create a paste with multiple files.")
 async def post_pastes(request: Request, payload: payloads.ListedPastePut, authorization: Optional[str] = Depends(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
@@ -85,13 +87,20 @@ async def post_pastes(request: Request, payload: payloads.ListedPastePut, author
         if not author:
             return UJSONResponse({"error": "Token provided but no valid user found."}, status_code=403)
 
+    if not payload.data or len(payload.data) < 1:
+        return UJSONResponse({"error": "You have not supplied any files to insert into a paste."}, status_code=400)
+
     author: Optional[int] = author.get("id", None) if isinstance(
         author, Record) else None
 
-    pastes: List[Record] = await request.app.state.db.put_pastes(generate_paste_id(),
-                                                                 payload.data,
-                                                                 author,
-                                                                 payload.nick)
+    pastes: List[Record] = await request.app.state.db.put_pastes(paste_id=generate_paste_id(),
+                                                                 workspace_name=payload.workspace_name,
+                                                                 pages=payload.files,
+                                                                 expires=payload.expires,
+                                                                 author=author,
+                                                                 password=payload.password)
+
+    return dict(pastes)
 
 
 @router.get("/paste/{paste_id}", tags=["pastes"], response_model=List[responses.PasteGetResponse], responses={
