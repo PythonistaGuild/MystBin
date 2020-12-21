@@ -1,6 +1,5 @@
 .Base {
     grid-template-areas: "n n n n n n" /* navbar */
-                         "o o o o o o"
                          "c c c c c c" /* content */
                          "f f f f f f"; /* footer */
     grid-template-rows: min-content min-content auto;
@@ -11,13 +10,6 @@
 
 .Base > nav {
     grid-area: n;
-}
-
-.Base > opts {
-    grid-area: o;
-    background-color: #1B1B1B;
-    color: rgba(255, 255, 255, .9);
-    padding-top: 0.5rem;
 }
 
 .Base > main {
