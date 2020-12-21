@@ -8,6 +8,7 @@
 .optsNavContainer > svg {
     margin-left: 0.5rem;
     margin-right: 0.5rem;
+    color: rgba(255, 255, 255, 80);
 }
 
 .optsNavContainer > svg:hover {

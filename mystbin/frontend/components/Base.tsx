@@ -11,9 +11,6 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
       <nav>
         <NavBar />
       </nav>
-      <opts>
-        <OptsBar />
-      </opts>
       <main className={className}>{children}</main>
       <footer></footer>
     </div>
