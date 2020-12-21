@@ -2,14 +2,20 @@ name: Analyze
 
 on:
   pull_request:
+    branches: [main]
   push:
   schedule:
   - cron: "0 0 * * *"
 
 jobs:
-  job:
+  analyze:
     name: Analyze
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
 
     steps:
     - name: Checkout
@@ -17,6 +23,8 @@ jobs:
 
     - name: Init CodeQL
       uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
 
     - name: Analyze
       uses: github/codeql-action/analyze@v1
