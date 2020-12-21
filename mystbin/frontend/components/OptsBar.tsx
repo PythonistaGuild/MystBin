@@ -50,11 +50,11 @@ export default function OptsBar() {
               </Popover>
             }
           >
+            <div className={styles.optsIconContainer}>
             {obj.icon}
+            </div>
           </OverlayTrigger>
         ))}
-
-        <div className={styles.optsDivider} />
 
         {opts.map((obj) => (
           <OverlayTrigger
@@ -72,7 +72,9 @@ export default function OptsBar() {
               </Popover>
             }
           >
-            {obj.icon}
+            <div className={styles.optsIconContainer}>
+              {obj.icon}
+            </div>
           </OverlayTrigger>
         ))}
       </Nav>
