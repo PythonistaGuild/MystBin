@@ -99,7 +99,8 @@ class Database:
                 """
                 contents = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
-                resp['pastes'] = [{a: str(b) for a, b in x.items()} for x in contents]
+                resp['pastes'] = [{a: str(b) for a, b in x.items()}
+                                  for x in contents]
 
                 return resp
             else:
@@ -132,7 +133,6 @@ class Database:
             else:
                 return None
 
-
     async def put_paste(self,
                         *,
                         paste_id: str,
@@ -157,7 +157,7 @@ class Database:
         syntax: Optional[:class:`str`]
             The paste syntax, if present.
         expires: Optional[:class:`datetime.datetime`]
-            when the paste should expire, in UTC
+            The expiry time of this paste, if present.
         password: Optioanl[:class:`str`]
             The password used to encrypt the paste, if present.
 
@@ -182,16 +182,16 @@ class Database:
         chars = len(content)
         now = datetime.datetime.utcnow()
 
-        val = await self._do_query(query,
-                                   paste_id,
-                                   author,
-                                   now,
-                                   expires,
-                                   content,
-                                   password,
-                                   filename,
-                                   syntax,
-                                   loc)
+        await self._do_query(query,
+                             paste_id,
+                             author,
+                             now,
+                             expires,
+                             content,
+                             password,
+                             filename,
+                             syntax,
+                             loc)
 
         # we need to generate our own response here, as we cant get the full response from the single query
         resp = {
@@ -201,12 +201,10 @@ class Database:
             "expires": expires,
             "files": [
                 {
-                    "content": content,
                     "filename": filename,
                     "syntax": syntax,
                     "loc": loc,
                     "charcount": chars,
-                    "index": val[0]['index']
                 }
             ]
         }
@@ -229,7 +227,7 @@ class Database:
         workspace_name: :class:`str`
             The workspace name of this Paste.
         pages: List[Dict[:class:`str`, :class:`str`]]
-            The paste content. A list of dictionaries containing `content`, `nick` (optional), and `syntax` (optional) keys.
+            The paste content. A list of dictionaries containing `content`, `filename, and `syntax` (optional) keys.
         expires: Optional[:class:`datetime.datetime`]
             The expiry time of this paste, if present.
         author: Optional[:class:`int`]
@@ -239,7 +237,7 @@ class Database:
 
         Returns
         ---------
-        Dict[:class:`str`, Any]
+        Dict[str, Optional[Union[str, int, datetime.datetime]]]
         """
         async with self._pool.acquire() as conn:
             query = """
@@ -253,9 +251,14 @@ class Database:
             resp = resp[0]
             to_insert = []
             for page in pages:
-                to_insert.append((resp['id'], page.content, page.filename, page.syntax, page.content.count("\n")))
+                to_insert.append(
+                    (resp['id'], page.content, page.filename, page.syntax, page.content.count("\n")))
 
-            files_query = "INSERT INTO files (parent_id, content, filename, syntax, loc) VALUES ($1, $2, $3, $4, $5) RETURNING index, filename, loc, charcount, syntax"
+            files_query = """
+                          INSERT INTO files (parent_id, content, filename, syntax, loc)
+                          VALUES ($1, $2, $3, $4, $5)
+                          RETURNING index, filename, loc, charcount, syntax
+                          """
             inserted = []
             async with conn.transaction():
                 for insert in to_insert:
@@ -305,17 +308,17 @@ class Database:
         return response[0] if response else None
 
     async def edit_pastes(self,
-                        paste_id: str,
-                        pages: List[Dict[str, str]],
-                        author: int,
-                        password: Optional[str] = None
-                        ) -> Optional[Dict[str, Union[str, List[Dict[str, str]]]]]:
+                          paste_id: str,
+                          pages: List[Dict[str, str]],
+                          author: int,
+                          password: Optional[str] = None
+                          ) -> Optional[Dict[str, Union[str, List[Dict[str, str]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
         paste_id: :class:`str:
             The paste ID we are storing.
-        pages: List[Dict[str, str]
+        pages: List[Dict[:class:`str`, :class:`str`]
             The paste content.
         author: Optional[:class:`int`]
             The ID of the author, if present.
@@ -329,9 +332,10 @@ class Database:
         """
         async with self._pool.acquire() as conn:
             query = """
-                    UPDATE pastes SET
-                    last_edited = NOW() at time zone 'UTC'
-                    WHERE id = $1 AND author_id = $2 AND password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null)
+                    UPDATE pastes
+                    SET last_edited = NOW() AT TIME ZONE 'UTC'
+                    WHERE id = $1 AND author_id = $2
+                    AND password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null)
                     RETURNING *
                     """
 
@@ -342,9 +346,16 @@ class Database:
             resp = resp[0]
             qs = []
             for page in pages:
-                qs.append((page['content'], page['content'].count("\n"), len(page['content']), paste_id, page['index']))
+                qs.append((page['content'], page['content'].count(
+                    "\n"), len(page['content']), paste_id, page['index']))
 
-            query = "UPDATE paste_content SET content = $1, loc = $2, charcount = $3 WHERE parent_id = $4 AND index = $5 RETURNING content, loc, charcount, index"
+            query = """
+                    UPDATE paste_content
+                    SET content = $1, loc = $2, charcount = $3
+                    WHERE parent_id = $4
+                    AND index = $5
+                    RETURNING content, loc, charcount, index
+                    """
             data = await conn.executemany(query, qs)
 
             resp = dict(resp)
