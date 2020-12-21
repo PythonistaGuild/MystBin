@@ -49,16 +49,16 @@ CREATE TRIGGER oldPastesExpiry
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldPastes();
 
-CREATE OR REPLACE FUNCTION setLastEditTime() RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE pastes SET last_edited = now() AT TIME ZONE 'utc' WHERE id = NEW.id;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE OR REPLACE FUNCTION setLastEditTime() RETURNS TRIGGER AS $$
+-- BEGIN
+--     UPDATE pastes SET last_edited = now() AT TIME ZONE 'utc' WHERE id = NEW.id;
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS lastEditTime on public.pastes;
-CREATE TRIGGER lastEditTime
-    AFTER UPDATE
-    ON pastes
-    FOR EACH ROW
-    EXECUTE PROCEDURE setLastEditTime();
+-- DROP TRIGGER IF EXISTS lastEditTime on public.pastes;
+-- CREATE TRIGGER lastEditTime
+--     AFTER UPDATE
+--     ON pastes
+--     FOR EACH ROW
+--     EXECUTE PROCEDURE setLastEditTime();
