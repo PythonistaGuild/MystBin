@@ -22,7 +22,7 @@ from random import sample
 from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request, Security
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 
@@ -48,7 +48,7 @@ def generate_paste_id():
     status_code=201,
     name="Create a paste with a single file."
 )
-async def post_paste(request: Request, payload: payloads.PastePost, authorization: Optional[str] = Depends(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
+async def post_paste(request: Request, payload: payloads.PastePost, authorization: Optional[str] = Security(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
     """Post a paste to MystBin.
     This endpoint accepts a single file."""
     author = None
@@ -78,7 +78,7 @@ async def post_paste(request: Request, payload: payloads.PastePost, authorizatio
 },
     status_code=201,
     name="Create a paste with multiple files.")
-async def post_pastes(request: Request, payload: payloads.ListedPastePut, authorization: Optional[str] = Depends(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
+async def put_pastes(request: Request, payload: payloads.ListedPastePut, authorization: Optional[str] = Security(optional_auth_model)) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
     ...
@@ -87,7 +87,7 @@ async def post_pastes(request: Request, payload: payloads.ListedPastePut, author
         if not author:
             return UJSONResponse({"error": "Token provided but no valid user found."}, status_code=403)
 
-    if not payload.data or len(payload.data) < 1:
+    if not payload.files or len(payload.files) < 1:
         return UJSONResponse({"error": "You have not supplied any files to insert into a paste."}, status_code=400)
 
     author: Optional[int] = author.get("id", None) if isinstance(
@@ -103,8 +103,8 @@ async def post_pastes(request: Request, payload: payloads.ListedPastePut, author
     return dict(pastes)
 
 
-@router.get("/paste/{paste_id}", tags=["pastes"], response_model=List[responses.PasteGetResponse], responses={
-    200: {"model": List[responses.PasteGetResponse]},
+@router.get("/paste/{paste_id}", tags=["pastes"], response_model=responses.PasteGetResponse, responses={
+    200: {"model": responses.PasteGetResponse},
     401: {"model": errors.Unauthorized},
     404: {"model": errors.NotFound}},
     name="Retrieve paste file(s)"
@@ -115,15 +115,7 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
     if pastes is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
-    return_pastes = []
-    for paste in pastes:
-        # TODO: New paste authentication logic AND transformation logic if needed?
-        # if paste['has_password'] and not paste['password_ok']:
-        #     return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-        return_pastes.append(dict(paste))
-
-    # TODO so far we still need `content` returned
-    return return_pastes
+    return pastes
 
 
 @router.get("/pastes", tags=["pastes"], response_model=List[responses.PasteGetAllResponse], responses={
@@ -131,7 +123,7 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
     403: {"model": errors.Forbidden}},
     name="Get multiple pastes"
 )
-async def get_all_pastes(request: Request, limit: Optional[int] = None, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
+async def get_all_pastes(request: Request, limit: Optional[int] = None, authorization: str = Security(auth_model)) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
     """Get all pastes for a specified author.
     * Requires authentication.
     """
@@ -160,7 +152,7 @@ async def get_all_pastes(request: Request, limit: Optional[int] = None, authoriz
     404: {"model": errors.NotFound}},
     name="Edit paste"
 )
-async def edit_paste(request: Request, paste_id: str, payload: payloads.PastePatch, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
+async def edit_paste(request: Request, paste_id: str, payload: payloads.PastePatch, authorization: str = Security(auth_model)) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     """Edit a paste on MystBin.
     * Requires authentication.
     """
@@ -185,7 +177,7 @@ async def edit_paste(request: Request, paste_id: str, payload: payloads.PastePat
     status_code=200,
     name="Delete paste"
 )
-async def delete_paste(request: Request, paste_id: str = None, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, str]]:
+async def delete_paste(request: Request, paste_id: str = None, authorization: str = Security(auth_model)) -> Union[UJSONResponse, Dict[str, str]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
     """
@@ -193,7 +185,7 @@ async def delete_paste(request: Request, paste_id: str = None, authorization: st
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
     author: Union[Record, int] = await request.app.state.db.get_user(token=authorization.credentials)
-    if not author or author in {400, 401}:
+    if not author or author in [400, 401]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     is_owner: bool = await request.app.state.db.ensure_author(paste_id, author['id'])
@@ -204,6 +196,7 @@ async def delete_paste(request: Request, paste_id: str = None, authorization: st
 
     return UJSONResponse({"deleted": deleted['id']}, status_code=200)
 
+
 @router.delete("/paste", tags=["pastes"], responses={
     200: {"content": {"application/json": {"example": {"succeeded": ["SomePasteID"], "failed": ["OtherPasteID"]}}}},
     401: {"model": errors.Unauthorized},
@@ -211,7 +204,7 @@ async def delete_paste(request: Request, paste_id: str = None, authorization: st
     status_code=200,
     name="Delete pastes"
 )
-async def delete_pastes(request: Request, payload: payloads.PasteDelete, authorization: str = Depends(auth_model)) -> Union[UJSONResponse, Dict[str, List[str]]]:
+async def delete_pastes(request: Request, payload: payloads.PasteDelete, authorization: str = Security(auth_model)) -> Union[UJSONResponse, Dict[str, List[str]]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
     """
