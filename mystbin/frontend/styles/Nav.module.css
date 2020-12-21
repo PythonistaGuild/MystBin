@@ -1,7 +1,4 @@
 .logo {
     width: 7rem;
-    position: absolute;
-    left: 0;
-    right: 0;
-    margin: 0.25rem auto auto auto;
+    float: left;
 }
