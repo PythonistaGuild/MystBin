@@ -50,9 +50,7 @@ export default function OptsBar() {
               </Popover>
             }
           >
-            <div className={styles.optsIconContainer}>
-            {obj.icon}
-            </div>
+            <div className={styles.optsIconContainer}>{obj.icon}</div>
           </OverlayTrigger>
         ))}
 
@@ -72,9 +70,7 @@ export default function OptsBar() {
               </Popover>
             }
           >
-            <div className={styles.optsIconContainer}>
-              {obj.icon}
-            </div>
+            <div className={styles.optsIconContainer}>{obj.icon}</div>
           </OverlayTrigger>
         ))}
       </Nav>
