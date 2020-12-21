@@ -31,8 +31,6 @@ EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 class Database:
     """Small Database style object for MystBin usage.
     This will be passed across the backend for database usage.
-
-    # TODO: Document methods and attrs.
     """
     timeout = 30
 
@@ -168,13 +166,12 @@ class Database:
         """
         query = """
                 WITH file AS (
-                    INSERT INTO pastes (id, author_id, created_at, expires)
-                    VALUES
-                    ($1, $2, $3, $4)
+                    INSERT INTO pastes (id, author_id, created_at, expires, password)
+                    VALUES ($1, $2, $3, $4, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null))
                     RETURNING id
                 )
-                INSERT INTO files (parent_id, content, password, filename, syntax, loc)
-                VALUES ((select id from file), $5, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null), $7, $8, $9)
+                INSERT INTO files (parent_id, content, filename, syntax, loc)
+                VALUES ((select id from file), $5, $7, $8, $9)
                 RETURNING index;
                 """
 
@@ -249,6 +246,7 @@ class Database:
             resp = await self._do_query(query, paste_id, author, workspace_name, expires, password, conn=conn)
 
             resp = resp[0]
+            print(resp)
             to_insert = []
             for page in pages:
                 to_insert.append(

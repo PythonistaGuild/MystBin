@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 class _File(BaseModel):
     filename: str
+    content: str
     syntax: Optional[str] = None
     loc: int
     charcount: int
@@ -44,11 +45,14 @@ class PastePatchResponse(BaseModel):
 
 class PasteGetResponse(BaseModel):
     id: str
-    content: str
+    workspace_name: str
     nick: Optional[str] = None
     syntax: Optional[str] = None
     created_at: datetime
     expires: Optional[datetime] = None
+    last_edited: Optional[datetime] = None
+    views: int
+    pastes: List[_File]
 
 
 class PasteGetAllResponse(BaseModel):
