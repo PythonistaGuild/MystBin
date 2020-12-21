@@ -12,7 +12,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [currTab, setCurrTab] = useState(0);
   const [lang, setLang] = useState(Array(5).fill("none"));
   const [charCountToast, setCharCountToast] = useState(false);
-  const [passwordModal, setPasswordModal] = useState(true);
+  const [passwordModal, setPasswordModal] = useState(!!password);
 
   return (
     <>
