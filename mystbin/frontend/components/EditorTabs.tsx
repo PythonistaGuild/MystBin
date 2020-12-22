@@ -4,7 +4,7 @@ import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
 import LockIcon from "@material-ui/icons/Lock";
 import Toast from "react-bootstrap/Toast";
-import { Form, Modal } from "react-bootstrap";
+import {Button, Form, Modal} from "react-bootstrap";
 import Link from "next/link";
 
 export default function EditorTabs({ password, initialData, dummyData }) {
@@ -12,6 +12,8 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!password);
+  const [passwordAttempt, setPasswordAttempt] = useState("");
+  const [shake, setShake] = useState("");
 
   let initialLangs = []
   value.map(function (v, i) {
@@ -25,6 +27,17 @@ export default function EditorTabs({ password, initialData, dummyData }) {
 
   const [lang, setLang] = useState(initialLangs);
 
+  const handlePasswordAttempt = e => {
+    if (passwordAttempt === password) {
+      setPasswordModal(false);
+      setValue(dummyData);
+    }
+    else {
+      setShake(styles.shakeModal);
+      setTimeout(function() { setShake(""); }, 500);
+    }
+  }
+
   return (
     <>
       <Modal
@@ -33,7 +46,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
         keyboard={false}
         aria-labelledby="contained-modal-title-vcenter"
         centered
-        className={styles.passwordModal}
+        className={styles.passwordModal + " " + shake}
       >
         <Modal.Header className={styles.passwordModalHeader}>
           <Modal.Title
@@ -52,24 +65,25 @@ export default function EditorTabs({ password, initialData, dummyData }) {
               <Form.Control
                 type="password"
                 placeholder="Password"
+                onChange={(event) => {
+                  setPasswordAttempt(event.currentTarget.value);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
+                    handlePasswordAttempt(e);
+                    }
                   }
-                }}
-                onChange={(e) => {
-                  if (e.currentTarget.value === password) {
-                    setPasswordModal(false);
-
-                    setValue(dummyData);
-                  }
-                }}
+                }
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Link href={"/"}>Return to home</Link>
+          <Button variant="info"
+                  type="submit"
+                  onClick={handlePasswordAttempt}>Submit</Button>
         </Modal.Footer>
       </Modal>
       <div>
