@@ -4,7 +4,7 @@ import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
 import LockIcon from "@material-ui/icons/Lock";
 import Toast from "react-bootstrap/Toast";
-import {Button, Form, Modal} from "react-bootstrap";
+import { Button, Form, Modal } from "react-bootstrap";
 import Link from "next/link";
 
 export default function EditorTabs({ password, initialData, dummyData }) {
@@ -15,28 +15,28 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [passwordAttempt, setPasswordAttempt] = useState("");
   const [shake, setShake] = useState("");
 
-  let initialLangs = []
+  let initialLangs = [];
   value.map(function (v, i) {
     if (v["title"].endsWith(".py")) {
-      initialLangs.push("python")
+      initialLangs.push("python");
+    } else {
+      initialLangs.push("none");
     }
-    else {
-      initialLangs.push("none")
-    }
-  })
+  });
 
   const [lang, setLang] = useState(initialLangs);
 
-  const handlePasswordAttempt = e => {
+  const handlePasswordAttempt = (e) => {
     if (passwordAttempt === password) {
       setPasswordModal(false);
       setValue(dummyData);
-    }
-    else {
+    } else {
       setShake(styles.shakeModal);
-      setTimeout(function() { setShake(""); }, 500);
+      setTimeout(function () {
+        setShake("");
+      }, 500);
     }
-  }
+  };
 
   return (
     <>
@@ -72,18 +72,17 @@ export default function EditorTabs({ password, initialData, dummyData }) {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     handlePasswordAttempt(e);
-                    }
                   }
-                }
+                }}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Link href={"/"}>Return to home</Link>
-          <Button variant="info"
-                  type="submit"
-                  onClick={handlePasswordAttempt}>Submit</Button>
+          <Button variant="info" type="submit" onClick={handlePasswordAttempt}>
+            Submit
+          </Button>
         </Modal.Footer>
       </Modal>
       <div>
