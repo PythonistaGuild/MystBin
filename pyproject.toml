@@ -13,7 +13,7 @@ asyncpg = "^0.21.0"
 fastapi = "^0.61.1"
 toml = "^0.10.2"
 aiohttp = "^3.7.2"
-PyJWT = "^1.7.1"
+PyJWT = "^2.0.0"
 pycryptodome = "^3.9.9"
 
 [tool.poetry.dev-dependencies]
