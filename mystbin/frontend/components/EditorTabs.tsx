@@ -1,17 +1,17 @@
-import { PropsWithoutRef, useState } from "react";
+import { useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
-import LockIcon from "@material-ui/icons/Lock";
-import { Button, Form, Modal, Toast } from "react-bootstrap";
-import Link from "next/link";
+import { Toast } from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
+import AES from "crypto-js/aes";
+import Utf8 from "crypto-js/enc-utf8";
 
-export default function EditorTabs({ password, initialData, dummyData }) {
+export default function EditorTabs({ initialData, encryptedPayload }) {
   const [value, setValue] = useState<Record<string, string>[]>(initialData);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
-  const [passwordModal, setPasswordModal] = useState(!!password);
+  const [passwordModal, setPasswordModal] = useState(!!encryptedPayload);
   const [shake, setShake] = useState(false);
 
   let initialLangs = [];
@@ -26,10 +26,12 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [lang, setLang] = useState(initialLangs);
 
   const handlePasswordAttempt = (attempt: string) => {
-    if (attempt === password) {
+    let decryptedBytes = AES.decrypt(encryptedPayload, attempt);
+    try {
+      let actualData = JSON.parse(decryptedBytes.toString(Utf8));
       setPasswordModal(false);
-      setValue(dummyData);
-    } else {
+      setValue(actualData);
+    } catch {
       setShake(true);
       setTimeout(function () {
         setShake(false);

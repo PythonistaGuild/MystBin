@@ -1,7 +1,7 @@
 import LockIcon from "@material-ui/icons/Lock";
 import { Button, Modal } from "react-bootstrap";
 import Link from "next/link";
-import styles from "../styles/EditorTabs.module.css";
+import styles from "../styles/PasswordModal.module.css";
 import { useState } from "react";
 import PasswordInput from "./PasswordInput";
 
@@ -23,7 +23,15 @@ export default function PasswordModal({
       keyboard={false}
       aria-labelledby="contained-modal-title-vcenter"
       centered
-      className={styles.passwordModal + " " + (shake && styles.shakeModal)}
+      className={styles.passwordModal}
+      style={
+        shake
+          ? {
+              animation: "shake 0.5s",
+              animationIterationCount: 1,
+            }
+          : {}
+      }
     >
       <Modal.Header className={styles.passwordModalHeader}>
         <Modal.Title
@@ -38,7 +46,7 @@ export default function PasswordModal({
         This paste is password protected. Please enter the password to continue.
         <PasswordInput
           value={passwordAttempt}
-          onChange={(value) => setPasswordAttempt(value)}
+          onChange={setPasswordAttempt}
           onSubmit={onAttempt}
         />
       </Modal.Body>
