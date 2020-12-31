@@ -39,7 +39,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
     { title: "other.py", content: "print('other.py')" },
   ];
 
-  var encryptedPayload = AES.encrypt(JSON.stringify(dummyData), password).toString();
+  var encryptedPayload = AES.encrypt(
+    JSON.stringify(dummyData),
+    password
+  ).toString();
 
   if (password) {
     initialData = [

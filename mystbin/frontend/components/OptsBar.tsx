@@ -16,18 +16,18 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveAltIcon />,
       callback: () => {
-        alert('test!');
+        alert("test!");
       },
-      hotKey: 'ctrl+s',
+      hotKey: "ctrl+s",
     },
     {
       title: "Edit Paste",
       content: "Copy and Edit this paste as a new paste.",
       icon: <EditIcon />,
       callback: () => {
-        alert('test2!');
+        alert("test2!");
       },
-      hotKey: 'ctrl+e',
+      hotKey: "ctrl+e",
     },
   ];
   const opts = [
@@ -36,8 +36,8 @@ export default function OptsBar() {
       content: "Create a password for this paste and all its files.",
       optional: true,
       icon: <EnhancedEncryptionIcon />,
-      callback: () => alert('test3'),
-      hotKey: 'ctrl+d',
+      callback: () => alert("test3"),
+      hotKey: "ctrl+d",
     },
     {
       title: "Create Expiry",
@@ -45,13 +45,13 @@ export default function OptsBar() {
       optional: true,
       icon: <HourglassFullIcon />,
       callback: () => setShowModal(true),
-      hotKey: 'ctrl+shift+e',
+      hotKey: "ctrl+shift+e",
     },
   ];
 
   actions.forEach(({ callback, hotKey }) => {
     useHotkeys(hotKey, callback);
-  })
+  });
 
   return (
     <div>
@@ -86,7 +86,12 @@ export default function OptsBar() {
                 </Popover>
               }
             >
-              <div className={styles.optsIconContainer} onClick={() => obj.callback()}>{obj.icon}</div>
+              <div
+                className={styles.optsIconContainer}
+                onClick={() => obj.callback()}
+              >
+                {obj.icon}
+              </div>
             </OverlayTrigger>
           ))}
 
