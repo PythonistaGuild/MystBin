@@ -32,7 +32,7 @@ export default function Home(
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const password = "";
+  const password = "abc";
   let initialData;
   let dummyData = [
     { title: "test.py", content: "print('Hello World!')" },
