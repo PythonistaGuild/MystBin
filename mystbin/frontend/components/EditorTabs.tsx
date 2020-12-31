@@ -3,20 +3,19 @@ import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
 import LockIcon from "@material-ui/icons/Lock";
-import Toast from "react-bootstrap/Toast";
-import { Button, Form, Modal } from "react-bootstrap";
+import { Button, Form, Modal, Toast } from "react-bootstrap";
 import Link from "next/link";
+import PasswordModal from "./PasswordModal";
 
 export default function EditorTabs({ password, initialData, dummyData }) {
-  const [value, setValue] = useState(initialData);
+  const [value, setValue] = useState<Record<string, string>[]>(initialData);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!password);
-  const [passwordAttempt, setPasswordAttempt] = useState("");
-  const [shake, setShake] = useState("");
+  const [shake, setShake] = useState(false);
 
   let initialLangs = [];
-  value.map(function (v, i) {
+  value.map(function (v) {
     if (v["title"].endsWith(".py")) {
       initialLangs.push("python");
     } else {
@@ -26,68 +25,28 @@ export default function EditorTabs({ password, initialData, dummyData }) {
 
   const [lang, setLang] = useState(initialLangs);
 
-  const handlePasswordAttempt = (e) => {
-    if (passwordAttempt === password) {
+  const handlePasswordAttempt = (attempt: string) => {
+    if (attempt === password) {
       setPasswordModal(false);
       setValue(dummyData);
     } else {
-      setShake(styles.shakeModal);
+      setShake(true);
       setTimeout(function () {
-        setShake("");
+        setShake(false);
       }, 500);
     }
   };
 
   return (
     <>
-      <Modal
+      <PasswordModal
         show={passwordModal}
-        backdrop="static"
-        keyboard={false}
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-        className={styles.passwordModal + " " + shake}
-      >
-        <Modal.Header className={styles.passwordModalHeader}>
-          <Modal.Title
-            id={"contained-modal-title-vcenter"}
-            className={styles.passwordModalTitle}
-          >
-            Password Protected
-            <LockIcon />
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          This paste is password protected. Please enter the password to
-          continue.
-          <Form>
-            <Form.Group controlId="pastePassword">
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                onChange={(event) => {
-                  setPasswordAttempt(event.currentTarget.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handlePasswordAttempt(e);
-                  }
-                }}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Link href={"/"}>Return to home</Link>
-          <Button variant="info" type="submit" onClick={handlePasswordAttempt}>
-            Submit
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        shake={shake}
+        onAttempt={handlePasswordAttempt}
+      />
       <div>
         <div className={styles.tabsContainer}>
-          {value.map((v, i) => (
+          {value.map((_, i) => (
             <div className={currTab === i ? styles.tabsSelected : styles.tabs}>
               <div
                 onClick={() => setCurrTab(i)}
@@ -133,7 +92,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
               {value.length > 1 ? (
                 <button
                   className={styles.tabsCloseButton}
-                  onClick={(event) => {
+                  onClick={() => {
                     let newValue = [...value];
                     let newLang = [...lang];
 
@@ -175,7 +134,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
           )}
         </div>
 
-        {value.map((v, i) => (
+        {value.map((_, i) => (
           <div
             style={{
               display: currTab === i ? "block" : "none",
@@ -184,7 +143,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
           >
             <MonacoEditor
               language={lang[i]}
-              onChange={(ev, newVal) => {
+              onChange={(_, newVal) => {
                 if (newVal.length > 300000) {
                   setCharCountToast(true);
                   newVal = newVal.slice(0, 300000);

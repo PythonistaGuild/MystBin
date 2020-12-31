@@ -42,7 +42,7 @@ export default function OptsBar() {
             key={`opt-${obj.title}`}
             placement={"bottom"}
             overlay={
-              <Popover>
+              <Popover id={`opt-${obj.title}`}>
                 <Popover.Title className={styles.popoverHeader} as="h3">
                   {obj.title}
                 </Popover.Title>
@@ -59,7 +59,7 @@ export default function OptsBar() {
             key={`opt-${obj.title}`}
             placement={"bottom"}
             overlay={
-              <Popover>
+              <Popover id={`opt-${obj.title}`}>
                 <Popover.Title className={styles.popoverHeader} as="h3">
                   {obj.title}
                 </Popover.Title>
