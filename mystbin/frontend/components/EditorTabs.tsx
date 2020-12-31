@@ -3,6 +3,8 @@ import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
 import LockIcon from "@material-ui/icons/Lock";
+import VisibilityOffIcon from "@material-ui/icons/VisibilityOff"
+import VisibilityIcon from "@material-ui/icons/Visibility"
 import Toast from "react-bootstrap/Toast";
 import { Button, Form, Modal } from "react-bootstrap";
 import Link from "next/link";
@@ -13,6 +15,7 @@ export default function EditorTabs({ password, initialData, dummyData }) {
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!password);
   const [passwordAttempt, setPasswordAttempt] = useState("");
+  const [passwordHide, setPasswordHide] = useState(true);
   const [shake, setShake] = useState("");
 
   let initialLangs = [];
@@ -61,9 +64,10 @@ export default function EditorTabs({ password, initialData, dummyData }) {
           This paste is password protected. Please enter the password to
           continue.
           <Form>
-            <Form.Group controlId="pastePassword">
+            <Form.Group controlId="pastePassword" className={styles.passwordGroup}>
               <Form.Control
-                type="password"
+                className={styles.passwordInput}
+                type={passwordHide ? 'password' : 'text'}
                 placeholder="Password"
                 onChange={(event) => {
                   setPasswordAttempt(event.currentTarget.value);
@@ -75,6 +79,12 @@ export default function EditorTabs({ password, initialData, dummyData }) {
                   }
                 }}
               />
+              <span
+                  className={passwordHide ? styles.passwordVisibilityTrue : styles.passwordVisibilityFalse}
+                  onClick={(e) => setPasswordHide(!passwordHide)}
+              >
+                {passwordHide ? <VisibilityIcon/> : <VisibilityOffIcon/>}
+              </span>
             </Form.Group>
           </Form>
         </Modal.Body>
