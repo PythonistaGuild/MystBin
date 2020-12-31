@@ -1,5 +1,7 @@
 import LockIcon from "@material-ui/icons/Lock";
 import { Button, Form, Modal } from "react-bootstrap";
+import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
+import VisibilityIcon from "@material-ui/icons/Visibility";
 import Link from "next/link";
 import styles from "../styles/EditorTabs.module.css";
 import { useState } from "react";
@@ -13,7 +15,8 @@ export default function PasswordModal({
   shake: boolean;
   onAttempt: (arg0: string) => void;
 }) {
-  let [passwordAttempt, setPasswordAttempt] = useState("");
+  const [passwordAttempt, setPasswordAttempt] = useState("");
+  const [passwordHide, setPasswordHide] = useState(true);
 
   return (
     <Modal
@@ -36,9 +39,13 @@ export default function PasswordModal({
       <Modal.Body>
         This paste is password protected. Please enter the password to continue.
         <Form>
-          <Form.Group controlId="pastePassword">
+          <Form.Group
+            controlId="pastePassword"
+            className={styles.passwordGroup}
+          >
             <Form.Control
-              type="password"
+              className={styles.passwordInput}
+              type={passwordHide ? "password" : "text"}
               placeholder="Password"
               onChange={(event) => {
                 setPasswordAttempt(event.currentTarget.value);
@@ -50,6 +57,16 @@ export default function PasswordModal({
                 }
               }}
             />
+            <span
+              className={
+                passwordHide
+                  ? styles.passwordVisibilityTrue
+                  : styles.passwordVisibilityFalse
+              }
+              onClick={(e) => setPasswordHide(!passwordHide)}
+            >
+              {passwordHide ? <VisibilityIcon /> : <VisibilityOffIcon />}
+            </span>
           </Form.Group>
         </Form>
       </Modal.Body>

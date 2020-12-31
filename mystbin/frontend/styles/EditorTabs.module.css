@@ -107,11 +107,56 @@
 
 .passwordModalHeader {
     background-color: #F7665E;
+    width: 100%;
+}
+
+.passwordModalTitle {
+    width: 100%;
+}
+
+.passwordGroup {
+    display: flex;
+}
+
+.passwordInput {
+    display: flex;
+    border-radius: 5px 0 0 5px;
+    border: solid 1px #CED4DA;
+    border-right: none;
+    opacity: 80%;
 }
 
 .passwordModalTitle > svg {
-    margin-bottom: 0.4rem;
-    margin-left: 1rem;
+    float: right;
+    margin-top: 0.4rem;
+}
+
+.passwordVisibilityTrue {
+    color: #202225;
+    float: right;
+    opacity: 80%;
+    cursor: pointer;
+    display: flex;
+    margin: auto;
+    border-right: solid 1px #CED4DA;
+    border-top: solid 1px #CED4DA;
+    border-bottom: solid 1px #CED4DA;
+    border-radius: 0 5px 5px 0;
+    padding: 6px;
+}
+
+.passwordVisibilityFalse {
+    color: grey;
+    float: right;
+    opacity: 80%;
+    cursor: pointer;
+    display: flex;
+    margin: auto;
+    border-right: solid 1px #CED4DA;
+    border-top: solid 1px #CED4DA;
+    border-bottom: solid 1px #CED4DA;
+    border-radius: 0 5px 5px 0;
+    padding: 6px;
 }
 
 .shakeModal {
