@@ -4,15 +4,16 @@ import Base from "../components/Base";
 import styles from "../styles/Home.module.css";
 import { PropsWithoutRef } from "react";
 import { GetServerSideProps } from "next";
+import AES from "crypto-js/aes";
 
 const PostMonacoEditor = dynamic(() => import("../components/EditorTabs"), {
   ssr: false,
 });
 
 export default function Home(
-  props: PropsWithoutRef<{ password; initialData; dummyData }>
+  props: PropsWithoutRef<{ initialData; encryptedPayload }>
 ) {
-  const { password, initialData, dummyData } = props;
+  const { initialData, encryptedPayload } = props;
 
   return (
     <div>
@@ -22,22 +23,23 @@ export default function Home(
       </Head>
       <Base className={styles.Tabs}>
         <PostMonacoEditor
-          password={password}
           initialData={initialData}
-          dummyData={dummyData}
+          encryptedPayload={encryptedPayload}
         />
       </Base>
     </div>
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const password = "abc";
   let initialData;
   let dummyData = [
     { title: "test.py", content: "print('Hello World!')" },
     { title: "other.py", content: "print('other.py')" },
   ];
+
+  var encryptedPayload = AES.encrypt(JSON.stringify(dummyData), password).toString();
 
   if (password) {
     initialData = [
@@ -49,9 +51,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      password,
       initialData,
-      dummyData,
+      encryptedPayload,
     },
   };
 };
