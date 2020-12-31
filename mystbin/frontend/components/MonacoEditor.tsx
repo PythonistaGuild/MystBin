@@ -66,7 +66,7 @@ monaco.init().then((monaco) => {
       { token: "predefined.sql", foreground: "FF00FF" },
     ],
     colors: {
-      "editor.background": "#202225",
+      "editor.background": "#2B2B2B",
     },
   });
 });
