@@ -5,6 +5,7 @@ import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveAltIcon from "@material-ui/icons/SaveAlt";
 import EditIcon from "@material-ui/icons/Edit";
 import styles from "../styles/OptsBar.module.css";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export default function OptsBar() {
   const [showModal, setShowModal] = useState(false);
@@ -14,11 +15,19 @@ export default function OptsBar() {
       title: "Save Paste",
       content: "Save this paste and all its files.",
       icon: <SaveAltIcon />,
+      callback: () => {
+        alert('test!');
+      },
+      hotKey: 'ctrl+s',
     },
     {
       title: "Edit Paste",
       content: "Copy and Edit this paste as a new paste.",
       icon: <EditIcon />,
+      callback: () => {
+        alert('test2!');
+      },
+      hotKey: 'ctrl+e',
     },
   ];
   const opts = [
@@ -27,15 +36,22 @@ export default function OptsBar() {
       content: "Create a password for this paste and all its files.",
       optional: true,
       icon: <EnhancedEncryptionIcon />,
+      callback: () => alert('test3'),
+      hotKey: 'ctrl+d',
     },
     {
       title: "Create Expiry",
       content: "Create a expiry date for this paste and all its files.",
       optional: true,
       icon: <HourglassFullIcon />,
-      action: () => setShowModal(true),
+      callback: () => setShowModal(true),
+      hotKey: 'ctrl+shift+e',
     },
   ];
+
+  actions.forEach(({ callback, hotKey }) => {
+    useHotkeys(hotKey, callback);
+  })
 
   return (
     <div>
@@ -70,7 +86,7 @@ export default function OptsBar() {
                 </Popover>
               }
             >
-              <div className={styles.optsIconContainer}>{obj.icon}</div>
+              <div className={styles.optsIconContainer} onClick={() => obj.callback()}>{obj.icon}</div>
             </OverlayTrigger>
           ))}
 
@@ -92,7 +108,7 @@ export default function OptsBar() {
             >
               <div
                 className={styles.optsIconContainer}
-                onClick={() => obj.action && obj.action()}
+                onClick={() => obj.callback && obj.callback()}
               >
                 {obj.icon}
               </div>
