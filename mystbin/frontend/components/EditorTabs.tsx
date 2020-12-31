@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import CloseIcon from "@material-ui/icons/Close";
@@ -13,17 +13,20 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!encryptedPayload);
   const [shake, setShake] = useState(false);
+  const [lang, setLang] = useState([]);
 
-  let initialLangs = [];
-  value.map(function (v) {
-    if (v["title"].endsWith(".py")) {
-      initialLangs.push("python");
-    } else {
-      initialLangs.push("none");
-    }
-  });
+  useEffect(() => {
+    let initialLangs = [];
+    value.map(function (v) {
+      if (v["title"].endsWith(".py")) {
+        initialLangs.push("python");
+      } else {
+        initialLangs.push("none");
+      }
 
-  const [lang, setLang] = useState(initialLangs);
+      setLang(initialLangs);
+    });
+  }, [value]);
 
   const handlePasswordAttempt = (attempt: string) => {
     let decryptedBytes = AES.decrypt(encryptedPayload, attempt);
