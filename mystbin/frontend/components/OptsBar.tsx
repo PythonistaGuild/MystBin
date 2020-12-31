@@ -33,7 +33,7 @@ export default function OptsBar() {
       content: "Create a expiry date for this paste and all its files.",
       optional: true,
       icon: <HourglassFullIcon />,
-      action: (e) => setShowModal(true),
+      action: () => setShowModal(true),
     },
   ];
 
@@ -92,7 +92,7 @@ export default function OptsBar() {
             >
               <div
                 className={styles.optsIconContainer}
-                onClick={(e) => obj?.action(e)}
+                onClick={() => obj.action && obj.action()}
               >
                 {obj.icon}
               </div>
