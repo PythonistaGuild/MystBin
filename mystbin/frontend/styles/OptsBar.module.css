@@ -31,3 +31,16 @@
     margin-right: 1rem;
     margin-left: 1rem;
 }
+
+.expiryModal {
+    background-color: #202225;
+}
+
+.expiryModalHeader {
+    background-color: #FADFA3;
+}
+
+.expiryModalTitle {
+    margin-bottom: 0.4rem;
+    margin-left: 1rem;
+}

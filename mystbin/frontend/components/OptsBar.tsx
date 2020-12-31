@@ -1,5 +1,5 @@
-import { Nav, Navbar, OverlayTrigger, Popover } from "react-bootstrap";
-import React from "react";
+import {Modal, Nav, Navbar, OverlayTrigger, Popover} from "react-bootstrap";
+import React, {useState} from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveAltIcon from "@material-ui/icons/SaveAlt";
@@ -7,6 +7,8 @@ import EditIcon from "@material-ui/icons/Edit";
 import styles from "../styles/OptsBar.module.css";
 
 export default function OptsBar() {
+  const [showModal, setShowModal] = useState(false);
+
   const actions = [
     {
       title: "Save Paste",
@@ -29,12 +31,34 @@ export default function OptsBar() {
     {
       title: "Create Expiry",
       content: "Create a expiry date for this paste and all its files.",
-      optional: false,
+      optional: true,
       icon: <HourglassFullIcon />,
+      action: (e) => setShowModal(true),
     },
   ];
 
   return (
+      <div>
+        <Modal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          keyboard={false}
+          aria-labelledby="contained-modal-title-vcenter"
+          centered
+          className={styles.expiryModal}
+        >
+          <Modal.Header
+            className={styles.expiryModalHeader}>
+            <Modal.Title
+              className={styles.expiryModalTitle}>
+                Hello World
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Set EXPIRY BRUH!
+          </Modal.Body>
+        </Modal>
+
     <Navbar className="justify-content-center">
       <Nav className={styles.optsNavContainer}>
         {actions.map((obj) => (
@@ -70,10 +94,14 @@ export default function OptsBar() {
               </Popover>
             }
           >
-            <div className={styles.optsIconContainer}>{obj.icon}</div>
+            <div className={styles.optsIconContainer}
+              onClick={(e) => obj?.action(e)}>
+              {obj.icon}
+            </div>
           </OverlayTrigger>
         ))}
       </Nav>
     </Navbar>
+  </div>
   );
 }
