@@ -1,0 +1,8 @@
+uvicorn==0.13.3
+ujson==4.0.1
+asyncpg==0.21.0
+fastapi==0.63.0
+toml==0.10.2
+aiohttp==3.7.3
+PyJWT==2.0.0
+pycryptodome==3.9.9
