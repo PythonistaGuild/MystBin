@@ -24,8 +24,8 @@ import aiohttp
 import toml
 from fastapi import FastAPI
 
-from .routers import admin, apps, pastes, user
-from .utils.db import Database
+from routers import admin, apps, pastes, user
+from utils.db import Database
 
 
 class MystbinApp(FastAPI):
