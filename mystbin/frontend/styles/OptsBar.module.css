@@ -1,46 +1,46 @@
 .popoverHeader {
-    background-color: #286395;
-    color: rgba(255, 255, 255, 0.9);
+  background-color: #286395;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .optsNavContainer {
-    margin-top: 1.625rem;
+  margin-top: 1.625rem;
 }
 
 .optsIconContainer {
-    background-color: rgba(255, 255, 255, .1);
-    color: rgba(255, 255, 255, 80);
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-    display: flex;
-    align-self: flex-end;
-    padding: 0.5rem;
-    border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 80);
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  display: flex;
+  align-self: flex-end;
+  padding: 0.5rem;
+  border-radius: 3px;
 }
 
 .optsIconContainer:hover {
-    opacity: 70%;
-    cursor: pointer;
+  opacity: 70%;
+  cursor: pointer;
 }
 
 .optsDivider {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1px;
-    height: 40px;
-    margin-top: -8px;
-    margin-right: 1rem;
-    margin-left: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1px;
+  height: 40px;
+  margin-top: -8px;
+  margin-right: 1rem;
+  margin-left: 1rem;
 }
 
 .expiryModal {
-    background-color: #202225;
+  background-color: #202225;
 }
 
 .expiryModalHeader {
-    background-color: #FADFA3;
+  background-color: #fadfa3;
 }
 
 .expiryModalTitle {
-    margin-bottom: 0.4rem;
-    margin-left: 1rem;
+  margin-bottom: 0.4rem;
+  margin-left: 1rem;
 }

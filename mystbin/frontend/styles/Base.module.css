@@ -1,25 +1,26 @@
 .Base {
-    grid-template-areas: "n n n n n n" /* navbar */
-                         "c c c c c c" /* content */
-                         "f f f f f f"; /* footer */
-    grid-template-rows: min-content min-content auto;
-    grid-template-columns: min-content;
-    display: grid;
-    height: 100vh;
+  grid-template-areas:
+    "n n n n n n" /* navbar */
+    "c c c c c c" /* content */
+    "f f f f f f"; /* footer */
+  grid-template-rows: min-content min-content auto;
+  grid-template-columns: min-content;
+  display: grid;
+  height: 100vh;
 }
 
 .Base > nav {
-    grid-area: n;
+  grid-area: n;
 }
 
 .Base > main {
-    grid-area: c;
-    background-color: #1B1B1B;
-    max-width: 100%;
+  grid-area: c;
+  background-color: #1b1b1b;
+  max-width: 100%;
 }
 
 .Base > footer {
-    grid-area: f;
-    background-color: #1B1B1B;
-    color: white;
+  grid-area: f;
+  background-color: #1b1b1b;
+  color: white;
 }

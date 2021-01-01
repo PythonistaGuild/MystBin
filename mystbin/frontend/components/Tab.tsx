@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from "../styles/EditorTabs.module.css";
+import styles from "../styles/Tab.module.css";
 import CloseIcon from "@material-ui/icons/Close";
 
 export default function Tab({

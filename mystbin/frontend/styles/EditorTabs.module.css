@@ -1,102 +1,24 @@
 .tabsContainer {
-    margin-top: 1.25rem;
-}
-
-.tabs:hover, .tabsSelected:hover {
-    cursor: pointer;
-}
-
-.tabs {
-    background: #2B2B2B;
-    color: rgba(255, 255, 255, .3);
-    border-bottom: 2px solid transparent;
-    outline: none !important;
-    font-size: 1em;
-    border-radius: 5px 5px 0 0;
-    min-width: 4rem;
-    display: inline-flex;
-    margin-left: 1.9rem;
-    margin-right: -1.9rem;
-    text-align: center;
-    vertical-align: bottom;
-}
-
-.tabsSelected {
-    background: #2B2B2B;
-    color: rgba(255, 255, 255, .9);
-    border: none;
-    border-bottom: 2px solid #286395;
-    outline: none !important;
-    font-size: 1em;
-    border-radius: 5px 5px 0 0;
-    min-width: 4rem;
-    display: inline-flex;
-    margin-left: 1.9rem;
-    margin-right: -1.9rem;
-    min-height: 2.5rem;
-    text-align: center;
-    vertical-align: bottom;
-}
-
-.tabs:hover {
-    color: rgba(255, 255, 255, .6);
-}
-
-.tabsNew {
-    background-color: #286395;
-    color: rgba(255, 255, 255, 70);
-    margin-left: 1.9rem;
-    outline: none !important;
-    border: none;
-    font-weight: bolder;
-    border-radius: 0 3px 3px 0;
-    padding: 0.3rem;
-    vertical-align: bottom;
-}
-
-.tabsNew:hover {
-    filter: brightness(120%);
-}
-
-.tabsFilename {
-    outline: none !important;
-    border: none;
-    display: block;
-    padding: 0.5rem;
-}
-
-.tabsCloseButton {
-    background: transparent;
-    color: #2273AB;
-    outline: none !important;
-    border: none;
-    margin-left: 0.4rem;
-    margin-top: 0.5rem;
-    display: contents;
-    font-size: 1em;
-}
-
-.tabsCloseButton:hover {
-    filter: brightness(180%);
+  margin-top: 1.25rem;
 }
 
 .maxCountToast {
-    z-index: 9999;
-    position: absolute;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1rem;
-    left: 0;
-    right: 0;
-    top: 0;
+  z-index: 9999;
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+  left: 0;
+  right: 0;
+  top: 0;
 }
 
 .maxCountToastHeader {
-    background-color: #F7CD29;
-    color: #36393F;
-    user-select: none;
+  background-color: #f7cd29;
+  color: #36393f;
+  user-select: none;
 }
 
 .maxCountToastHeader > button {
-    outline: none;
+  outline: none;
 }
