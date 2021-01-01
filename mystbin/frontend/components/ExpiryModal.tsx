@@ -63,10 +63,7 @@ export default function ExpiryModal({
 
             return (
               <>
-                <Form.Label
-                  className="my-1 mr-2"
-                  htmlFor={`expiry-${optName}`}
-                >
+                <Form.Label className="my-1 mr-2" htmlFor={`expiry-${optName}`}>
                   {optName}
                 </Form.Label>
                 <Form.Control
