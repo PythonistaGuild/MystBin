@@ -1,8 +1,14 @@
-[database]
-user = "mystbin"
-password = "hahayes"
-dsn = "postgresql://user:pass@address:port/database"
-schema_path = "mystbin/database/schema.sql"
+[production-database]
+user = "prod-username"
+password = "prod-password"
+dsn = "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
+schema_path = "database/schema.sql"
+
+[staging-database]
+user = "staging-username"
+password = "staging-password"
+dsn = "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
+schema_path = "database/schema.sql"
 
 [apps]
 discord_application_id = ""
@@ -13,3 +19,7 @@ github_application = ""
 
 [site]
 base_site = "http://127.0.0.1:8000"
+
+[debug]
+db = "False"
+site = "False"
