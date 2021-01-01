@@ -17,7 +17,7 @@ def generate(userid: int, key=None) -> str:
 def get_user_id(token: str) -> Optional[int]:
     """Get user ID from a token."""
     try:
-        payload = jwt.decode(token, algorithms=['HS512'], options=JWT_OPTIONS)
-        return payload['id']
+        payload = jwt.decode(token, algorithms=["HS512"], options=JWT_OPTIONS)
+        return payload["id"]
     except jwt.DecodeError:
         return None
