@@ -30,6 +30,7 @@ export default function OptsBar() {
       hotKey: "ctrl+e",
     },
   ];
+
   const opts = [
     {
       title: "Create Password",
@@ -37,7 +38,6 @@ export default function OptsBar() {
       optional: true,
       icon: <EnhancedEncryptionIcon />,
       callback: () => alert("test3"),
-      hotKey: "ctrl+d",
     },
     {
       title: "Create Expiry",
@@ -45,7 +45,6 @@ export default function OptsBar() {
       optional: true,
       icon: <HourglassFullIcon />,
       callback: () => setShowModal(true),
-      hotKey: "ctrl+shift+e",
     },
   ];
 
@@ -73,54 +72,53 @@ export default function OptsBar() {
 
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
-          {actions.map((obj) => (
-            <OverlayTrigger
-              key={`opt-${obj.title}`}
-              placement={"bottom"}
-              overlay={
-                <Popover id={`opt-${obj.title}`}>
-                  <Popover.Title className={styles.popoverHeader} as="h3">
-                    {obj.title}
-                  </Popover.Title>
-                  <Popover.Content>{obj.content}</Popover.Content>
-                </Popover>
-              }
-            >
-              <div
-                className={styles.optsIconContainer}
-                onClick={() => obj.callback()}
-              >
-                {obj.icon}
-              </div>
-            </OverlayTrigger>
-          ))}
-
-          {opts.map((obj) => (
-            <OverlayTrigger
-              key={`opt-${obj.title}`}
-              placement={"bottom"}
-              overlay={
-                <Popover id={`opt-${obj.title}`}>
-                  <Popover.Title className={styles.popoverHeader} as="h3">
-                    {obj.title}
-                  </Popover.Title>
-                  <Popover.Content>
-                    {obj.content}
-                    <strong> {obj.optional ? "Optional" : "Required"}</strong>
-                  </Popover.Content>
-                </Popover>
-              }
-            >
-              <div
-                className={styles.optsIconContainer}
-                onClick={() => obj.callback && obj.callback()}
-              >
-                {obj.icon}
-              </div>
-            </OverlayTrigger>
-          ))}
+          {actions.map(OptsButton)}
+          {opts.map(OptsButton)}
         </Nav>
       </Navbar>
     </div>
+  );
+}
+
+function OptsButton(obj: {
+  title: string;
+  content: string;
+  icon: JSX.Element;
+  callback: () => void;
+  hotKey?: string;
+  optional?: boolean;
+}): JSX.Element {
+  return (
+    <OverlayTrigger
+      key={`opt-${obj.title}`}
+      placement={"bottom"}
+      overlay={
+        <Popover id={`opt-${obj.title}`}>
+          <Popover.Title className={styles.popoverHeader} as="h3">
+            {obj.title}
+            {obj.hotKey && (
+              <span
+                style={{
+                  float: "right",
+                  color: "rgba(255, 255, 255, .6)",
+                }}
+              >
+                {obj.hotKey}
+              </span>
+            )}
+          </Popover.Title>
+          <Popover.Content>
+            {obj.content}{" "}
+            {obj.optional !== undefined && (
+              <strong>{obj.optional ? "Optional" : "Required"}</strong>
+            )}
+          </Popover.Content>
+        </Popover>
+      }
+    >
+      <div className={styles.optsIconContainer} onClick={() => obj.callback()}>
+        {obj.icon}
+      </div>
+    </OverlayTrigger>
   );
 }
