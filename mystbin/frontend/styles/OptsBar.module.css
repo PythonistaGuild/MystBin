@@ -4,7 +4,11 @@
 }
 
 .optsNavContainer {
-  margin-top: 1.625rem;
+  top: 50%;
+  left: 0;
+  position: fixed;
+  z-index: 3;
+  flex-direction: column !important;
 }
 
 .optsIconContainer {
