@@ -26,9 +26,9 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 
-from ..models import errors, payloads, responses
+from models import errors, payloads, responses
 
-WORDS_LIST = open(pathlib.Path("mystbin/rest/utils/words.txt")).readlines()
+WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 
 
 router = APIRouter()
