@@ -15,28 +15,11 @@ import SaveAltIcon from "@material-ui/icons/SaveAlt";
 import EditIcon from "@material-ui/icons/Edit";
 import styles from "../styles/OptsBar.module.css";
 import { useHotkeys } from "react-hotkeys-hook";
+import ExpiryModal from "./ExpiryModal";
 
 export default function OptsBar() {
-  const [showExpiryModal, setShowExpiryModal] = useState(false);
+  const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
-
-  let days = [-1];
-  let hours = [-1];
-  const minutes = [-1, 0, 5, 15, 30, 45];
-
-  for (let i = 0; i <= 31; i++) {
-    days.push(i);
-  }
-
-  for (let i = 0; i <= 23; i++) {
-    hours.push(i);
-  }
-
-  const handleExpirySubmit = (e) => {
-    e.preventDefault();
-    setShowExpiryModal(false);
-    console.log(expiryValue);
-  };
 
   const actions = [
     {
@@ -72,7 +55,17 @@ export default function OptsBar() {
       content: "Create a expiry date for this paste and all its files.",
       optional: true,
       icon: <HourglassFullIcon />,
-      callback: () => setShowExpiryModal(true),
+      callback: () => {
+        setCurrentModal(
+          <ExpiryModal
+            initialValue={expiryValue}
+            onHide={() => {
+              setCurrentModal(null);
+            }}
+            onSubmit={setExpiryValue}
+          />
+        );
+      },
     },
   ];
 
@@ -82,101 +75,7 @@ export default function OptsBar() {
 
   return (
     <div>
-      <Modal
-        show={showExpiryModal}
-        onHide={() => setShowExpiryModal(false)}
-        keyboard={false}
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-        className={styles.expiryModal}
-      >
-        <Modal.Header className={styles.expiryModalHeader}>
-          <Modal.Title className={styles.expiryModalTitle}>
-            Set Paste Expiry
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <InputGroup className={"mb-3"} onSubmit={handleExpirySubmit}>
-            <span className={styles.expiryModalLabel}>Days</span>
-            <Form.Control
-              as={"select"}
-              onChange={(e) => {
-                const oldExpiry = expiryValue;
-                oldExpiry[0] = parseInt(e.target.value);
-
-                setExpiryValue(oldExpiry);
-              }}
-            >
-              {days.map((v, i) => {
-                if (v === -1 && expiryValue[0] === -1) {
-                  return <option value={"Days"}>{"Days"}</option>;
-                } else if (v === -1 && expiryValue[0] !== -1) {
-                  days.splice(days.indexOf(expiryValue[0]), 1);
-                  return (
-                    <option value={expiryValue[0]}>{expiryValue[0]}</option>
-                  );
-                } else {
-                  return <option value={v}>{v}</option>;
-                }
-              })}
-            </Form.Control>
-
-            <span className={styles.expiryModalLabel}>Hours</span>
-            <Form.Control
-              as={"select"}
-              onChange={(e) => {
-                const oldExpiry = expiryValue;
-                oldExpiry[1] = parseInt(e.target.value);
-
-                setExpiryValue(oldExpiry);
-              }}
-            >
-              {hours.map((v, i) => {
-                if (v === -1 && expiryValue[1] === -1) {
-                  return <option value={"Hours"}>{"Hours"}</option>;
-                } else if (v === -1 && expiryValue[1] !== -1) {
-                  hours.splice(hours.indexOf(expiryValue[1]), 1);
-                  return (
-                    <option value={expiryValue[1]}>{expiryValue[1]}</option>
-                  );
-                } else {
-                  return <option value={v}>{v}</option>;
-                }
-              })}
-            </Form.Control>
-
-            <span className={styles.expiryModalLabel}>Hours</span>
-            <Form.Control
-              as={"select"}
-              onChange={(e) => {
-                const oldExpiry = expiryValue;
-                oldExpiry[2] = parseInt(e.target.value);
-
-                setExpiryValue(oldExpiry);
-              }}
-            >
-              {minutes.map((v, i) => {
-                if (v === -1 && expiryValue[2] === -1) {
-                  return <option value={"Mins"}>{"Mins"}</option>;
-                } else if (v === -1 && expiryValue[2] !== -1) {
-                  minutes.splice(minutes.indexOf(expiryValue[2]), 1);
-                  return (
-                    <option value={expiryValue[2]}>{expiryValue[2]}</option>
-                  );
-                } else {
-                  return <option value={v}>{v}</option>;
-                }
-              })}
-            </Form.Control>
-          </InputGroup>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="info" type="submit" onClick={handleExpirySubmit}>
-            Submit
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
+      {currentModal && currentModal}
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
           {actions.map(OptsButton)}
