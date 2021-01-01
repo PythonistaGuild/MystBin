@@ -56,9 +56,20 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
             newValue.splice(i, 1);
             newLang.splice(i, 1);
             newLang.push("none");
-            setCurrTab(
-              currTab > 1 ? (currTab !== i ? currTab : currTab - 1) : 0
-            );
+            let tabNumber = currTab;
+
+            if (currTab > 1) {
+              if (currTab === i) {
+                tabNumber = currTab - 1;
+              } else {
+                tabNumber = currTab - 1;
+              }
+            } else {
+              tabNumber = 0;
+            }
+
+            setCurrTab(tabNumber);
+            setTabs([]);
             setLang(newLang);
             setValue(newValue);
           }}
