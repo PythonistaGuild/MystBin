@@ -9,27 +9,25 @@
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0 5px 5px 0;
 }
 
 .optsIconContainer {
-  background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 80);
   margin-left: 0.5rem;
   margin-right: 0.5rem;
   display: flex;
   align-self: flex-end;
   padding: 0.5rem;
-  border-radius: 3px;
 }
 
 .optsIconContainer:hover {
-  opacity: 70%;
+  opacity: 50%;
   cursor: pointer;
 }
 
 .optsDivider {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1px;
   height: 40px;
   margin-top: -8px;
   margin-right: 1rem;
