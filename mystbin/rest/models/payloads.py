@@ -35,6 +35,7 @@ class _PastePut(BaseModel):
     filename: str
     syntax: Optional[str] = None
 
+
 class ListedPastePut(BaseModel):
     workspace_name: Optional[str] = None
     expires: Optional[datetime.datetime] = None
@@ -47,17 +48,18 @@ class ListedPastePut(BaseModel):
                 "workspace_name": "string",
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": "string",
-                "files": [{
-                    "content": "string",
-                    "filename": "string",
-                    "syntax": "string",
-                },
+                "files": [
                     {
-                    "content": "another_string",
-                    "filename": "another_string",
-                    "syntax": "another_string",
-                }
-                ]
+                        "content": "string",
+                        "filename": "string",
+                        "syntax": "string",
+                    },
+                    {
+                        "content": "another_string",
+                        "filename": "another_string",
+                        "syntax": "another_string",
+                    },
+                ],
             }
         }
 
