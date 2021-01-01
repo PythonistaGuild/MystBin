@@ -23,7 +23,7 @@ import yarl
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import UJSONResponse
 
-from ..models import responses
+from models import responses
 
 router = APIRouter()
 

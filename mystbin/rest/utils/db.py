@@ -32,12 +32,14 @@ class Database:
     """Small Database style object for MystBin usage.
     This will be passed across the backend for database usage.
     """
+
     timeout = 30
 
     def __init__(self, app):
         self._pool: asyncpg.pool.Pool = None
-        self._config = app.config['database']
-        self._db_schema = pathlib.Path(self._config['schema_path'])
+        self.env = "staging" if app.config["debug"]["db"] == "True" else "production"
+        self._config = app.config[f"{self.env}-database"]
+        self._db_schema = pathlib.Path(self._config["schema_path"])
 
     @property
     def pool(self) -> Optional[asyncpg.pool.Pool]:
@@ -45,12 +47,18 @@ class Database:
         return self._pool or None
 
     async def __ainit__(self):
-        self._pool = await asyncpg.create_pool(self._config['dsn'], max_inactive_connection_lifetime=0)
+        await asyncio.sleep(5)
+        print(self._config["dsn"])
+        self._pool = await asyncpg.create_pool(
+            self._config["dsn"], max_inactive_connection_lifetime=0
+        )
         with open(self._db_schema) as schema:
             await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(self, query, *args, conn: asyncpg.Connection = None) -> Optional[List[asyncpg.Record]]:
+    async def _do_query(
+        self, query, *args, conn: asyncpg.Connection = None
+    ) -> Optional[List[asyncpg.Record]]:
         if self._pool is None:
             await self.__ainit__()
 
@@ -65,7 +73,9 @@ class Database:
 
             return response
 
-    async def get_paste(self, paste_id: str, password: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def get_paste(
+        self, paste_id: str, password: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get the specified paste.
         Parameters
         ------------
@@ -97,8 +107,7 @@ class Database:
                 """
                 contents = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
-                resp['pastes'] = [{a: str(b) for a, b in x.items()}
-                                  for x in contents]
+                resp["pastes"] = [{a: str(b) for a, b in x.items()} for x in contents]
 
                 return resp
             else:
@@ -122,25 +131,26 @@ class Database:
                 contents = await self._do_query(query, paste_id, conn=conn)
                 ret = {
                     "key": paste_id,
-                    "data": contents[0]['content'],
-                    "has_password": resp[0]['has_password'],
-                    "syntax": contents[0]['syntax']
+                    "data": contents[0]["content"],
+                    "has_password": resp[0]["has_password"],
+                    "syntax": contents[0]["syntax"],
                 }
 
                 return ret
             else:
                 return None
 
-    async def put_paste(self,
-                        *,
-                        paste_id: str,
-                        content: str,
-                        filename: str = "file.txt",
-                        author: Optional[int] = None,
-                        syntax: str = "",
-                        expires: datetime.datetime = None,
-                        password: Optional[str] = None
-                        ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
+    async def put_paste(
+        self,
+        *,
+        paste_id: str,
+        content: str,
+        filename: str = "file.txt",
+        author: Optional[int] = None,
+        syntax: str = "",
+        expires: datetime.datetime = None,
+        password: Optional[str] = None,
+    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -179,16 +189,18 @@ class Database:
         chars = len(content)
         now = datetime.datetime.utcnow()
 
-        await self._do_query(query,
-                             paste_id,
-                             author,
-                             now,
-                             expires,
-                             content,
-                             password,
-                             filename,
-                             syntax,
-                             loc)
+        await self._do_query(
+            query,
+            paste_id,
+            author,
+            now,
+            expires,
+            content,
+            password,
+            filename,
+            syntax,
+            loc,
+        )
 
         # we need to generate our own response here, as we cant get the full response from the single query
         resp = {
@@ -203,19 +215,20 @@ class Database:
                     "loc": loc,
                     "charcount": chars,
                 }
-            ]
+            ],
         }
         return resp
 
-    async def put_pastes(self,
-                         *,
-                         paste_id: str,
-                         workspace_name: str,
-                         pages: List[Dict[str, str]],
-                         expires: Optional[datetime.datetime] = None,
-                         author: Optional[int] = None,
-                         password: Optional[str] = None
-                         ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
+    async def put_pastes(
+        self,
+        *,
+        paste_id: str,
+        workspace_name: str,
+        pages: List[Dict[str, str]],
+        expires: Optional[datetime.datetime] = None,
+        author: Optional[int] = None,
+        password: Optional[str] = None,
+    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -243,14 +256,23 @@ class Database:
                     RETURNING id, author_id, created_at, expires
                     """
 
-            resp = await self._do_query(query, paste_id, author, workspace_name, expires, password, conn=conn)
+            resp = await self._do_query(
+                query, paste_id, author, workspace_name, expires, password, conn=conn
+            )
 
             resp = resp[0]
             print(resp)
             to_insert = []
             for page in pages:
                 to_insert.append(
-                    (resp['id'], page.content, page.filename, page.syntax, page.content.count("\n")))
+                    (
+                        resp["id"],
+                        page.content,
+                        page.filename,
+                        page.syntax,
+                        page.content.count("\n"),
+                    )
+                )
 
             files_query = """
                           INSERT INTO files (parent_id, content, filename, syntax, loc)
@@ -264,15 +286,17 @@ class Database:
                     inserted.append(row)
 
             resp = dict(resp)
-            resp['files'] = [dict(file) for file in inserted]
+            resp["files"] = [dict(file) for file in inserted]
 
             return resp
 
-    async def edit_paste(self,
-                         paste_id: str,
-                         author_id: int,
-                         new_content: str,
-                         new_nick: Optional[str] = None) -> Optional[asyncpg.Record]:
+    async def edit_paste(
+        self,
+        paste_id: str,
+        author_id: int,
+        new_content: str,
+        new_nick: Optional[str] = None,
+    ) -> Optional[asyncpg.Record]:
         """Edits a live paste
         Parameters
         ------------
@@ -301,16 +325,19 @@ class Database:
                 RETURNING *
                 """
 
-        response = await self._do_query(query, new_content, new_content.count("\n"), new_nick, paste_id, author_id)
+        response = await self._do_query(
+            query, new_content, new_content.count("\n"), new_nick, paste_id, author_id
+        )
 
         return response[0] if response else None
 
-    async def edit_pastes(self,
-                          paste_id: str,
-                          pages: List[Dict[str, str]],
-                          author: int,
-                          password: Optional[str] = None
-                          ) -> Optional[Dict[str, Union[str, List[Dict[str, str]]]]]:
+    async def edit_pastes(
+        self,
+        paste_id: str,
+        pages: List[Dict[str, str]],
+        author: int,
+        password: Optional[str] = None,
+    ) -> Optional[Dict[str, Union[str, List[Dict[str, str]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -344,8 +371,15 @@ class Database:
             resp = resp[0]
             qs = []
             for page in pages:
-                qs.append((page['content'], page['content'].count(
-                    "\n"), len(page['content']), paste_id, page['index']))
+                qs.append(
+                    (
+                        page["content"],
+                        page["content"].count("\n"),
+                        len(page["content"]),
+                        paste_id,
+                        page["index"],
+                    )
+                )
 
             query = """
                     UPDATE paste_content
@@ -357,11 +391,13 @@ class Database:
             data = await conn.executemany(query, qs)
 
             resp = dict(resp)
-            resp['pages'] = [{a: str(b) for a, b in x.items()} for x in data]
+            resp["pages"] = [{a: str(b) for a, b in x.items()} for x in data]
 
             return resp
 
-    async def get_all_pastes(self, author_id: Optional[int], limit: Optional[int] = None) -> List[asyncpg.Record]:
+    async def get_all_pastes(
+        self, author_id: Optional[int], limit: Optional[int] = None
+    ) -> List[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
@@ -388,11 +424,9 @@ class Database:
 
         return response
 
-    async def delete_paste(self,
-                           paste_id: str,
-                           author_id: Optional[int] = None,
-                           *,
-                           admin: bool = False) -> Optional[asyncpg.Record]:
+    async def delete_paste(
+        self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False
+    ) -> Optional[asyncpg.Record]:
         """Delete a paste, with an admin override.
 
         Parameters
@@ -420,9 +454,9 @@ class Database:
 
         return response[0] if response else None
 
-    async def get_user(self, *,
-                       user_id: int = None,
-                       token: str = None) -> Optional[Union[asyncpg.Record, int]]:
+    async def get_user(
+        self, *, user_id: int = None, token: str = None
+    ) -> Optional[Union[asyncpg.Record, int]]:
         """Returns a User on successful query.
 
         Parameters
@@ -458,17 +492,18 @@ class Database:
             return None
 
         data = data[0]
-        if token and data['token'] != token:
+        if token and data["token"] != token:
             return 401
 
         return data
 
-    async def new_user(self,
-                       email: str,
-                       discord_id: int = None,
-                       github_id: int = None,
-                       google_id: int = None
-                       ) -> asyncpg.Record:
+    async def new_user(
+        self,
+        email: str,
+        discord_id: int = None,
+        github_id: int = None,
+        google_id: int = None,
+    ) -> asyncpg.Record:
         """Creates a new User record.
 
         Parameters
@@ -497,16 +532,19 @@ class Database:
                 RETURNING *;
                 """
 
-        data = await self._do_query(query, userid, token, [email], discord_id, github_id, google_id)
+        data = await self._do_query(
+            query, userid, token, [email], discord_id, github_id, google_id
+        )
         return data[0]
 
-    async def update_user(self,
-                          user_id: int,
-                          email: Optional[str] = None,
-                          discord_id: Optional[int] = None,
-                          github_id: Optional[int] = None,
-                          google_id: Optional[str] = None
-                          ) -> Optional[str]:
+    async def update_user(
+        self,
+        user_id: int,
+        email: Optional[str] = None,
+        discord_id: Optional[int] = None,
+        github_id: Optional[int] = None,
+        google_id: Optional[str] = None,
+    ) -> Optional[str]:
         """Updates an existing user account.
 
         Parameters
@@ -561,7 +599,7 @@ class Database:
 
         data = await self._do_query(query, email)
         if data:
-            return data[0]['id']
+            return data[0]["id"]
 
     async def toggle_admin(self, userid: int, admin: bool) -> None:
         """Quick query to toggle admin privileges."""
@@ -579,7 +617,9 @@ class Database:
 
         await self._do_query(query, theme, userid)
 
-    async def regen_token(self, *, userid: int = None, token: str = None) -> Optional[str]:
+    async def regen_token(
+        self, *, userid: int = None, token: str = None
+    ) -> Optional[str]:
         """Generates a new token for the given user id or token. Returns the new token, or None if the user does not exist."""
         if not self._pool:
             await self.__ainit__()
@@ -596,7 +636,7 @@ class Database:
                 if not data:
                     return None
 
-                userid = data[0]['id']
+                userid = data[0]["id"]
 
             new_token = tokens.generate(userid)
             query = """
@@ -621,7 +661,7 @@ class Database:
         if not data:
             return False
 
-        return data[0]['id']
+        return data[0]["id"]
 
     async def ensure_admin(self, token: str) -> bool:
         """Quick query against a token to return if admin or not."""
@@ -636,7 +676,7 @@ class Database:
         if not data:
             return False
 
-        return data[0]['admin']
+        return data[0]["admin"]
 
     async def ensure_author(self, paste_id: str, author_id: int) -> bool:
         """Quick query to ensure a paste is owned by the passed author ID."""
