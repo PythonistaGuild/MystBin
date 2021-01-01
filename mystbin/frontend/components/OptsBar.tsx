@@ -1,4 +1,13 @@
-import {Modal, Nav, Navbar, OverlayTrigger, Popover, Form, InputGroup, Button} from "react-bootstrap";
+import {
+  Modal,
+  Nav,
+  Navbar,
+  OverlayTrigger,
+  Popover,
+  Form,
+  InputGroup,
+  Button,
+} from "react-bootstrap";
 import React, { useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
@@ -12,22 +21,22 @@ export default function OptsBar() {
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
 
   let days = [-1];
-  let hours = [-1]
+  let hours = [-1];
   const minutes = [-1, 0, 5, 15, 30, 45];
 
-  for (let i=0; i <= 31; i++) {
+  for (let i = 0; i <= 31; i++) {
     days.push(i);
   }
 
-  for (let i=0; i <= 23; i++) {
+  for (let i = 0; i <= 23; i++) {
     hours.push(i);
   }
 
-  const handleExpirySubmit = e => {
+  const handleExpirySubmit = (e) => {
     e.preventDefault();
     setShowExpiryModal(false);
     console.log(expiryValue);
-  }
+  };
 
   const actions = [
     {
@@ -87,85 +96,82 @@ export default function OptsBar() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <InputGroup className={'mb-3'} onSubmit={handleExpirySubmit}>
-
+          <InputGroup className={"mb-3"} onSubmit={handleExpirySubmit}>
             <span className={styles.expiryModalLabel}>Days</span>
             <Form.Control
-                as={"select"}
-                onChange={(e) => {
-                  const oldExpiry = expiryValue;
-                  oldExpiry[0] = parseInt(e.target.value);
+              as={"select"}
+              onChange={(e) => {
+                const oldExpiry = expiryValue;
+                oldExpiry[0] = parseInt(e.target.value);
 
-                  setExpiryValue(oldExpiry);
-                }}>
+                setExpiryValue(oldExpiry);
+              }}
+            >
               {days.map((v, i) => {
                 if (v === -1 && expiryValue[0] === -1) {
-                  return <option value={"Days"}>{"Days"}</option>
-                }
-                else if (v === -1 && expiryValue[0] !== -1) {
+                  return <option value={"Days"}>{"Days"}</option>;
+                } else if (v === -1 && expiryValue[0] !== -1) {
                   days.splice(days.indexOf(expiryValue[0]), 1);
-                  return <option value={expiryValue[0]}>{expiryValue[0]}</option>
-                }
-                else {
-                  return <option value={v}>{v}</option>
+                  return (
+                    <option value={expiryValue[0]}>{expiryValue[0]}</option>
+                  );
+                } else {
+                  return <option value={v}>{v}</option>;
                 }
               })}
             </Form.Control>
 
             <span className={styles.expiryModalLabel}>Hours</span>
             <Form.Control
-                as={"select"}
-                onChange={(e) => {
-                  const oldExpiry = expiryValue;
-                  oldExpiry[1] = parseInt(e.target.value);
+              as={"select"}
+              onChange={(e) => {
+                const oldExpiry = expiryValue;
+                oldExpiry[1] = parseInt(e.target.value);
 
-                  setExpiryValue(oldExpiry);
-                }}>
+                setExpiryValue(oldExpiry);
+              }}
+            >
               {hours.map((v, i) => {
                 if (v === -1 && expiryValue[1] === -1) {
-                  return <option value={"Hours"}>{"Hours"}</option>
-                }
-                else if (v === -1 && expiryValue[1] !== -1) {
+                  return <option value={"Hours"}>{"Hours"}</option>;
+                } else if (v === -1 && expiryValue[1] !== -1) {
                   hours.splice(hours.indexOf(expiryValue[1]), 1);
-                  return <option value={expiryValue[1]}>{expiryValue[1]}</option>
-                }
-                else {
-                  return <option value={v}>{v}</option>
+                  return (
+                    <option value={expiryValue[1]}>{expiryValue[1]}</option>
+                  );
+                } else {
+                  return <option value={v}>{v}</option>;
                 }
               })}
             </Form.Control>
 
             <span className={styles.expiryModalLabel}>Hours</span>
             <Form.Control
-                as={"select"}
-                onChange={(e) => {
-                  const oldExpiry = expiryValue;
-                  oldExpiry[2] = parseInt(e.target.value);
+              as={"select"}
+              onChange={(e) => {
+                const oldExpiry = expiryValue;
+                oldExpiry[2] = parseInt(e.target.value);
 
-                  setExpiryValue(oldExpiry);
-                }}>
+                setExpiryValue(oldExpiry);
+              }}
+            >
               {minutes.map((v, i) => {
                 if (v === -1 && expiryValue[2] === -1) {
-                  return <option value={"Mins"}>{"Mins"}</option>
-                }
-                else if (v === -1 && expiryValue[2] !== -1) {
+                  return <option value={"Mins"}>{"Mins"}</option>;
+                } else if (v === -1 && expiryValue[2] !== -1) {
                   minutes.splice(minutes.indexOf(expiryValue[2]), 1);
-                  return <option value={expiryValue[2]}>{expiryValue[2]}</option>
-                }
-                else {
-                  return <option value={v}>{v}</option>
+                  return (
+                    <option value={expiryValue[2]}>{expiryValue[2]}</option>
+                  );
+                } else {
+                  return <option value={v}>{v}</option>;
                 }
               })}
             </Form.Control>
-
           </InputGroup>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-              variant="info"
-              type="submit"
-              onClick={handleExpirySubmit}
-          >
+          <Button variant="info" type="submit" onClick={handleExpirySubmit}>
             Submit
           </Button>
         </Modal.Footer>
