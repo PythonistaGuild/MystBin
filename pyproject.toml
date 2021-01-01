@@ -7,18 +7,18 @@ license = "GPL-3.0"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-uvicorn = "^0.12.2"
-ujson = "^4.0.1"
-asyncpg = "^0.21.0"
-fastapi = "^0.61.1"
-toml = "^0.10.2"
-aiohttp = "^3.7.2"
-PyJWT = "^2.0.0"
-pycryptodome = "^3.9.9"
+uvicorn = "*"
+ujson = "*"
+asyncpg = "*"
+fastapi = "*"
+toml = "*"
+aiohttp = "*"
+PyJWT = "*"
+pycryptodome = "*"
 
 [tool.poetry.dev-dependencies]
-pylint = "^2.6.0"
-autopep8 = "^1.5.4"
+black = "*"
+flake8 = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
