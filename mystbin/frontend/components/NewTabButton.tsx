@@ -1,4 +1,4 @@
-import styles from "../styles/EditorTabs.module.css";
+import styles from "../styles/NewTabButton.module.css";
 
 export default function NewTabButton({ enabled, onClick }) {
   return (
