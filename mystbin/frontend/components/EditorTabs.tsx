@@ -15,7 +15,6 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
   const [passwordModal, setPasswordModal] = useState(!!encryptedPayload);
   const [shake, setShake] = useState(false);
   const [lang, setLang] = useState<string[]>([]);
-  // const [tabs, setTabs] = useState<React.ElementType[]>([]);
 
   useEffect(() => {
     let initialLangs = [];
@@ -55,29 +54,23 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
         <div className={styles.tabsContainer}>
           {value.map((v, i) => {
             return <Tab
+              key={i}
               current={currTab === i}
               deletable={value.length > 1}
               filename={v.title}
               onFocus={() => setCurrTab(i)}
-              onChange={([filename, _lang]) => {
+              onChange={(filename) => {
                 let newValue = [...value];
                 newValue[i].title = filename;
-
-                let newLang = [...lang];
-                newLang[i] = _lang;
-
                 setValue(newValue);
-                setLang(newLang);
               }}
               onDelete={() => {
                 let newValue = [...value];
-                let newLang = [...lang];
 
                 newValue.splice(i, 1);
-                newLang.splice(i, 1);
-                newLang.push("none");
-                let tabNumber = currTab;
 
+                let tabNumber = currTab;
+                console.log(tabNumber);
                 if (currTab > 1) {
                   if (currTab === i) {
                     tabNumber = currTab - 1;
@@ -87,10 +80,10 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
                 } else {
                   tabNumber = 0;
                 }
+                console.log(tabNumber);
 
-                setCurrTab(tabNumber);
-                setLang(newLang);
                 setValue(newValue);
+                setCurrTab(tabNumber);
               }}
             />;
           })}
@@ -105,12 +98,15 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
           />
         </div>
 
-        {value.map((_, i) => (
-          <div
+        {value.map((v, i) => {
+          console.log(currTab)
+          return <div
+            key={i}
             style={{
               display: currTab === i ? "block" : "none",
             }}
             className={"maxed"}
+            id={`tab-${i}`}
           >
             <MonacoEditor
               language={lang[i]}
@@ -124,12 +120,12 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
                 setValue(newValue);
                 return `${newVal}`;
               }}
-              value={value[i]["content"]}
+              value={v.content}
               theme={"mystBinDark"}
               readOnly={false}
             />
-          </div>
-        ))}
+          </div>}
+        )}
       </div>
 
       <Toast
