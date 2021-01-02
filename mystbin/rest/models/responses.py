@@ -82,3 +82,4 @@ class User(BaseModel):
     theme: str
     subscriber: bool
     banned: bool
+    bookmarks: List[str]
