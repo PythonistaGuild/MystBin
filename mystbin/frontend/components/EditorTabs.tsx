@@ -54,45 +54,47 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
       <div>
         <div className={styles.tabsContainer}>
           {value.map((v, i) => {
-            return <Tab
-              current={currTab === i}
-              deletable={value.length > 1}
-              filename={v.title}
-              onFocus={() => setCurrTab(i)}
-              onChange={([filename, _lang]) => {
-                let newValue = [...value];
-                newValue[i].title = filename;
+            return (
+              <Tab
+                current={currTab === i}
+                deletable={value.length > 1}
+                filename={v.title}
+                onFocus={() => setCurrTab(i)}
+                onChange={([filename, _lang]) => {
+                  let newValue = [...value];
+                  newValue[i].title = filename;
 
-                let newLang = [...lang];
-                newLang[i] = _lang;
+                  let newLang = [...lang];
+                  newLang[i] = _lang;
 
-                setValue(newValue);
-                setLang(newLang);
-              }}
-              onDelete={() => {
-                let newValue = [...value];
-                let newLang = [...lang];
+                  setValue(newValue);
+                  setLang(newLang);
+                }}
+                onDelete={() => {
+                  let newValue = [...value];
+                  let newLang = [...lang];
 
-                newValue.splice(i, 1);
-                newLang.splice(i, 1);
-                newLang.push("none");
-                let tabNumber = currTab;
+                  newValue.splice(i, 1);
+                  newLang.splice(i, 1);
+                  newLang.push("none");
+                  let tabNumber = currTab;
 
-                if (currTab > 1) {
-                  if (currTab === i) {
-                    tabNumber = currTab - 1;
+                  if (currTab > 1) {
+                    if (currTab === i) {
+                      tabNumber = currTab - 1;
+                    } else {
+                      tabNumber = currTab - 1;
+                    }
                   } else {
-                    tabNumber = currTab - 1;
+                    tabNumber = 0;
                   }
-                } else {
-                  tabNumber = 0;
-                }
 
-                setCurrTab(tabNumber);
-                setLang(newLang);
-                setValue(newValue);
-              }}
-            />;
+                  setCurrTab(tabNumber);
+                  setLang(newLang);
+                  setValue(newValue);
+                }}
+              />
+            );
           })}
           <NewTabButton
             onClick={() => {
