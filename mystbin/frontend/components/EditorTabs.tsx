@@ -84,9 +84,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
               }}
               onDelete={() => {
                 let newValue = [...value];
-
                 newValue.splice(i, 1);
-
                 setValue(newValue);
               }}
             />
