@@ -1,9 +1,4 @@
-import {
-  Nav,
-  Navbar,
-  OverlayTrigger,
-  Popover,
-} from "react-bootstrap";
+import { Nav, Navbar, OverlayTrigger, Popover } from "react-bootstrap";
 import React, { useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
