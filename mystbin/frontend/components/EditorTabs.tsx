@@ -21,11 +21,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
       let tabNumber = currTab.valueOf();
       console.log(tabNumber);
       if (currTab > 1) {
-        if (currTab === i) {
-          tabNumber = currTab - 1;
-        } else {
-          tabNumber = 0;
-        }
+        tabNumber = currTab - 1;
       } else {
         tabNumber = 0;
       }
