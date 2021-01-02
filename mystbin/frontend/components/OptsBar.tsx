@@ -110,7 +110,7 @@ export default function OptsBar() {
   });
 
   return (
-    <div>
+    <>
       {currentModal && currentModal}
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
@@ -119,7 +119,7 @@ export default function OptsBar() {
           {opts.map(OptsButton)}
         </Nav>
       </Navbar>
-    </div>
+    </>
   );
 }
 
