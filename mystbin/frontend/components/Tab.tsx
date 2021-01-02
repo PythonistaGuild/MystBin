@@ -7,24 +7,25 @@ export default function Tab({
   onFocus,
   onChange,
   onDelete,
-  initialFilename,
+  filename,
   deletable,
 }: {
   current: boolean;
   onFocus: () => void;
   onChange: (arg0: string[]) => void;
   onDelete: () => void;
-  initialFilename: string;
+  filename: string;
   deletable: boolean;
 }) {
-  const [filename, setFilename] = useState(initialFilename);
   const [lang, setLang] = useState("none");
   const spanRef = React.createRef<HTMLSpanElement>();
 
   return (
-    <div className={current ? styles.tabsSelected : styles.tabs}>
+    <div
+      onClick={onFocus}
+      className={current ? styles.tabsSelected : styles.tabs}
+    >
       <div
-        onClick={onFocus}
         onKeyDown={(e) => {
           const button = e.currentTarget;
 
@@ -39,20 +40,18 @@ export default function Tab({
             _filename = filename;
           }
 
-          setFilename(_filename);
-
           if (filename.endsWith(".py")) {
             setLang("python");
           } else {
             setLang("none");
           }
 
-          onChange([filename, lang]);
+          onChange([_filename, lang]);
         }}
       >
         <span
           ref={spanRef}
-          contentEditable={true}
+          contentEditable={current}
           className={styles.tabsFilename}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
