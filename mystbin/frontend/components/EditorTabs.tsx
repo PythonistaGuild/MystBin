@@ -75,7 +75,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
                   if (currTab === i) {
                     tabNumber = currTab - 1;
                   } else {
-                    tabNumber = currTab - 1;
+                    tabNumber = 0;
                   }
                 } else {
                   tabNumber = 0;
