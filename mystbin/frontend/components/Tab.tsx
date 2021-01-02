@@ -12,12 +12,11 @@ export default function Tab({
 }: {
   current: boolean;
   onFocus: () => void;
-  onChange: (arg0: string[]) => void;
+  onChange: (arg0: string) => void;
   onDelete: () => void;
   filename: string;
   deletable: boolean;
 }) {
-  const [lang, setLang] = useState("none");
   const spanRef = React.createRef<HTMLSpanElement>();
 
   return (
@@ -40,13 +39,7 @@ export default function Tab({
             _filename = filename;
           }
 
-          if (filename.endsWith(".py")) {
-            setLang("python");
-          } else {
-            setLang("none");
-          }
-
-          onChange([_filename, lang]);
+          onChange(_filename);
         }}
       >
         <span
