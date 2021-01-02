@@ -53,39 +53,41 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
       <div>
         <div className={styles.tabsContainer}>
           {value.map((v, i) => {
-            return <Tab
-              key={i}
-              current={currTab === i}
-              deletable={value.length > 1}
-              filename={v.title}
-              onFocus={() => setCurrTab(i)}
-              onChange={(filename) => {
-                let newValue = [...value];
-                newValue[i].title = filename;
-                setValue(newValue);
-              }}
-              onDelete={() => {
-                let newValue = [...value];
+            return (
+              <Tab
+                key={i}
+                current={currTab === i}
+                deletable={value.length > 1}
+                filename={v.title}
+                onFocus={() => setCurrTab(i)}
+                onChange={(filename) => {
+                  let newValue = [...value];
+                  newValue[i].title = filename;
+                  setValue(newValue);
+                }}
+                onDelete={() => {
+                  let newValue = [...value];
 
-                newValue.splice(i, 1);
+                  newValue.splice(i, 1);
 
-                let tabNumber = currTab;
-                console.log(tabNumber);
-                if (currTab > 1) {
-                  if (currTab === i) {
-                    tabNumber = currTab - 1;
+                  let tabNumber = currTab;
+                  console.log(tabNumber);
+                  if (currTab > 1) {
+                    if (currTab === i) {
+                      tabNumber = currTab - 1;
+                    } else {
+                      tabNumber = 0;
+                    }
                   } else {
                     tabNumber = 0;
                   }
-                } else {
-                  tabNumber = 0;
-                }
-                console.log(tabNumber);
+                  console.log(tabNumber);
 
-                setValue(newValue);
-                setCurrTab(tabNumber);
-              }}
-            />;
+                  setValue(newValue);
+                  setCurrTab(tabNumber);
+                }}
+              />
+            );
           })}
           <NewTabButton
             onClick={() => {
@@ -99,33 +101,35 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
         </div>
 
         {value.map((v, i) => {
-          console.log(currTab)
-          return <div
-            key={i}
-            style={{
-              display: currTab === i ? "block" : "none",
-            }}
-            className={"maxed"}
-            id={`tab-${i}`}
-          >
-            <MonacoEditor
-              language={lang[i]}
-              onChange={(_, newVal) => {
-                if (newVal.length > 300000) {
-                  setCharCountToast(true);
-                  newVal = newVal.slice(0, 300000);
-                }
-                let newValue = [...value];
-                newValue[i]["content"] = newVal;
-                setValue(newValue);
-                return `${newVal}`;
+          console.log(currTab);
+          return (
+            <div
+              key={i}
+              style={{
+                display: currTab === i ? "block" : "none",
               }}
-              value={v.content}
-              theme={"mystBinDark"}
-              readOnly={false}
-            />
-          </div>}
-        )}
+              className={"maxed"}
+              id={`tab-${i}`}
+            >
+              <MonacoEditor
+                language={lang[i]}
+                onChange={(_, newVal) => {
+                  if (newVal.length > 300000) {
+                    setCharCountToast(true);
+                    newVal = newVal.slice(0, 300000);
+                  }
+                  let newValue = [...value];
+                  newValue[i]["content"] = newVal;
+                  setValue(newValue);
+                  return `${newVal}`;
+                }}
+                value={v.content}
+                theme={"mystBinDark"}
+                readOnly={false}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <Toast
