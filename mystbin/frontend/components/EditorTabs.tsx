@@ -15,7 +15,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
   const [passwordModal, setPasswordModal] = useState(!!encryptedPayload);
   const [shake, setShake] = useState(false);
   const [lang, setLang] = useState<string[]>([]);
-  const [tabs, setTabs] = useState<React.ElementType[]>([]);
+  // const [tabs, setTabs] = useState<React.ElementType[]>([]);
 
   useEffect(() => {
     let initialLangs = [];
@@ -30,62 +30,12 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
     });
   }, [value]);
 
-  useEffect(() => {
-    let newTabs = [];
-    value.forEach((v, i) => {
-      newTabs.push(
-        <Tab
-          current={currTab === i}
-          deletable={value.length > 1}
-          initialFilename={v.title || "default_name.ext"}
-          onFocus={() => setCurrTab(i)}
-          onChange={([filename, _lang]) => {
-            let newValue = [...value];
-            newValue[i].title = filename;
-
-            let newLang = [...lang];
-            newLang[i] = _lang;
-
-            setValue(newValue);
-            setLang(newLang);
-          }}
-          onDelete={() => {
-            let newValue = [...value];
-            let newLang = [...lang];
-
-            newValue.splice(i, 1);
-            newLang.splice(i, 1);
-            newLang.push("none");
-            let tabNumber = currTab;
-
-            if (currTab > 1) {
-              if (currTab === i) {
-                tabNumber = currTab - 1;
-              } else {
-                tabNumber = currTab - 1;
-              }
-            } else {
-              tabNumber = 0;
-            }
-
-            setCurrTab(tabNumber);
-            setTabs([]);
-            setLang(newLang);
-            setValue(newValue);
-          }}
-        />
-      );
-      setTabs(newTabs);
-    });
-  }, [value]);
-
   const handlePasswordAttempt = (attempt: string) => {
     let decryptedBytes = AES.decrypt(encryptedPayload, attempt);
     try {
       let actualData = JSON.parse(decryptedBytes.toString(Utf8));
       setPasswordModal(false);
       setValue(actualData);
-      setTabs([]);
     } catch {
       setShake(true);
       setTimeout(function () {
@@ -103,7 +53,47 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
       />
       <div>
         <div className={styles.tabsContainer}>
-          {tabs.map((v) => v)}
+          {value.map((v, i) => {
+            return <Tab
+              current={currTab === i}
+              deletable={value.length > 1}
+              filename={v.title}
+              onFocus={() => setCurrTab(i)}
+              onChange={([filename, _lang]) => {
+                let newValue = [...value];
+                newValue[i].title = filename;
+
+                let newLang = [...lang];
+                newLang[i] = _lang;
+
+                setValue(newValue);
+                setLang(newLang);
+              }}
+              onDelete={() => {
+                let newValue = [...value];
+                let newLang = [...lang];
+
+                newValue.splice(i, 1);
+                newLang.splice(i, 1);
+                newLang.push("none");
+                let tabNumber = currTab;
+
+                if (currTab > 1) {
+                  if (currTab === i) {
+                    tabNumber = currTab - 1;
+                  } else {
+                    tabNumber = currTab - 1;
+                  }
+                } else {
+                  tabNumber = 0;
+                }
+
+                setCurrTab(tabNumber);
+                setLang(newLang);
+                setValue(newValue);
+              }}
+            />;
+          })}
           <NewTabButton
             onClick={() => {
               let newValue = [...value];
