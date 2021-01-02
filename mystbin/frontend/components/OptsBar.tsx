@@ -21,7 +21,7 @@ import ExpiryModal from "./ExpiryModal";
 import LoginIcon from "../icons/LoginIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import FiberNewIcon from "@material-ui/icons/FiberNew";
-import BrushIcon from '@material-ui/icons/Brush';
+import BrushIcon from "@material-ui/icons/Brush";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -36,8 +36,9 @@ export default function OptsBar() {
     },
     {
       title: "Change Theme",
-      content: "Change the look and feel of MystBin. Saves to your account preferences.",
-      icon: <BrushIcon style={{ color: "#F6B08B" }}/>
+      content:
+        "Change the look and feel of MystBin. Saves to your account preferences.",
+      icon: <BrushIcon style={{ color: "#F6B08B" }} />,
     },
 
     {
