@@ -7,7 +7,7 @@ services:
     ports:
       - 5555:443/tcp
     volumes:
-      - ./mystbin/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ./mystbin/nginx/sites-enabled/:/etc/nginx/sites-enabled/:ro
       - ./mystbin/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     container_name: "staging-reverse-proxy"
     networks:
