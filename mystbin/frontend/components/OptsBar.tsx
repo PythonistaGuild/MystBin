@@ -12,20 +12,34 @@ import React, { useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveAltIcon from "@material-ui/icons/SaveAlt";
+import SaveIcon from '@material-ui/icons/Save';
 import EditIcon from "@material-ui/icons/Edit";
+import FavoriteIcon from '@material-ui/icons/Favorite';
 import styles from "../styles/OptsBar.module.css";
 import { useHotkeys } from "react-hotkeys-hook";
 import ExpiryModal from "./ExpiryModal";
+import LoginIcon from "../icons/LoginIcon";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
 
+  const personal = [
+    {
+      title: "Bookmark Paste",
+      content: "Bookmark this paste to your favourites for later viewing.",
+      icon: <FavoriteIcon style={{ color: "#F74954" }} />,
+      callback: () => {
+        alert('Bookmark thing.')
+      },
+    }
+  ]
+
   const actions = [
     {
       title: "Save Paste",
       content: "Save this paste and all its files.",
-      icon: <SaveAltIcon />,
+      icon: <SaveIcon />,
       callback: () => {
         alert("test!");
       },
@@ -78,6 +92,7 @@ export default function OptsBar() {
       {currentModal && currentModal}
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
+          {personal.map(OptsButton)}
           {actions.map(OptsButton)}
           {opts.map(OptsButton)}
         </Nav>
