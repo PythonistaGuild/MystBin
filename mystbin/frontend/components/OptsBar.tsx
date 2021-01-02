@@ -1,29 +1,23 @@
 import {
-  Modal,
   Nav,
   Navbar,
   OverlayTrigger,
   Popover,
-  Form,
-  InputGroup,
-  Button,
 } from "react-bootstrap";
 import React, { useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
-import SaveAltIcon from "@material-ui/icons/SaveAlt";
 import SaveIcon from "@material-ui/icons/Save";
 import EditIcon from "@material-ui/icons/Edit";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import styles from "../styles/OptsBar.module.css";
 import { useHotkeys } from "react-hotkeys-hook";
 import ExpiryModal from "./ExpiryModal";
-import LoginIcon from "../icons/LoginIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import FiberNewIcon from "@material-ui/icons/FiberNew";
 import BrushIcon from "@material-ui/icons/Brush";
 
-export default function OptsBar() {
+export default function OptsBar({ disabledActions }) {
   const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
 
@@ -115,7 +109,9 @@ export default function OptsBar() {
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
           {personal.map(OptsButton)}
+          <hr className={styles.navGap} />
           {actions.map(OptsButton)}
+          <hr className={styles.navGap} />
           {opts.map(OptsButton)}
         </Nav>
       </Navbar>

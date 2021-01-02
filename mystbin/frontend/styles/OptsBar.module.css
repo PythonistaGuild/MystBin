@@ -9,13 +9,13 @@
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
-  background-color: #1B1B1B;
+  background-color: #1b1b1b;
   height: 100%;
   justify-content: center;
 }
 
 .optsIconContainer {
-  color: rgba(255, 255, 255, .9);
+  color: rgba(255, 255, 255, 0.9);
   display: flex;
   align-self: flex-end;
   padding: 1rem;
@@ -25,6 +25,15 @@
   background-color: #286395;
   filter: brightness(150%);
   cursor: pointer;
+}
+
+.navGap {
+  margin-top: none;
+  margin-bottom: none;
+  border-top: 2px solid rgba(255, 255, 255, 0.6);
+  width: 30px;
+  height: 0;
+  box-sizing: content-box;
 }
 
 .optsDivider {
