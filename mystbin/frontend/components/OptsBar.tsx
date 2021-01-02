@@ -19,12 +19,19 @@ import styles from "../styles/OptsBar.module.css";
 import { useHotkeys } from "react-hotkeys-hook";
 import ExpiryModal from "./ExpiryModal";
 import LoginIcon from "../icons/LoginIcon";
+import DashboardIcon from '@material-ui/icons/Dashboard';
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
 
   const personal = [
+    {
+      title: "Dashboard",
+      content: "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
+      icon: <DashboardIcon style={{ color: "#54B4D3" }}/>
+    },
+
     {
       title: "Bookmark Paste",
       content: "Bookmark this paste to your favourites for later viewing.",
