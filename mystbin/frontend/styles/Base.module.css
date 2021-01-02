@@ -1,12 +1,17 @@
 .Base {
   grid-template-areas:
-    "c c c c c c" /* content */
-    "f f f f f f"; /* footer */
+    "n c c c c c c" /* content */
+    "n c c c c c c"
+    "f f f f f f f"; /* footer */
   grid-template-rows: min-content min-content auto;
   grid-template-columns: min-content;
   display: grid;
   height: 100vh;
   background-color: #1b1b1b;
+}
+
+.Base > nav {
+  grid-area: n;
 }
 
 .Base > main {
@@ -21,6 +26,7 @@
   color: white;
   display: flex;
   justify-content: center;
+  max-width: 100%;
 }
 
 .logo {
