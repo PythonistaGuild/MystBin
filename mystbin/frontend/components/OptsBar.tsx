@@ -20,7 +20,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import ExpiryModal from "./ExpiryModal";
 import LoginIcon from "../icons/LoginIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
-import FiberNewIcon from '@material-ui/icons/FiberNew';
+import FiberNewIcon from "@material-ui/icons/FiberNew";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -37,7 +37,7 @@ export default function OptsBar() {
     {
       title: "New Paste",
       content: "Create a new paste to share.",
-      icon: <FiberNewIcon style={{ color: "#84DDA5" }} />
+      icon: <FiberNewIcon style={{ color: "#84DDA5" }} />,
     },
 
     {
