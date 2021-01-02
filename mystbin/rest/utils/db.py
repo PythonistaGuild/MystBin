@@ -528,12 +528,12 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, false, DEFAULT, false, false)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, false)
                 RETURNING *;
                 """
 
         data = await self._do_query(
-            query, userid, token, [email], discord_id, github_id, google_id
+            query, userid, token, [email], [], discord_id, github_id, google_id
         )
         return data[0]
 
@@ -541,6 +541,7 @@ class Database:
         self,
         user_id: int,
         email: Optional[str] = None,
+        bookmarks: Optional[List[str]] = None,
         discord_id: Optional[int] = None,
         github_id: Optional[int] = None,
         google_id: Optional[str] = None,
@@ -553,6 +554,8 @@ class Database:
             The ID of the user to edit.
         email: Optional[:class:`str`]
             The email to add to the User's list of emails.
+        bookmarks: Optional[List[:class:`str`]]
+            The bookmarks to update existing bookmarks.
         discord_id: Optional[:class:`int`]
             The user's Discord ID.
         github_id: Optional[:class:`int`]
@@ -568,14 +571,17 @@ class Database:
 
         query = """
                 UPDATE users SET
-                discord_id = COALESCE($1, discord_id),
-                github_id = COALESCE($2, github_id),
-                google_id = COALESCE($3, google_id)
+                bookmarks = COALESCE($1, bookmarks),
+                discord_id = COALESCE($2, discord_id),
+                github_id = COALESCE($3, github_id),
+                google_id = COALESCE($4, google_id)
                 WHERE id = $4
                 RETURNING token, emails;
                 """
 
-        data = await self._do_query(query, discord_id, github_id, google_id, user_id)
+        data = await self._do_query(
+            query, bookmarks, discord_id, github_id, google_id, user_id
+        )
         if not data:
             return None
 
