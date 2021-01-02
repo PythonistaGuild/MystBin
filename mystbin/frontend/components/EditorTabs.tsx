@@ -17,6 +17,24 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
   const [lang, setLang] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!value[currTab]) {
+      let tabNumber = currTab.valueOf();
+      console.log(tabNumber);
+      if (currTab > 1) {
+        if (currTab === i) {
+          tabNumber = currTab - 1;
+        } else {
+          tabNumber = 0;
+        }
+      } else {
+        tabNumber = 0;
+      }
+
+      setCurrTab(tabNumber);
+    }
+  }, [value]);
+
+  useEffect(() => {
     let initialLangs = [];
     value.map(function (v) {
       if (v["title"].endsWith(".py")) {
@@ -52,8 +70,8 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
       />
       <div>
         <div className={styles.tabsContainer}>
-          {value.map((v, i) => {
-            return <Tab
+          {value.map((v, i) => (
+            <Tab
               key={i}
               current={currTab === i}
               deletable={value.length > 1}
@@ -69,24 +87,10 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
 
                 newValue.splice(i, 1);
 
-                let tabNumber = currTab;
-                console.log(tabNumber);
-                if (currTab > 1) {
-                  if (currTab === i) {
-                    tabNumber = currTab - 1;
-                  } else {
-                    tabNumber = 0;
-                  }
-                } else {
-                  tabNumber = 0;
-                }
-                console.log(tabNumber);
-
                 setValue(newValue);
-                setCurrTab(tabNumber);
               }}
-            />;
-          })}
+            />
+          ))}
           <NewTabButton
             onClick={() => {
               let newValue = [...value];
@@ -98,9 +102,8 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
           />
         </div>
 
-        {value.map((v, i) => {
-          console.log(currTab)
-          return <div
+        {value.map((v, i) => (
+          <div
             key={i}
             style={{
               display: currTab === i ? "block" : "none",
@@ -124,8 +127,8 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
               theme={"mystBinDark"}
               readOnly={false}
             />
-          </div>}
-        )}
+          </div>
+        ))}
       </div>
 
       <Toast
