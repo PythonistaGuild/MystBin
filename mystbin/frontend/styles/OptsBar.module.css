@@ -15,14 +15,15 @@
 
 .optsIconContainer {
   color: rgba(255, 255, 255, .9);
-  margin: 2.5rem 0.5rem -1rem;
+  margin: 2.5rem 0 -2rem;
   display: flex;
   align-self: flex-end;
-  padding: 0.5rem;
+  padding: 1rem;
 }
 
 .optsIconContainer:hover {
-  opacity: 50%;
+  background-color: #286395;
+  filter: brightness(150%);
   cursor: pointer;
 }
 
