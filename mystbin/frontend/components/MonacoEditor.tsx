@@ -95,6 +95,8 @@ export default function MonacoEditor(
         quickSuggestions: false,
         minimap: { enabled: false },
         readOnly: readOnly,
+        lineDecorationsWidth: "0",
+        lineNumbersMinChars: "2",
       }}
     />
   );
