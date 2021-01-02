@@ -1,16 +1,12 @@
 .Base {
   grid-template-areas:
-    "n n n n n n" /* navbar */
     "c c c c c c" /* content */
     "f f f f f f"; /* footer */
   grid-template-rows: min-content min-content auto;
   grid-template-columns: min-content;
   display: grid;
   height: 100vh;
-}
-
-.Base > nav {
-  grid-area: n;
+  background-color: #1b1b1b;
 }
 
 .Base > main {
@@ -23,4 +19,11 @@
   grid-area: f;
   background-color: #1b1b1b;
   color: white;
+  display: flex;
+  justify-content: center;
+}
+
+.logo {
+  width: 7rem;
+  display: flex;
 }

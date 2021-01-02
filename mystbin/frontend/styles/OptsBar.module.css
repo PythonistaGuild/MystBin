@@ -4,19 +4,18 @@
 }
 
 .optsNavContainer {
-  top: 50%;
+  top: 0;
   left: 0;
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0 5px 5px 0;
+  background-color: #414141;
+  height: 100%;
 }
 
 .optsIconContainer {
-  color: rgba(255, 255, 255, 80);
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
+  color: rgba(255, 255, 255, .9);
+  margin: 10rem 0.5rem -9rem;
   display: flex;
   align-self: flex-end;
   padding: 0.5rem;
