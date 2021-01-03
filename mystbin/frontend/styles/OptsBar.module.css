@@ -30,7 +30,7 @@
 .navGap {
   margin-top: none;
   margin-bottom: none;
-  border-top: 2px solid rgba(255, 255, 255, 0.6);
+  border-top: 2px solid rgba(255, 255, 255, 0.4);
   width: 30px;
   height: 0;
   box-sizing: content-box;
