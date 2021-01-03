@@ -34,7 +34,7 @@ export default function OptsBar({ disabledActions }) {
     {
       title: "Bookmark Paste",
       content: "Bookmark this paste to your favourites for later viewing.",
-      icon: <FavoriteIcon style={{color: "#F74954"}}/>,
+      icon: <FavoriteIcon style={{ color: "#F74954" }} />,
       callback: () => {
         alert("Bookmark thing.");
       },
