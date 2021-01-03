@@ -23,6 +23,7 @@ export default function OptsBar({ disabledActions }) {
         "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
       icon: <DashboardIcon style={{ color: "#54B4D3" }} />,
     },
+
     {
       title: "Change Theme",
       content:
@@ -33,20 +34,20 @@ export default function OptsBar({ disabledActions }) {
     {
       title: "Bookmark Paste",
       content: "Bookmark this paste to your favourites for later viewing.",
-      icon: <FavoriteIcon style={{ color: "#F74954" }} />,
+      icon: <FavoriteIcon style={{color: "#F74954"}}/>,
       callback: () => {
         alert("Bookmark thing.");
       },
     },
+  ];
 
+  const actions = [
     {
       title: "New Paste",
       content: "Create a new paste to share.",
       icon: <FiberNewIcon style={{ color: "#84DDA5" }} />,
     },
-  ];
 
-  const actions = [
     {
       title: "Save Paste",
       content: "Save this paste and all its files.",
@@ -56,6 +57,7 @@ export default function OptsBar({ disabledActions }) {
       },
       hotKey: "ctrl+s",
     },
+
     {
       title: "Edit Paste",
       content: "Copy and Edit this paste as a new paste.",
