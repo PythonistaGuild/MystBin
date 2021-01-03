@@ -25,11 +25,34 @@
   background-color: #1b1b1b;
   color: white;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   max-width: 100%;
 }
 
 .logo {
   width: 7rem;
   display: flex;
+  align-items: center;
+}
+
+.socialIconsContainer {
+  display: flex;
+  align-items: center;
+  margin-right: 4rem;
+}
+
+.socialIcon {
+  font-size: 2rem;
+  margin-left: 1rem;
+}
+
+.socialIcon:hover {
+  cursor: pointer;
+}
+
+.footerLeft {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  margin-left: 4rem;
 }
