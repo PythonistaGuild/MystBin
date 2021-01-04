@@ -2,3 +2,5 @@ __pycache__/
 .vscode/
 config.toml
 .env
+mystbin/nginx/ssl/certs/*.pem
+mystbin/nginx/ssl/keys/*.pem
