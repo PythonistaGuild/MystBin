@@ -6,7 +6,7 @@
 .optsNavContainer {
   top: 0;
   left: 0;
-  margin-top: 2.6rem;
+  margin-top: .8rem;
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
@@ -58,4 +58,15 @@
 
 .expiryModalLabel {
   margin: auto 0.25rem auto 1rem;
+}
+
+.logoMinimal {
+  width: 2rem;
+  display: flex;
+  align-self: center;
+  margin-bottom: 2rem;
+}
+
+.logoMinimal:hover {
+  cursor: pointer;
 }

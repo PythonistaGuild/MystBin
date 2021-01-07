@@ -11,6 +11,7 @@ import ExpiryModal from "./ExpiryModal";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import FiberNewIcon from "@material-ui/icons/FiberNew";
 import BrushIcon from "@material-ui/icons/Brush";
+import LogoMinimalMain from "../public/LogoMinimalMain";
 
 export default function OptsBar({ disabledActions }) {
   const [currentModal, setCurrentModal] = useState(null);
@@ -105,6 +106,7 @@ export default function OptsBar({ disabledActions }) {
       {currentModal && currentModal}
       <Navbar className="justify-content-center">
         <Nav className={styles.optsNavContainer}>
+          <LogoMinimalMain className={styles.logoMinimal} />
           {personal.map(OptsButton)}
           <hr className={styles.navGap} />
           {actions.map(OptsButton)}
