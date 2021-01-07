@@ -1,6 +1,6 @@
 .tabsSelected {
   background: #2b2b2b;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.7);
   border: none;
   border-bottom: 2px solid #286395;
   outline: none !important;
@@ -12,6 +12,7 @@
   min-height: 2.5rem;
   text-align: center;
   vertical-align: bottom;
+  filter: brightness(130%);
 }
 
 .tabs {
