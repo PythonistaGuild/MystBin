@@ -6,7 +6,7 @@
 .optsNavContainer {
   top: 0;
   left: 0;
-  margin-top: .8rem;
+  margin-top: .9rem;
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
