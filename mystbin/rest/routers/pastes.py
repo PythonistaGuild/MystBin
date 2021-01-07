@@ -41,12 +41,45 @@ def generate_paste_id():
     word_samples = sample(word_list, 3)
     return "".join(word_samples).replace("\n", "")
 
+def enforce_paste_limit(app, paste: payloads.PastePost, n=1):
+    charlim = app.config['paste']['character_limit']
+    if len(paste.content) > charlim:
+        return UJSONResponse({"error": f"files.{n}.content ({paste.filename}): maximum length per file is {charlim} characters. "
+                                       f"You are {len(paste.content)-charlim} characters over the limit"}, status_code=400)
+
+    return None
+
+def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
+    filelim = app.config['paste']['character_limit']
+    if len(pastes.files) < 1:
+        return UJSONResponse({"error": "files.length: you have not provided any files"}, status_code=400)
+    if len(pastes.files) > filelim:
+        return UJSONResponse({"error": f"files.length: maximum file count is {filelim} files. You are "
+                                       f"{len(pastes.files) - filelim} files over the limit"}, status_code=400)
+
+    for n, file in enumerate(pastes.files):
+        if err := enforce_paste_limit(app, file, n):
+            return err
+
+    return None
+
 
 @router.post(
     "/paste",
     tags=["pastes"],
     response_model=responses.PastePostResponse,
-    responses={201: {"model": responses.PastePostResponse}},
+    responses={
+        201: {"model": responses.PastePostResponse},
+        400: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "files.length: You have provided a bad paste"
+                    }
+                }
+            }
+        }
+    },
     status_code=201,
     name="Create a paste with a single file.",
 )
@@ -69,8 +102,11 @@ async def post_paste(
             )
 
     author: Optional[int] = (
-        author.get("id", None) if isinstance(author, Record) else None
+        author.get("id", None) if author else None
     )
+
+    if err := enforce_paste_limit(request.app, payload):
+        return err
 
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
@@ -95,7 +131,7 @@ async def post_paste(
             "content": {
                 "application/json": {
                     "example": {
-                        "error": "You have not supplied any files to insert into a paste."
+                        "error": "files.length: You have provided a bad paste"
                     }
                 }
             }
@@ -111,7 +147,9 @@ async def put_pastes(
 ) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
-    ...
+
+    author = None
+
     if authorization and authorization.credentials:
         author: Record = await request.app.state.db.get_user(
             token=authorization.credentials
@@ -121,14 +159,11 @@ async def put_pastes(
                 {"error": "Token provided but no valid user found."}, status_code=403
             )
 
-    if not payload.files or len(payload.files) < 1:
-        return UJSONResponse(
-            {"error": "You have not supplied any files to insert into a paste."},
-            status_code=400,
-        )
+    if err := enforce_multipaste_limit(request.app, payload):
+        return err
 
     author: Optional[int] = (
-        author.get("id", None) if isinstance(author, Record) else None
+        author.get("id", None) if author else None
     )
 
     pastes: List[Record] = await request.app.state.db.put_pastes(
