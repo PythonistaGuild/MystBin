@@ -47,15 +47,19 @@
 
 .tabsCloseButton {
   background: transparent;
-  color: #2273ab;
+  color: rgba(255, 255, 255, 0.2);
   outline: none !important;
   border: none;
   margin-left: 0.4rem;
-  margin-top: 0.5rem;
   display: contents;
-  font-size: 1em;
 }
 
 .tabsCloseButton:hover {
-  filter: brightness(180%);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tabsCloseButton > svg {
+  font-size: 1.2em;
+  display: flex;
+  align-self: center;
 }
