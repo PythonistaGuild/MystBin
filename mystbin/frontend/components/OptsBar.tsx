@@ -22,20 +22,20 @@ export default function OptsBar({ disabledActions }) {
       title: "Dashboard",
       content:
         "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
-      icon: <DashboardIcon style={{ color: "#54B4D3" }} />,
+      icon: <DashboardIcon />,
     },
 
     {
       title: "Change Theme",
       content:
         "Change the look and feel of MystBin. Saves to your account preferences.",
-      icon: <BrushIcon style={{ color: "#F6B08B" }} />,
+      icon: <BrushIcon />,
     },
 
     {
       title: "Bookmark Paste",
       content: "Bookmark this paste to your favourites for later viewing.",
-      icon: <FavoriteIcon style={{ color: "#F74954" }} />,
+      icon: <FavoriteIcon />,
       callback: () => {
         alert("Bookmark thing.");
       },
@@ -46,7 +46,7 @@ export default function OptsBar({ disabledActions }) {
     {
       title: "New Paste",
       content: "Create a new paste to share.",
-      icon: <FiberNewIcon style={{ color: "#84DDA5" }} />,
+      icon: <FiberNewIcon />,
     },
 
     {
