@@ -87,19 +87,25 @@ async def post_paste(
     request: Request,
     payload: payloads.PastePost,
     authorization: Optional[str] = Security(optional_auth_model),
-) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
+) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     """Post a paste to MystBin.
     This endpoint accepts a single file."""
     author = None
 
     if authorization and authorization.credentials:
-        author: Record = await request.app.state.db.get_user(
+        author = await request.app.state.db.get_user(
             token=authorization.credentials
         )
-        if not author:
+        if not author or author == 400:
             return UJSONResponse(
-                {"error": "Token provided but no valid user found."}, status_code=403
+                {"error": "Token provided but no valid user found"}, status_code=403
             )
+        elif author == 401:
+            return UJSONResponse(
+                {"error": "Token provided was not valid"}, status_code=403
+            )
+        elif not isinstance(author, Record):
+            raise ValueError("the database returned a bad response")
 
     author: Optional[int] = (
         author.get("id", None) if author else None
@@ -144,14 +150,14 @@ async def put_pastes(
     request: Request,
     payload: payloads.ListedPastePut,
     authorization: Optional[str] = Security(optional_auth_model),
-) -> Dict[str, Optional[Union[str, int, datetime.datetime]]]:
+) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
 
     author = None
 
     if authorization and authorization.credentials:
-        author: Record = await request.app.state.db.get_user(
+        author = await request.app.state.db.get_user(
             token=authorization.credentials
         )
         if not author:
@@ -166,7 +172,7 @@ async def put_pastes(
         author.get("id", None) if author else None
     )
 
-    pastes: List[Record] = await request.app.state.db.put_pastes(
+    pastes = await request.app.state.db.put_pastes(
         paste_id=generate_paste_id(),
         workspace_name=payload.workspace_name,
         pages=payload.files,
@@ -175,7 +181,7 @@ async def put_pastes(
         password=payload.password,
     )
 
-    return dict(pastes)
+    return pastes
 
 
 @router.get(
@@ -193,7 +199,7 @@ async def get_paste(
     request: Request, paste_id: str, password: Optional[str] = None
 ) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     """Get a paste from MystBin."""
-    pastes: List[Record] = await request.app.state.db.get_paste(paste_id, password)
+    pastes = await request.app.state.db.get_paste(paste_id, password)
     if pastes is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
@@ -225,7 +231,7 @@ async def get_all_pastes(
         token=authorization.credentials
     )
 
-    pastes: Record = await request.app.state.db.get_all_pastes(author["id"], limit)
+    pastes = await request.app.state.db.get_all_pastes(author["id"], limit)
     pastes = [dict(entry) for entry in pastes]
 
     return {"pastes": pastes}
