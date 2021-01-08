@@ -25,52 +25,20 @@ This simply makes the keyfunc and is_exempt func async functions
 """
 
 import asyncio
-import datetime
 import functools
 import inspect
 import itertools
-import json
-import logging
-import sys
-import time
-import warnings
-from email.utils import formatdate, parsedate_to_datetime
-from functools import wraps
-from typing import (
-    Any,
-    Coroutine,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    Iterator
-)
+from typing import Any, Callable, Coroutine, Iterator, List, Optional, Union
 
 import asyncpg
-from limits import RateLimitItem, parse_many  # type: ignore
-from limits.errors import ConfigurationError  # type: ignore
-from limits.storage import Storage  # type: ignore
-from limits.storage import MemoryStorage, storage_from_string
-from limits.strategies import STRATEGIES, RateLimiter  # type: ignore
-from starlette.applications import Starlette
-from starlette.config import Config
-from starlette.exceptions import HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
-
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_ipaddr
-
 import slowapi
+from limits import RateLimitItem, parse_many  # type: ignore
+from slowapi.errors import RateLimitExceeded
 from slowapi.extension import StrOrCallableStr
-from . import tokens
+from starlette.requests import Request
+from starlette.responses import Response
 
+from . import tokens
 
 
 class Limit(object):
@@ -103,7 +71,9 @@ class Limit(object):
         Check if the limit is exempt.
         Return True to exempt the route from the limit.
         """
-        return await self.exempt_when(request) if self.exempt_when is not None else False
+        return (
+            await self.exempt_when(request) if self.exempt_when is not None else False
+        )
 
     @property
     def scope(self) -> str:
@@ -117,6 +87,7 @@ class Limit(object):
                 if callable(self.__scope)
                 else self.__scope
             )
+
 
 class LimitGroup(object):
     """
@@ -245,10 +216,10 @@ class Limiter(slowapi.Limiter):
             if name in self._dynamic_route_limits:
                 for lim in self._dynamic_route_limits[name]:
                     try:
-                        l = []
+                        ret = []
                         async for x in lim.iterate(request):
-                            l.append(x)
-                        dynamic_limits.extend(l)
+                            ret.append(x)
+                        dynamic_limits.extend(ret)
                     except ValueError as e:
                         self.logger.error(
                             "failed to load ratelimit for view function %s (%s)",
@@ -350,7 +321,9 @@ class Limiter(slowapi.Limiter):
                     )
                 except ValueError as e:
                     self.logger.error(
-                        "Failed to configure throttling for %s (%s)", name, e,
+                        "Failed to configure throttling for %s (%s)",
+                        name,
+                        e,
                     )
             self.__marked_for_limiting.setdefault(name, []).append(func)
             if dynamic_limit:
@@ -414,6 +387,7 @@ async def ratelimit_key(request: Request) -> str:
 
     return str(userid)
 
+
 async def _ignores_ratelimits(request: Request):
     if not hasattr(request.state, "user"):
         request.state.user = None
@@ -428,10 +402,11 @@ async def _ignores_ratelimits(request: Request):
 
         request.state.user = user
 
-    if request.state.user and request.state.user['admin']:
+    if request.state.user and request.state.user["admin"]:
         return True
 
     return False
+
 
 def limit(t, scope=None):
     async def _limit_key(request: Request) -> str:
@@ -451,15 +426,25 @@ def limit(t, scope=None):
             user = request.state.user
 
         if user:
-            _t = ("authed_" if not user['subscriber'] else "subscriber_") + _t
+            _t = ("authed_" if not user["subscriber"] else "subscriber_") + _t
 
         try:
-            return request.app.config['ratelimits'][_t]
+            return request.app.config["ratelimits"][_t]
         except KeyError:
-            return request.app.config['ratelimits'][t]
+            return request.app.config["ratelimits"][t]
 
     if scope:
-        return global_limiter.shared_limit(_limit_key, scope=scope, key_func=ratelimit_key, exempt_when=_ignores_ratelimits) # noqa
-    return global_limiter.limit(_limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits) # noqa
+        return global_limiter.shared_limit(
+            _limit_key,
+            scope=scope,
+            key_func=ratelimit_key,
+            exempt_when=_ignores_ratelimits,
+        )  # noqa
+    return global_limiter.limit(
+        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits
+    )  # noqa
 
-global_limiter = Limiter(ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True)
+
+global_limiter = Limiter(
+    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True
+)

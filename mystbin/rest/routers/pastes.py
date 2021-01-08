@@ -42,21 +42,35 @@ def generate_paste_id():
     word_samples = sample(word_list, 3)
     return "".join(word_samples).replace("\n", "")
 
+
 def enforce_paste_limit(app, paste: payloads.PastePost, n=1):
-    charlim = app.config['paste']['character_limit']
+    charlim = app.config["paste"]["character_limit"]
     if len(paste.content) > charlim:
-        return UJSONResponse({"error": f"files.{n}.content ({paste.filename}): maximum length per file is {charlim} characters. "
-                                       f"You are {len(paste.content)-charlim} characters over the limit"}, status_code=400)
+        return UJSONResponse(
+            {
+                "error": f"files.{n}.content ({paste.filename}): maximum length per file is {charlim} characters. "
+                f"You are {len(paste.content)-charlim} characters over the limit"
+            },
+            status_code=400,
+        )
 
     return None
 
+
 def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
-    filelim = app.config['paste']['character_limit']
+    filelim = app.config["paste"]["character_limit"]
     if len(pastes.files) < 1:
-        return UJSONResponse({"error": "files.length: you have not provided any files"}, status_code=400)
+        return UJSONResponse(
+            {"error": "files.length: you have not provided any files"}, status_code=400
+        )
     if len(pastes.files) > filelim:
-        return UJSONResponse({"error": f"files.length: maximum file count is {filelim} files. You are "
-                                       f"{len(pastes.files) - filelim} files over the limit"}, status_code=400)
+        return UJSONResponse(
+            {
+                "error": f"files.length: maximum file count is {filelim} files. You are "
+                f"{len(pastes.files) - filelim} files over the limit"
+            },
+            status_code=400,
+        )
 
     for n, file in enumerate(pastes.files):
         if err := enforce_paste_limit(app, file, n):
@@ -74,12 +88,10 @@ def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
         400: {
             "content": {
                 "application/json": {
-                    "example": {
-                        "error": "files.length: You have provided a bad paste"
-                    }
+                    "example": {"error": "files.length: You have provided a bad paste"}
                 }
             }
-        }
+        },
     },
     status_code=201,
     name="Create a paste with a single file.",
@@ -95,9 +107,7 @@ async def post_paste(
     author = None
 
     if authorization and authorization.credentials:
-        author = await request.app.state.db.get_user(
-            token=authorization.credentials
-        )
+        author = await request.app.state.db.get_user(token=authorization.credentials)
         if not author or author == 400:
             return UJSONResponse(
                 {"error": "Token provided but no valid user found"}, status_code=403
@@ -109,9 +119,7 @@ async def post_paste(
         elif not isinstance(author, Record):
             raise ValueError("the database returned a bad response")
 
-    author: Optional[int] = (
-        author.get("id", None) if author else None
-    )
+    author: Optional[int] = author.get("id", None) if author else None
 
     if err := enforce_paste_limit(request.app, payload):
         return err
@@ -138,9 +146,7 @@ async def post_paste(
         400: {
             "content": {
                 "application/json": {
-                    "example": {
-                        "error": "files.length: You have provided a bad paste"
-                    }
+                    "example": {"error": "files.length: You have provided a bad paste"}
                 }
             }
         },
@@ -160,9 +166,7 @@ async def put_pastes(
     author = None
 
     if authorization and authorization.credentials:
-        author = await request.app.state.db.get_user(
-            token=authorization.credentials
-        )
+        author = await request.app.state.db.get_user(token=authorization.credentials)
         if not author:
             return UJSONResponse(
                 {"error": "Token provided but no valid user found."}, status_code=403
@@ -171,9 +175,7 @@ async def put_pastes(
     if err := enforce_multipaste_limit(request.app, payload):
         return err
 
-    author: Optional[int] = (
-        author.get("id", None) if author else None
-    )
+    author: Optional[int] = author.get("id", None) if author else None
 
     pastes = await request.app.state.db.put_pastes(
         paste_id=generate_paste_id(),

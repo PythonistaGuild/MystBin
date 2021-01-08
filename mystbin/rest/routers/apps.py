@@ -236,7 +236,7 @@ async def auth_from_github(
             if "users.noreply.github.com" in entry["email"]:
                 continue
 
-            email.append(entry['email'])
+            email.append(entry["email"])
 
     if email:
         exists = await request.app.state.db.check_email(email)

@@ -28,6 +28,7 @@ from . import tokens
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
+
 def _recursive_hook(d: dict):
     for a, b in d.items():
         if isinstance(b, dict):
@@ -36,6 +37,7 @@ def _recursive_hook(d: dict):
             d[a] = b.isoformat()
 
     return d
+
 
 def wrapped_hook_callback(func):
     @functools.wraps(func)
@@ -53,7 +55,9 @@ def wrapped_hook_callback(func):
             resp = r
 
         return resp
+
     return wraps
+
 
 class Database:
     """Small Database style object for MystBin usage.
