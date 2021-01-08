@@ -21,14 +21,13 @@ import pathlib
 from typing import Any, Dict
 
 import aiohttp
-import toml
-import fastapi
 import slowapi
+import toml
 from fastapi import FastAPI
 
 from routers import admin, apps, pastes, user
-from utils.db import Database
 from utils import ratelimits
+from utils.db import Database
 
 
 class MystbinApp(FastAPI):
@@ -44,7 +43,9 @@ class MystbinApp(FastAPI):
             loop=loop,
         )
         self.state.limiter = ratelimits.global_limiter
-        self.add_exception_handler(ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler)
+        self.add_exception_handler(
+            ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler
+        )
 
 
 app = MystbinApp()
