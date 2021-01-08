@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
     token TEXT,
     emails TEXT[],
+    bookmarks TEXT[],
     discord_id BIGINT,
     github_id BIGINT,
     google_id BIGINT,

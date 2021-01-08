@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, responses
+from utils.ratelimits import limit
 
 router = APIRouter()
 auth_model = HTTPBearer()
@@ -39,6 +40,7 @@ auth_model = HTTPBearer()
     },
     name="Get current user",
 )
+@limit("self")
 async def get_self(
     request: Request, authorization: str = Depends(auth_model)
 ) -> Union[UJSONResponse, Dict[str, Union[str, int, bool]]]:

@@ -22,10 +22,13 @@ from typing import Any, Dict
 
 import aiohttp
 import toml
+import fastapi
+import slowapi
 from fastapi import FastAPI
 
 from routers import admin, apps, pastes, user
 from utils.db import Database
+from utils import ratelimits
 
 
 class MystbinApp(FastAPI):
@@ -40,6 +43,8 @@ class MystbinApp(FastAPI):
             description="MystBin backend server",
             loop=loop,
         )
+        self.state.limiter = ratelimits.global_limiter
+        self.add_exception_handler(ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler)
 
 
 app = MystbinApp()

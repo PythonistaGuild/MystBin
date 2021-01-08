@@ -26,6 +26,7 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, payloads, responses
+from utils.ratelimits import limit
 
 WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 
@@ -83,6 +84,7 @@ def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
     status_code=201,
     name="Create a paste with a single file.",
 )
+@limit("postpastes", "zones.pastes.post")
 async def post_paste(
     request: Request,
     payload: payloads.PastePost,
@@ -124,7 +126,7 @@ async def post_paste(
         password=payload.password,
     )
 
-    return dict(paste)
+    return UJSONResponse(dict(paste))
 
 
 @router.put(
@@ -146,6 +148,7 @@ async def post_paste(
     status_code=201,
     name="Create a paste with multiple files.",
 )
+@limit("postpastes", "zones.pastes.post")
 async def put_pastes(
     request: Request,
     payload: payloads.ListedPastePut,
@@ -181,7 +184,7 @@ async def put_pastes(
         password=payload.password,
     )
 
-    return pastes
+    return UJSONResponse(pastes)
 
 
 @router.get(
@@ -195,6 +198,7 @@ async def put_pastes(
     },
     name="Retrieve paste file(s)",
 )
+@limit("getpaste", "zones.pastes.get")
 async def get_paste(
     request: Request, paste_id: str, password: Optional[str] = None
 ) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
@@ -203,7 +207,7 @@ async def get_paste(
     if pastes is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
-    return pastes
+    return UJSONResponse(pastes)
 
 
 @router.get(
@@ -216,6 +220,7 @@ async def get_paste(
     },
     name="Get multiple pastes",
 )
+@limit("getpaste", "zones.pastes.get")
 async def get_all_pastes(
     request: Request,
     limit: Optional[int] = None,
@@ -234,7 +239,7 @@ async def get_all_pastes(
     pastes = await request.app.state.db.get_all_pastes(author["id"], limit)
     pastes = [dict(entry) for entry in pastes]
 
-    return {"pastes": pastes}
+    return UJSONResponse({"pastes": pastes})
 
 
 @router.put(
@@ -261,6 +266,7 @@ async def get_all_pastes(
     },
     name="Edit paste",
 )
+@limit("postpastes", "zones.pastes.post")
 async def edit_paste(
     request: Request,
     paste_id: str,
@@ -276,7 +282,7 @@ async def edit_paste(
     author: Record = await request.app.state.db.get_user(
         token=authorization.credentials
     )
-    if not author or author in {400, 401}:
+    if not author or isinstance(author, int):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     paste: Union[Record, int] = await request.app.state.db.edit_paste(
@@ -292,7 +298,7 @@ async def edit_paste(
             status_code=404,
         )
 
-    return dict(paste[0])
+    return UJSONResponse(dict(paste[0]))
 
 
 @router.delete(
@@ -306,6 +312,7 @@ async def edit_paste(
     status_code=200,
     name="Delete paste",
 )
+@limit("deletepaste", "zones.pastes.delete")
 async def delete_paste(
     request: Request, paste_id: str = None, authorization: str = Security(auth_model)
 ) -> Union[UJSONResponse, Dict[str, str]]:
@@ -352,6 +359,7 @@ async def delete_paste(
     status_code=200,
     name="Delete pastes",
 )
+@limit("deletepaste", "zones.pastes.delete")
 async def delete_pastes(
     request: Request,
     payload: payloads.PasteDelete,
@@ -366,7 +374,7 @@ async def delete_pastes(
     author: Union[Record, int] = await request.app.state.db.get_user(
         token=authorization.credentials
     )
-    if not author or author in {400, 401}:
+    if not author or isinstance(author, int):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     for paste in payload.pastes:

@@ -27,3 +27,18 @@ file_limit = 5
 [debug]
 db = "False"
 site = "False"
+
+[ratelimits]
+global_limit = "60/minute"
+authed_global_limit = "120/minute"
+premium_global_limit = "360/minute"
+postpastes = "5/minute"
+authed_postpages = "10/minute"
+premium_postpastes = "20/minute"
+getpaste = "20/minute"
+authed_getpaste = "40/minute"
+premium_getpaste = "80/minute"
+deletepaste = "1/minute"
+authed_deletepaste = "10/minute"
+premium_deletepaste = "20/minute"
+self = "20/minute"

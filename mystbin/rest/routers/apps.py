@@ -22,6 +22,7 @@ import yarl
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import UJSONResponse
 from models import responses
+from utils.ratelimits import limit
 
 router = APIRouter()
 
@@ -29,6 +30,7 @@ router = APIRouter()
 @router.get(
     "/apps/discord", response_model=responses.TokenResponse, include_in_schema=False
 )
+@limit("apps", "zones.apps")
 async def auth_from_discord(
     request: Request, code: str = Query(None), state: Optional[str] = Query(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
@@ -95,12 +97,13 @@ async def auth_from_discord(
 
     if not existing_user:
         data = await request.app.state.db.new_user(email, userid)
-        return {"token": data["token"]}
+        return UJSONResponse({"token": data["token"]})
 
 
 @router.get(
     "/apps/google", response_model=responses.TokenResponse, include_in_schema=False
 )
+@limit("apps", "zones.apps")
 async def auth_from_google(
     request: Request, code: str = Query(None), state: Optional[str] = Query(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
@@ -169,7 +172,7 @@ async def auth_from_google(
 
     if not existing_user:
         data = await request.app.state.db.new_user(email, google_id=userid)
-        return {"token": data["token"]}
+        return UJSONResponse({"token": data["token"]})
 
 
 @router.get(
@@ -177,6 +180,7 @@ async def auth_from_google(
     response_model=responses.TokenResponse,
     include_in_schema=False,
 )
+@limit("apps", "zones.apps")
 async def auth_from_github(
     request: Request, code: str = Query(None), state: Optional[str] = Query(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
@@ -227,14 +231,12 @@ async def auth_from_github(
     ) as resp:
         resp.raise_for_status()
         data = await resp.json()
-        email = None
+        email = []
         for entry in data:
             if "users.noreply.github.com" in entry["email"]:
                 continue
 
-            if entry["primary"]:
-                email = entry["email"]
-                break
+            email.append(entry['email'])
 
     if email:
         exists = await request.app.state.db.check_email(email)
@@ -259,4 +261,4 @@ async def auth_from_github(
 
     if not existing_user:
         data = await request.app.state.db.new_user(email, github_id=userid)
-        return {"token": data["token"]}
+        return UJSONResponse({"token": data["token"]})

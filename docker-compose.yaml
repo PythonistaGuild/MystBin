@@ -23,11 +23,14 @@ services:
     image: python:3.9.1-buster
     build: mystbin/rest
     volumes:
-      - ./mystbin/database/schema.sql:/etc/schema.sql:ro
+      - ./mystbin/database/schema.sql:/usr/src/app/database/schema.sql:ro
+      - ./mystbin/rest/config.toml:/usr/src/app/config.toml:ro
     container_name: "staging-api"
     networks:
       main:
         ipv4_address: 172.25.0.11
+    ports:
+      - 5557:9000/tcp
     depends_on:
       - postgres
 
