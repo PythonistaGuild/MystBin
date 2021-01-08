@@ -1,9 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
-envsubst '${DOMAIN}' < /etc/nginx/sites-enabled/frontend.conf > /etc/nginx/sites-enabled/frontend.conf
-envsubst '${API_DOMAIN}' < /etc/nginx/sites-enabled/api.conf > /etc/nginx/sites-enabled/api.conf
+if [ ! -d "/etc/nginx/sites-enabled/" ]; then
+    mkdir -p "/etc/nginx/sites-enabled/"
+fi
 
-. /.ssl.sh
+envsubst '${DOMAIN}' < /etc/mystbin/sites-enabled/frontend.conf > /etc/nginx/sites-enabled/frontend.conf
+envsubst '${API_DOMAIN}' < /etc/mystbin/sites-enabled/api.conf > /etc/nginx/sites-enabled/api.conf
+
+. /etc/mystbin/ssl.sh
 
 exec "$@"
