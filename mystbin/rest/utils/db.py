@@ -19,6 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
+import functools
 from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
@@ -27,6 +28,32 @@ from . import tokens
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
+def _recursive_hook(d: dict):
+    for a, b in d.items():
+        if isinstance(b, dict):
+            d[a] = _recursive_hook(b)
+        elif isinstance(b, datetime.datetime):
+            d[a] = b.isoformat()
+
+    return d
+
+def wrapped_hook_callback(func):
+    @functools.wraps(func)
+    async def wraps(*args, **kwargs):
+        resp = await func(*args, **kwargs)
+        if isinstance(resp, dict):
+            return _recursive_hook(resp)
+        elif isinstance(resp, list):
+            r = []
+            for i in resp:
+                if isinstance(i, dict):
+                    r.append(_recursive_hook(i))
+                else:
+                    r.append(i)
+            resp = r
+
+        return resp
+    return wraps
 
 class Database:
     """Small Database style object for MystBin usage.
@@ -73,6 +100,7 @@ class Database:
 
             return response
 
+    @wrapped_hook_callback
     async def get_paste(
         self, paste_id: str, password: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
@@ -113,6 +141,7 @@ class Database:
             else:
                 return None
 
+    @wrapped_hook_callback
     async def get_paste_compat(self, paste_id: str) -> Optional[Dict[str, str]]:
         async with self._pool.acquire() as conn:
             query = """
@@ -140,6 +169,7 @@ class Database:
             else:
                 return None
 
+    @wrapped_hook_callback
     async def put_paste(
         self,
         *,
@@ -219,6 +249,7 @@ class Database:
         }
         return resp
 
+    @wrapped_hook_callback
     async def put_pastes(
         self,
         *,
@@ -290,6 +321,7 @@ class Database:
 
             return resp
 
+    @wrapped_hook_callback
     async def edit_paste(
         self,
         paste_id: str,
@@ -331,6 +363,7 @@ class Database:
 
         return response[0] if response else None
 
+    @wrapped_hook_callback
     async def edit_pastes(
         self,
         paste_id: str,
@@ -395,6 +428,7 @@ class Database:
 
             return resp
 
+    @wrapped_hook_callback
     async def get_all_pastes(
         self, author_id: Optional[int], limit: Optional[int] = None
     ) -> List[asyncpg.Record]:
@@ -424,6 +458,7 @@ class Database:
 
         return response
 
+    @wrapped_hook_callback
     async def delete_paste(
         self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False
     ) -> Optional[asyncpg.Record]:
@@ -454,6 +489,7 @@ class Database:
 
         return response[0] if response else None
 
+    @wrapped_hook_callback
     async def get_user(
         self, *, user_id: int = None, token: str = None
     ) -> Optional[Union[asyncpg.Record, int]]:
@@ -497,9 +533,10 @@ class Database:
 
         return data
 
+    @wrapped_hook_callback
     async def new_user(
         self,
-        email: str,
+        emails: List[str],
         discord_id: int = None,
         github_id: int = None,
         google_id: int = None,
@@ -508,8 +545,8 @@ class Database:
 
         Parameters
         ------------
-        email: :class:`str`
-            The email address the user has registered with.
+        emails: List[:class:`str`]
+            The email addresses the user has registered with.
         discord_id: Optional[:class:`int`]
             The Discord ID of the registering user.
         github_id: Optional[:class:`int`]
@@ -533,10 +570,11 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, userid, token, [email], [], discord_id, github_id, google_id
+            query, userid, token, emails, [], discord_id, github_id, google_id
         )
         return data[0]
 
+    @wrapped_hook_callback
     async def update_user(
         self,
         user_id: int,
@@ -597,16 +635,20 @@ class Database:
         await self._do_query(query, email, user_id)
         return token
 
-    async def check_email(self, email: str) -> Optional[int]:
+    @wrapped_hook_callback
+    async def check_email(self, emails: Union[str, List[str]]) -> Optional[int]:
         """Quick check to query an email."""
         query = """
-                SELECT id FROM users WHERE $1 = ANY(emails)
+                SELECT id FROM users WHERE $1 && emails
                 """
+        if isinstance(emails, str):
+            emails = [emails]
 
-        data = await self._do_query(query, email)
+        data = await self._do_query(query, emails)
         if data:
             return data[0]["id"]
 
+    @wrapped_hook_callback
     async def toggle_admin(self, userid: int, admin: bool) -> None:
         """Quick query to toggle admin privileges."""
         query = """
@@ -615,6 +657,7 @@ class Database:
 
         await self._do_query(query, admin, userid)
 
+    @wrapped_hook_callback
     async def switch_theme(self, userid: int, theme: str) -> None:
         """Quick query to set theme choices."""
         query = """
@@ -623,6 +666,7 @@ class Database:
 
         await self._do_query(query, theme, userid)
 
+    @wrapped_hook_callback
     async def regen_token(
         self, *, userid: int = None, token: str = None
     ) -> Optional[str]:
@@ -654,6 +698,7 @@ class Database:
 
             return token
 
+    @wrapped_hook_callback
     async def ensure_authorization(self, token: str) -> bool:
         """Quick query against a passed token."""
         if not token:
@@ -669,6 +714,7 @@ class Database:
 
         return data[0]["id"]
 
+    @wrapped_hook_callback
     async def ensure_admin(self, token: str) -> bool:
         """Quick query against a token to return if admin or not."""
         if not token:
@@ -684,6 +730,7 @@ class Database:
 
         return data[0]["admin"]
 
+    @wrapped_hook_callback
     async def ensure_author(self, paste_id: str, author_id: int) -> bool:
         """Quick query to ensure a paste is owned by the passed author ID."""
 

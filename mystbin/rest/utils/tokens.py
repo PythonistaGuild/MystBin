@@ -11,7 +11,7 @@ def generate(userid: int, key=None) -> str:
     """Generate a token."""
     payload = {"id": userid}
     key = key or binascii.hexlify(get_random_bytes(64))
-    return jwt.encode(payload, key, algorithm="HS512").decode()
+    return jwt.encode(payload, key, algorithm="HS512")
 
 
 def get_user_id(token: str) -> Optional[int]:

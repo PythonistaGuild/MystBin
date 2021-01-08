@@ -46,5 +46,5 @@ async def get_any_user(
 
     data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id)
     if data:
-        return dict(data)
+        return UJSONResponse(dict(data))
     return None
