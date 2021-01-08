@@ -33,4 +33,3 @@ if [ ! -f ${SSL_DHPARAM2048_FILE} ]; then
     openssl dhparam -out ${SSL_DHPARAM2048_FILE} 2048 >/dev/null
 fi
 chmod 0644 ${SSL_DHPARAM2048_FILE}
-
