@@ -23,6 +23,7 @@ base_site = "http://127.0.0.1:8000"
 [paste]
 character_limit = 300000
 file_limit = 5
+log_ip = true
 
 [debug]
 db = "False"

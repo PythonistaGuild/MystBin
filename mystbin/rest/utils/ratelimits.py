@@ -36,10 +36,11 @@ from limits import RateLimitItem, parse_many  # type: ignore
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import StrOrCallableStr
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response, UJSONResponse
 
 from . import tokens
 
+class IpBanned(Exception): pass
 
 class Limit(object):
     """
@@ -357,11 +358,13 @@ class Limiter(slowapi.Limiter):
                     if not getattr(
                         request.state, "_rate_limiting_complete", False
                     ):
-                        await self._check_request_limit(request, func, False)
+                        try:
+                            await self._check_request_limit(request, func, False)
+                        except IpBanned:
+                            return UJSONResponse({"error": "You have been banned from the service."}, status_code=403)
                         request.state._rate_limiting_complete = True
                     response = await func(*args, **kwargs)  # noqa
                     assert isinstance(response, Response)
-                    print(request.state.view_rate_limit)
                     self._inject_headers(response, request.state.view_rate_limit)
                     return response
 
@@ -384,21 +387,32 @@ async def ratelimit_key(request: Request) -> str:
 
     return str(userid)
 
+async def _fetch_user(request: Request):
+    auth = request.headers.get("Authorization", None)
+    if not auth:
+        query = "SELECT * FROM ipbans WHERE ip = $1"
+        bans = await request.app.state.db._do_query(query, request.client.host)
+        if bans:
+            raise IpBanned
+        return
+
+    query = """
+            SELECT *, ipbans.ip as _is_ip_banned FROM users FULL OUTER JOIN ipbans ON ip = $2 WHERE token = $1
+            """
+    user = (await request.app.state.db._do_query(
+                    query,
+                    auth.replace("Bearer ", ""),
+                    request.client.host)
+                 )[0]
+    if user['_is_ip_banned'] or user['banned']:
+        raise IpBanned
+
+    request.state.user = user
 
 async def _ignores_ratelimits(request: Request):
     if not hasattr(request.state, "user"):
         request.state.user = None
-
-        auth = request.headers.get("Authorization", None)
-        if not auth:
-            return False
-
-        user = await request.app.state.db.get_user(token=auth.replace("Bearer ", ""))
-        print(user)
-        if not isinstance(user, asyncpg.Record):
-            return False
-
-        request.state.user = user
+        await _fetch_user(request)
 
     if request.state.user and request.state.user["admin"]:
         return True
@@ -411,17 +425,10 @@ def limit(t, scope=None):
         _t = t
 
         if not hasattr(request.state, "user"):
-            request.state.user = user = None
+            request.state.user = None
+            await _fetch_user(request)
 
-            auth = request.headers.get("Authorization", None)
-            if auth:
-                user = await request.app.state.db.get_user(token=auth.replace("Bearer ", ""))
-                if isinstance(user, asyncpg.Record):
-                    request.state.user = user
-                else:
-                    user = None
-        else:
-            user = request.state.user
+        user = request.state.user
 
         if user:
             _t = ("authed_" if not user["subscriber"] else "subscriber_") + _t
