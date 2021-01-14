@@ -30,7 +30,6 @@ import inspect
 import itertools
 from typing import Any, Callable, Coroutine, Iterator, List, Optional, Union
 
-import asyncpg
 import slowapi
 from limits import RateLimitItem, parse_many  # type: ignore
 from slowapi.errors import RateLimitExceeded
@@ -40,7 +39,10 @@ from starlette.responses import Response, UJSONResponse
 
 from . import tokens
 
-class IpBanned(Exception): pass
+
+class IPBanned(Exception):
+    pass
+
 
 class Limit(object):
     """
@@ -117,7 +119,7 @@ class LimitGroup(object):
 
     async def iterate(self, request: Request) -> Iterator[Limit]:
         limit_items: List[RateLimitItem] = parse_many(
-            await self.__limit_provider(request) # noqa
+            await self.__limit_provider(request)  # noqa
             if inspect.iscoroutinefunction(self.__limit_provider)
             else self.__limit_provider
         )
@@ -151,9 +153,9 @@ class Limiter(slowapi.Limiter):
                 limit_scope += ":%s" % request.method
 
             if "request" in inspect.signature(lim.key_func).parameters.keys():
-                limit_key = await lim.key_func(request) # noqa
+                limit_key = await lim.key_func(request)  # noqa
             else:
-                limit_key = await lim.key_func() # noqa
+                limit_key = await lim.key_func()  # noqa
 
             args = [limit_key, limit_scope]
             if all(args):
@@ -219,7 +221,7 @@ class Limiter(slowapi.Limiter):
                 for lim in self._dynamic_route_limits[name]:
                     try:
                         ret = []
-                        async for x in lim.iterate(request): # noqa
+                        async for x in lim.iterate(request):  # noqa
                             ret.append(x)
                         dynamic_limits.extend(ret)
                     except ValueError as e:
@@ -355,20 +357,21 @@ class Limiter(slowapi.Limiter):
                             "parameter `request` must be an instance of starlette.requests.Request"
                         )
 
-                    if not getattr(
-                        request.state, "_rate_limiting_complete", False
-                    ):
+                    if not getattr(request.state, "_rate_limiting_complete", False):
                         try:
                             await self._check_request_limit(request, func, False)
-                        except IpBanned:
-                            return UJSONResponse({"error": "You have been banned from the service."}, status_code=403)
+                        except IPBanned:
+                            return UJSONResponse(
+                                {"error": "You have been banned from the service."},
+                                status_code=403,
+                            )
                         request.state._rate_limiting_complete = True
                     response = await func(*args, **kwargs)  # noqa
                     assert isinstance(response, Response)
                     self._inject_headers(response, request.state.view_rate_limit)
                     return response
 
-                return async_wrapper # noqa
+                return async_wrapper  # noqa
 
             else:
                 raise ValueError("Don't make sync callbacks")
@@ -387,27 +390,29 @@ async def ratelimit_key(request: Request) -> str:
 
     return str(userid)
 
+
 async def _fetch_user(request: Request):
     auth = request.headers.get("Authorization", None)
     if not auth:
         query = "SELECT * FROM ipbans WHERE ip = $1"
         bans = await request.app.state.db._do_query(query, request.client.host)
         if bans:
-            raise IpBanned
+            raise IPBanned
         return
 
     query = """
             SELECT *, ipbans.ip as _is_ip_banned FROM users FULL OUTER JOIN ipbans ON ip = $2 WHERE token = $1
             """
-    user = (await request.app.state.db._do_query(
-                    query,
-                    auth.replace("Bearer ", ""),
-                    request.client.host)
-                 )[0]
-    if user['_is_ip_banned'] or user['banned']:
-        raise IpBanned
+    user = (
+        await request.app.state.db._do_query(
+            query, auth.replace("Bearer ", ""), request.client.host
+        )
+    )[0]
+    if user["_is_ip_banned"] or user["banned"]:
+        raise IPBanned
 
     request.state.user = user
+
 
 async def _ignores_ratelimits(request: Request):
     if not hasattr(request.state, "user"):
@@ -440,16 +445,16 @@ def limit(t, scope=None):
 
     if scope:
         return global_limiter.shared_limit(
-            _limit_key, # noqa
+            _limit_key,  # noqa
             scope=scope,
-            key_func=ratelimit_key, # noqa
-            exempt_when=_ignores_ratelimits, # noqa
+            key_func=ratelimit_key,  # noqa
+            exempt_when=_ignores_ratelimits,  # noqa
         )  # noqa
     return global_limiter.limit(
-        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits # noqa
+        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits  # noqa
     )
 
 
 global_limiter = Limiter(
-    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True # noqa
+    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True  # noqa
 )
