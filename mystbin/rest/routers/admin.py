@@ -16,35 +16,94 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List
 
 from asyncpg import Record
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, responses
+from utils.ratelimits import limit
 
 router = APIRouter()
 auth_model = HTTPBearer()
 
 
 @router.get(
-    "/admin/user/{user_id}",
+    "/admin/users/{user_id}",
     tags=["admin"],
     response_model=responses.User,
-    responses={200: {"model": responses.User}, 401: {"model": errors.Unauthorized}},
+    responses={200: {"model": responses.User}, 401: {"model": errors.Unauthorized},
+               400: {"response": {"example": {"error": "The given user was not found"}}}},
     include_in_schema=False,
 )
+@limit("admin")
 async def get_any_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
+        request: Request, user_id: int, authorization: str = Depends(auth_model)
 ) -> Union[UJSONResponse, Dict[str, str]]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
-    if not await request.app.state.db.ensure_admin(authorization.credentials):
+    if not request.state.user or not request.state.user['admin']:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id)
+    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id=user_id)
     if data:
         return UJSONResponse(dict(data))
-    return None
+    return UJSONResponse({"error": "The given user was not found"}, status_code=400)
+
+@router.post(
+    "/admin/users/{user_id}/ban",
+    tags=["admin"],
+    include_in_schema=False
+)
+@limit("admin", "admin")
+async def ban_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+    """
+    Bans a user from the service
+    * Requires admin authentication
+    """
+    if not request.state.user or not request.state.user['admin']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    success = await request.app.state.db.toggle_ban(user_id, True)
+    return UJSONResponse({"success": success})
+
+@router.post(
+    "/admin/users/{user_id}/unban",
+    tags=["admin"],
+    include_in_schema=False
+)
+@limit("admin", "admin")
+async def unban_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+    """
+    Unbans a user from the service
+    * Requires admin authentication
+    """
+    if not request.state.user or not request.state.user['admin']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    success = await request.app.state.db.toggle_ban(user_id, False)
+    return UJSONResponse({"success": success})
+
+@router.get(
+    "/admin/users",
+    tags=["admin"],
+    response_model=responses.UserList,
+    responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
+    include_in_schema=False
+)
+@limit("admin", "admin")
+async def get_admin_userlist(request: Request, page: int=1, authorization: str = Depends(auth_model)):
+    """
+    Returns a list of smaller user objects
+    * Requires admin authentication.
+    """
+    if page < 1:
+        return UJSONResponse({"error": "page must be >= 1"}, status_code=400)
+
+    if not request.state.user or not request.state.user['admin']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    data = await request.app.state.db.get_admin_userlist(page)
+    return UJSONResponse(data)
