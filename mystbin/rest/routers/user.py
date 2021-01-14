@@ -77,7 +77,7 @@ async def regen_token(
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
     token: Optional[str] = await request.app.state.db.regen_token(
-        userid=request.state.user['id']
+        userid=request.state.user["id"]
     )
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
