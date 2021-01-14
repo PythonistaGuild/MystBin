@@ -116,7 +116,7 @@ class LimitGroup(object):
 
     async def iterate(self, request: Request) -> Iterator[Limit]:
         limit_items: List[RateLimitItem] = parse_many(
-            await self.__limit_provider(request)
+            await self.__limit_provider(request) # noqa
             if inspect.iscoroutinefunction(self.__limit_provider)
             else self.__limit_provider
         )
@@ -144,17 +144,15 @@ class Limiter(slowapi.Limiter):
         limit_for_header = None
         for lim in limits:
             limit_scope = lim.scope or endpoint
-            if await lim.is_exempt(request):
-                continue
             if lim.methods is not None and request.method.lower() not in lim.methods:
                 continue
             if lim.per_method:
                 limit_scope += ":%s" % request.method
 
             if "request" in inspect.signature(lim.key_func).parameters.keys():
-                limit_key = await lim.key_func(request)
+                limit_key = await lim.key_func(request) # noqa
             else:
-                limit_key = await lim.key_func()
+                limit_key = await lim.key_func() # noqa
 
             args = [limit_key, limit_scope]
             if all(args):
@@ -162,6 +160,9 @@ class Limiter(slowapi.Limiter):
                     args = [self._key_prefix] + args
                 if not limit_for_header or lim.limit < limit_for_header[0]:
                     limit_for_header = (lim.limit, args)
+                if await lim.is_exempt(request):
+                    continue
+
                 if not self.limiter.hit(lim.limit, *args):
                     self.logger.warning(
                         "ratelimit %s (%s) exceeded at endpoint: %s",
@@ -217,7 +218,7 @@ class Limiter(slowapi.Limiter):
                 for lim in self._dynamic_route_limits[name]:
                     try:
                         ret = []
-                        async for x in lim.iterate(request):
+                        async for x in lim.iterate(request): # noqa
                             ret.append(x)
                         dynamic_limits.extend(ret)
                     except ValueError as e:
@@ -353,22 +354,18 @@ class Limiter(slowapi.Limiter):
                             "parameter `request` must be an instance of starlette.requests.Request"
                         )
 
-                    if self._auto_check and not getattr(
+                    if not getattr(
                         request.state, "_rate_limiting_complete", False
                     ):
                         await self._check_request_limit(request, func, False)
                         request.state._rate_limiting_complete = True
-                    response = await func(*args, **kwargs)  # type: ignore
-                    if not isinstance(response, Response):
-                        # get the response object from the decorated endpoint function
-                        self._inject_headers(
-                            kwargs.get("response"), request.state.view_rate_limit  # type: ignore
-                        )
-                    else:
-                        self._inject_headers(response, request.state.view_rate_limit)
+                    response = await func(*args, **kwargs)  # noqa
+                    assert isinstance(response, Response)
+                    print(request.state.view_rate_limit)
+                    self._inject_headers(response, request.state.view_rate_limit)
                     return response
 
-                return async_wrapper
+                return async_wrapper # noqa
 
             else:
                 raise ValueError("Don't make sync callbacks")
@@ -381,7 +378,7 @@ async def ratelimit_key(request: Request) -> str:
     if not auth:
         return request.headers.get("X-Forwarded-For", None) or request.client.host
 
-    userid = tokens.get_user_id(auth)
+    userid = tokens.get_user_id(auth.replace("Bearer ", ""))
     if not userid:  # must be a fake token, so just ignore it and go by ip
         return request.headers.get("X-Forwarded-For", None) or request.client.host
 
@@ -396,7 +393,8 @@ async def _ignores_ratelimits(request: Request):
         if not auth:
             return False
 
-        user = await request.app.state.db.get_user(token=auth)
+        user = await request.app.state.db.get_user(token=auth.replace("Bearer ", ""))
+        print(user)
         if not isinstance(user, asyncpg.Record):
             return False
 
@@ -417,7 +415,7 @@ def limit(t, scope=None):
 
             auth = request.headers.get("Authorization", None)
             if auth:
-                user = await request.app.state.db.get_user(token=auth)
+                user = await request.app.state.db.get_user(token=auth.replace("Bearer ", ""))
                 if isinstance(user, asyncpg.Record):
                     request.state.user = user
                 else:
@@ -435,16 +433,16 @@ def limit(t, scope=None):
 
     if scope:
         return global_limiter.shared_limit(
-            _limit_key,
+            _limit_key, # noqa
             scope=scope,
-            key_func=ratelimit_key,
-            exempt_when=_ignores_ratelimits,
+            key_func=ratelimit_key, # noqa
+            exempt_when=_ignores_ratelimits, # noqa
         )  # noqa
     return global_limiter.limit(
-        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits
-    )  # noqa
+        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits # noqa
+    )
 
 
 global_limiter = Limiter(
-    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True
+    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True # noqa
 )

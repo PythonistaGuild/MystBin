@@ -30,7 +30,7 @@ auth_model = HTTPBearer()
 
 
 @router.get(
-    "/user",
+    "/users/me",
     tags=["users"],
     response_model=responses.User,
     responses={
@@ -47,20 +47,16 @@ async def get_self(
     """Gets the User object of the currently logged in user.
     * Requires authentication.
     """
-    if not authorization:
+
+    user = request.state.user
+    if not user:
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
-    data: Union[Record, int] = await request.app.state.db.get_user(
-        token=authorization.credentials
-    )
-    if not data or data in {400, 401}:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    return dict(data)
+    return UJSONResponse(responses.User(**user).dict())
 
 
 @router.post(
-    "/user/token-gen",
+    "/users/regenerate",
     tags=["users"],
     response_model=responses.TokenResponse,
     responses={
@@ -70,17 +66,18 @@ async def get_self(
     },
     name="Regenerate your token",
 )
+@limit("tokengen")
 async def regen_token(
     request: Request, authorization: str = Depends(auth_model)
 ) -> Union[UJSONResponse, Dict[str, str]]:
     """Regens the user's token.
     * Requires authentication.
     """
-    if not authorization:
+    if not request.state.user:
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
     token: Optional[str] = await request.app.state.db.regen_token(
-        token=authorization.credentials
+        userid=request.state.user['id']
     )
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)

@@ -83,3 +83,18 @@ class User(BaseModel):
     subscriber: bool
     banned: bool
     bookmarks: List[str]
+
+class SmallUser(BaseModel):
+    id: int
+    authorizations: List[str]
+    admin: bool
+    theme: str
+    subscriber: bool
+    banned: bool
+    last_seen: Optional[str]
+    paste_count: int
+
+class UserList(BaseModel):
+    users: List[SmallUser]
+    page: int
+    page_count: int
