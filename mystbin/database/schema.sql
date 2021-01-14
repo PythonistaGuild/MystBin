@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS pastes (
     expires TIMESTAMP WITH TIME ZONE,
     last_edited TIMESTAMP WITH TIME ZONE,
     password TEXT,
-    views INTEGER DEFAULT 0
+    views INTEGER DEFAULT 0,
+    origin_ip text
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -34,6 +35,11 @@ CREATE TABLE IF NOT EXISTS files (
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
     index SERIAL NOT NULL,
     PRIMARY KEY (parent_id, index)
+);
+
+CREATE TABLE IF NOT EXISTS ipbans (
+    ip text not null,
+    reason text
 );
 
 CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
