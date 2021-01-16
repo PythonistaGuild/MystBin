@@ -74,8 +74,6 @@ class Database:
         self._config = app.config[f"{self.env}-database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
 
-        self.ban_cache = {}
-
     @property
     def pool(self) -> Optional[asyncpg.pool.Pool]:
         """Property for easier access to attr."""
@@ -678,15 +676,6 @@ class Database:
         data = await self._do_query(query, state, userid)
         return len(data) > 0
 
-    @wrapped_hook_callback
-    async def toggle_subscription(self, userid: int, state: bool):
-        """
-        Gives or revokes premium for a user.
-        Returns False if the user doesnt exist, otherwise returns True
-        """
-        query = """
-                UPDATE users SET subscriber = $1 WHERE id = $2 RETURNING id
-                """
         data = await self._do_query(query, state, userid)
         return len(data) > 0
 
