@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
@@ -11,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     admin BOOLEAN DEFAULT false,
     theme TEXT DEFAULT 'default',
     subscriber BOOLEAN DEFAULT false,
-    banned BOOLEAN DEFAULT false
+    names text[] default ARRAY[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
 );
 
 CREATE TABLE IF NOT EXISTS pastes (
@@ -37,8 +38,10 @@ CREATE TABLE IF NOT EXISTS files (
     PRIMARY KEY (parent_id, index)
 );
 
-CREATE TABLE IF NOT EXISTS ipbans (
-    ip text not null,
+CREATE TABLE IF NOT EXISTS bans (
+    ip text unique,
+    userid bigint unique,
+    names text[],
     reason text
 );
 

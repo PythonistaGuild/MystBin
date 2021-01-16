@@ -20,8 +20,9 @@ import asyncio
 import datetime
 import pathlib
 import functools
+import difflib
 import math
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Iterable
 
 import asyncpg
 
@@ -72,6 +73,8 @@ class Database:
         self.env = "staging" if app.config["debug"]["db"] == "True" else "production"
         self._config = app.config[f"{self.env}-database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
+
+        self.ban_cache = {}
 
     @property
     def pool(self) -> Optional[asyncpg.pool.Pool]:
@@ -676,6 +679,18 @@ class Database:
         return len(data) > 0
 
     @wrapped_hook_callback
+    async def toggle_subscription(self, userid: int, state: bool):
+        """
+        Gives or revokes premium for a user.
+        Returns False if the user doesnt exist, otherwise returns True
+        """
+        query = """
+                UPDATE users SET subscriber = $1 WHERE id = $2 RETURNING id
+                """
+        data = await self._do_query(query, state, userid)
+        return len(data) > 0
+
+    @wrapped_hook_callback
     async def switch_theme(self, userid: int, theme: str) -> None:
         """Quick query to set theme choices."""
         query = """
@@ -804,3 +819,73 @@ class Database:
             "page_count": pageinfo,
             "page": page
         }
+
+    async def get_bans(self, *, ip, userid, search) -> Union[Optional[str], Dict[str, Any]]:
+        assert any((ip, userid, search))
+        if not self.ban_cache:
+            if ip and userid:
+                r = await self._do_query("SELECT reason FROM bans WHERE ip = $1 OR userid = $2", ip, userid)
+                return r[0]['reason'] if r else None
+
+            if ip: # quick path: select directly from the db
+                r = await self._do_query("SELECT reason FROM bans WHERE ip = $1", ip)
+                return r[0]['reason'] if r else None
+
+            elif userid: # quick path: select directly from the db
+                r = await self._do_query("SELECT reason FROM bans WHERE id = $1", ip)
+                return r[0]['reason'] if r else None
+
+            # long path, sequence search
+            self.ban_cache = await self._do_query("SELECT * FROM bans")
+
+        if ip and userid:
+            v = [x for x in self.ban_cache if x['ip'] == ip or x['userid'] == userid]
+            return v[0]['reason'] if v else None
+
+        if ip:
+            v = [x for x in self.ban_cache if x['ip'] == ip]
+            return v[0]['reason'] if v else None
+
+        elif userid:
+            v = [x for x in self.ban_cache if x['ip'] == ip]
+            return v[0]['reason'] if v else None
+
+        # long path
+        # in reality this should only ever be called by the admin ban search endpoint
+        matcher = difflib.SequenceMatcher()
+        matcher.set_seq1(search)
+        close = []
+
+        if "." in search: # a really stupid way to detect a possible ip, but hey, it works
+            for ban in self.ban_cache:
+                if not ban['ip']:
+                    continue
+
+                if ban['ip'] == search:
+                    return ban['reason']
+
+                matcher.set_seq2(ban['ip'])
+                if matcher.quick_ratio() > 0.7:
+                    close.append(dict(ban))
+
+        for ban in self.ban_cache:
+            if not ban['id']:
+                continue
+
+            if ban['id'] == search:
+                return ban['reason']
+            if search in ban['names']:
+                return ban['reason']
+
+            matcher.set_seq2(ban['id'])
+            if matcher.quick_ratio() > 0.7:
+                close.append(dict(ban))
+                continue
+
+            for name in ban['names']:
+                matcher.set_seq2(name)
+                if matcher.quick_ratio() > 0.7:
+                    close.append(dict(ban))
+                    break
+
+        return close
