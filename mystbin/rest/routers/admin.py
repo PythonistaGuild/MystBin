@@ -86,6 +86,40 @@ async def unban_user(request: Request, user_id: int, authorization: str = Depend
     success = await request.app.state.db.toggle_ban(user_id, False)
     return UJSONResponse({"success": success})
 
+@router.post(
+    "/admin/users/{user_id}/subscribe",
+    tags=["admin"],
+    include_in_schema=False
+)
+@limit("admin", "admin")
+async def subscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+    """
+    Gives a user subscriber access
+    * Requires admin authentication
+    """
+    if not request.state.user or not request.state.user['admin']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    success = await request.app.state.db.toggle_subscription(user_id, True)
+    return UJSONResponse({"success": success})
+
+@router.post(
+    "/admin/users/{user_id}/unsubscribe",
+    tags=["admin"],
+    include_in_schema=False
+)
+@limit("admin", "admin")
+async def subscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+    """
+    Revokes a users subscriber access
+    * Requires admin authentication
+    """
+    if not request.state.user or not request.state.user['admin']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    success = await request.app.state.db.toggle_subscription(user_id, False)
+    return UJSONResponse({"success": success})
+
 @router.get(
     "/admin/users",
     tags=["admin"],
@@ -107,3 +141,15 @@ async def get_admin_userlist(request: Request, page: int=1, authorization: str =
 
     data = await request.app.state.db.get_admin_userlist(page)
     return UJSONResponse(data)
+
+@router.get(
+    "/admin/bans",
+    tags=["admin"],
+    include_in_schema=False
+)
+async def search_bans(request: Request, search: str):
+    data = await request.app.state.db.get_bans(search=search)
+    if isinstance(data, str):
+        return UJSONResponse({"reason": data, "searches": []})
+
+    return UJSONResponse({"reason": None, "searches": data})
