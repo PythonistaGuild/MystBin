@@ -18,11 +18,11 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
 import datetime
-import pathlib
 import functools
 import difflib
 import math
-from typing import Any, Dict, List, Optional, Union, Iterable
+import pathlib
+from typing import Any, Dict, List, Optional, Union
 
 import asyncpg
 
@@ -666,7 +666,7 @@ class Database:
         await self._do_query(query, admin, userid)
 
     @wrapped_hook_callback
-    async def toggle_ban(self, userid: int, state: bool=True):
+    async def toggle_ban(self, userid: int, state: bool = True):
         """
         Bans or unbans a user.
         Returns False if the user doesnt exist, otherwise returns True
@@ -674,7 +674,7 @@ class Database:
         query = """
                 UPDATE users SET banned = $1 WHERE id = $2 AND banned != $1 AND admin = false RETURNING id
                 """
-        
+
         data = await self._do_query(query, state, userid)
         return len(data) > 0
 
@@ -780,9 +780,11 @@ class Database:
         return False
 
     @wrapped_hook_callback
-    async def get_admin_userlist(self, page: int) -> Dict[str, Union[List[Dict[str, Union[int, bool, None]]], int]]:
+    async def get_admin_userlist(
+        self, page: int
+    ) -> Dict[str, Union[List[Dict[str, Union[int, bool, None]]], int]]:
         query = """
-                SELECT 
+                SELECT
                     id,
                     github_id,
                     discord_id,
@@ -795,30 +797,37 @@ class Database:
                 FROM users LIMIT 20 OFFSET $1 * 20;
         """
         async with self._pool.acquire() as conn:
-            users = await self._do_query(query, page-1, conn=conn)
-            pageinfo = math.ceil((await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn))[0]['count'])
+            users = await self._do_query(query, page - 1, conn=conn)
+            pageinfo = math.ceil(
+                (
+                    await self._do_query(
+                        "SELECT COUNT(*) AS count FROM users", conn=conn
+                    )
+                )[0]["count"]
+            )
 
         users = [
             {
-                "id": x['id'],
-                "admin": x['admin'],
-                "theme": x['theme'],
-                "subscriber": x['subscriber'],
-                "banned": x['banned'],
-                "paste_count": x['paste_count'],
-                "last_seen": None, # TODO need something to track last seen timestamps
-                "authorizations": [x for x in (
-                    "github" if x['github_id'] else None,
-                    "discord" if x['discord_id'] else None,
-                    "google" if x['google_id'] else None
-                ) if x is not None]
-            } for x in users
+                "id": x["id"],
+                "admin": x["admin"],
+                "theme": x["theme"],
+                "subscriber": x["subscriber"],
+                "banned": x["banned"],
+                "paste_count": x["paste_count"],
+                "last_seen": None,  # TODO need something to track last seen timestamps
+                "authorizations": [
+                    x
+                    for x in (
+                        "github" if x["github_id"] else None,
+                        "discord" if x["discord_id"] else None,
+                        "google" if x["google_id"] else None,
+                    )
+                    if x is not None
+                ],
+            }
+            for x in users
         ]
-        return {
-            "users": users,
-            "page_count": pageinfo,
-            "page": page
-        }
+        return {"users": users, "page_count": pageinfo, "page": page}
 
     async def get_bans(self, *, ip, userid, search) -> Union[Optional[str], Dict[str, Any]]:
         assert any((ip, userid, search))
