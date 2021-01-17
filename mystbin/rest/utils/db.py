@@ -664,20 +664,40 @@ class Database:
         await self._do_query(query, admin, userid)
 
     @wrapped_hook_callback
-    async def toggle_ban(self, userid: int, state: bool = True):
+    async def ban_user(self, userid: int=None, ip: str=None, reason: str=None):
         """
-        Bans or unbans a user.
-        Returns False if the user doesnt exist, otherwise returns True
+        Bans a user.
+        Returns False if the user/ip doesnt exist, or is already banned, otherwise returns True
         """
-        query = """
-                UPDATE users SET banned = $1 WHERE id = $2 AND banned != $1 AND admin = false RETURNING id
-                """
+        try:
+            query = """
+                    INSERT INTO bans VALUES ($1, $2, (SELECT names FROM users WHERE id = $1 AND id is not NULL), $3)
+                    """
+            assert userid or ip
 
-        data = await self._do_query(query, state, userid)
-        return len(data) > 0
+            await self._do_query(query, userid, ip, reason)
+        except asyncpg.UniqueViolationError:
+            return False
+        else:
+            return True
 
-        data = await self._do_query(query, state, userid)
-        return len(data) > 0
+    @wrapped_hook_callback
+    async def unban_user(self, userid: int=None, ip: str=None):
+        """
+        Unbans a user.
+        Returns True if the user/ip was successfully unbanned, otherwise False
+        """
+        assert userid or ip
+
+        if userid and ip:
+            query = "DELETE FROM bans WHERE userid = $1 OR ip = $2 RETURNING *;"
+            return len(await self._do_query(query, userid, ip)) > 0
+        elif userid:
+            query = "DELETE FROM bans WHERE userid = $1 RETURNING *;"
+            return len(await self._do_query(query, userid)) > 0
+        else:
+            query = "DELETE FROM bans WHERE ip = $1 RETURNING *;"
+            return len(await self._do_query(query, ip)) > 0
 
     @wrapped_hook_callback
     async def switch_theme(self, userid: int, theme: str) -> None:
