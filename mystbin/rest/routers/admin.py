@@ -61,7 +61,7 @@ async def get_any_user(
 @router.post("/admin/users/{user_id}/ban", tags=["admin"], include_in_schema=False)
 @limit("admin", "admin")
 async def ban_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
+    request: Request, user_id: int, ip: str = None, reason: str=None, authorization: str = Depends(auth_model)
 ) -> UJSONResponse:
     """
     Bans a user from the service
@@ -70,14 +70,14 @@ async def ban_user(
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    success = await request.app.state.db.toggle_ban(user_id, True)
+    success = await request.app.state.db.ban_user(user_id, ip, reason)
     return UJSONResponse({"success": success})
 
 
 @router.post("/admin/users/{user_id}/unban", tags=["admin"], include_in_schema=False)
 @limit("admin", "admin")
 async def unban_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
+    request: Request, user_id: int, ip: str = None, authorization: str = Depends(auth_model)
 ) -> UJSONResponse:
     """
     Unbans a user from the service
@@ -86,7 +86,7 @@ async def unban_user(
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    success = await request.app.state.db.toggle_ban(user_id, False)
+    success = await request.app.state.db.unban_user(user_id, ip)
     return UJSONResponse({"success": success})
 
 @router.post(
