@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     admin BOOLEAN DEFAULT false,
     theme TEXT DEFAULT 'default',
     subscriber BOOLEAN DEFAULT false,
-    names text[] default ARRAY[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
+    names text[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
 );
 
 CREATE TABLE IF NOT EXISTS pastes (

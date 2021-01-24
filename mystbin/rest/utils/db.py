@@ -33,6 +33,9 @@ EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
 def _recursive_hook(d: dict):
     for a, b in d.items():
+        if isinstance(b, asyncpg.Record):
+            b = dict(b)
+
         if isinstance(b, dict):
             d[a] = _recursive_hook(b)
         elif isinstance(b, datetime.datetime):
@@ -45,6 +48,9 @@ def wrapped_hook_callback(func):
     @functools.wraps(func)
     async def wraps(*args, **kwargs):
         resp = await func(*args, **kwargs)
+        if isinstance(resp, asyncpg.Record):
+            resp = dict(resp)
+
         if isinstance(resp, dict):
             return _recursive_hook(resp)
         elif isinstance(resp, list):
@@ -73,6 +79,7 @@ class Database:
         self.env = "staging" if app.config["debug"]["db"] == "True" else "production"
         self._config = app.config[f"{self.env}-database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
+        self.ban_cache = None
 
     @property
     def pool(self) -> Optional[asyncpg.pool.Pool]:
@@ -671,11 +678,10 @@ class Database:
         """
         try:
             query = """
-                    INSERT INTO bans VALUES ($1, $2, (SELECT names FROM users WHERE id = $1 AND id is not NULL), $3)
+                    INSERT INTO bans VALUES ($1, $2, (SELECT names FROM users WHERE id = $2 AND $2 is not NULL), $3)
                     """
             assert userid or ip
-
-            await self._do_query(query, userid, ip, reason)
+            await self._do_query(query, ip, userid, reason)
         except asyncpg.UniqueViolationError:
             return False
         else:
@@ -700,6 +706,17 @@ class Database:
             return len(await self._do_query(query, ip)) > 0
 
     @wrapped_hook_callback
+    async def get_bans(self, page: int=1):
+        """
+        Lists the bans. Pages by 40
+        """
+        query = """
+                SELECT * FROM bans LIMIT 40 OFFSET $1 * 20
+                """
+        data = await self._do_query(query, page-1)
+        return data
+
+    @wrapped_hook_callback
     async def switch_theme(self, userid: int, theme: str) -> None:
         """Quick query to set theme choices."""
         query = """
@@ -707,6 +724,12 @@ class Database:
                 """
 
         await self._do_query(query, theme, userid)
+
+    @wrapped_hook_callback
+    async def toggle_subscription(self, userid: int, state: bool):
+        query = "UPDATE users SET subscriber = $1 WHERE id = $2 AND subscriber != $1 RETURNING id;"
+        val = await self._do_query(query, state, userid)
+        return len(val) > 0
 
     @wrapped_hook_callback
     async def regen_token(
@@ -801,7 +824,6 @@ class Database:
                     admin,
                     theme,
                     subscriber,
-                    banned,
                     (SELECT COUNT(*) FROM pastes WHERE author_id = users.id) AS paste_count
                 FROM users LIMIT 20 OFFSET $1 * 20;
         """
@@ -821,7 +843,6 @@ class Database:
                 "admin": x["admin"],
                 "theme": x["theme"],
                 "subscriber": x["subscriber"],
-                "banned": x["banned"],
                 "paste_count": x["paste_count"],
                 "last_seen": None,  # TODO need something to track last seen timestamps
                 "authorizations": [
@@ -838,7 +859,8 @@ class Database:
         ]
         return {"users": users, "page_count": pageinfo, "page": page}
 
-    async def get_bans(self, *, ip, userid, search) -> Union[Optional[str], Dict[str, Any]]:
+    @wrapped_hook_callback
+    async def search_bans(self, *, ip=None, userid=None, search=None) -> Union[Optional[str], Dict[str, Any]]:
         assert any((ip, userid, search))
         if not self.ban_cache:
             if ip and userid:
