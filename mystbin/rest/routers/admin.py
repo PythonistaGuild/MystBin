@@ -38,7 +38,7 @@ auth_model = HTTPBearer()
         401: {"model": errors.Unauthorized},
         400: {"response": {"example": {"error": "The given user was not found"}}},
     },
-    include_in_schema=False,
+#    include_in_schema=False,
 )
 @limit("admin")
 async def get_any_user(
@@ -58,7 +58,9 @@ async def get_any_user(
     return UJSONResponse({"error": "The given user was not found"}, status_code=400)
 
 
-@router.post("/admin/users/{user_id}/ban", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id}/ban", tags=["admin"],
+#             include_in_schema=False
+)
 @limit("admin", "admin")
 async def ban_user(
     request: Request, user_id: int, ip: str = None, reason: str=None, authorization: str = Depends(auth_model)
@@ -74,7 +76,9 @@ async def ban_user(
     return UJSONResponse({"success": success})
 
 
-@router.post("/admin/users/{user_id}/unban", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id}/unban", tags=["admin"],
+#             include_in_schema=False
+)
 @limit("admin", "admin")
 async def unban_user(
     request: Request, user_id: int, ip: str = None, authorization: str = Depends(auth_model)
@@ -92,7 +96,7 @@ async def unban_user(
 @router.post(
     "/admin/users/{user_id}/subscribe",
     tags=["admin"],
-    include_in_schema=False
+#    include_in_schema=False
 )
 @limit("admin", "admin")
 async def subscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
@@ -109,10 +113,10 @@ async def subscribe_user(request: Request, user_id: int, authorization: str = De
 @router.post(
     "/admin/users/{user_id}/unsubscribe",
     tags=["admin"],
-    include_in_schema=False
+#    include_in_schema=False
 )
 @limit("admin", "admin")
-async def subscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+async def unsubscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
     """
     Revokes a users subscriber access
     * Requires admin authentication
@@ -128,7 +132,7 @@ async def subscribe_user(request: Request, user_id: int, authorization: str = De
     tags=["admin"],
     response_model=responses.UserList,
     responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
-    include_in_schema=False,
+#    include_in_schema=False,
 )
 @limit("admin", "admin")
 async def get_admin_userlist(
@@ -150,11 +154,44 @@ async def get_admin_userlist(
 @router.get(
     "/admin/bans",
     tags=["admin"],
-    include_in_schema=False
+#    include_in_schema=False
 )
-async def search_bans(request: Request, search: str):
-    data = await request.app.state.db.get_bans(search=search)
-    if isinstance(data, str):
-        return UJSONResponse({"reason": data, "searches": []})
+@limit("admin", "admin")
+async def search_bans(request: Request, search: str=None, page: int=1):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return UJSONResponse({"reason": None, "searches": data})
+    if search is not None:
+        data = await request.app.state.db.search_bans(search=search)
+        if isinstance(data, str):
+            return UJSONResponse({"reason": data, "searches": []})
+
+        return UJSONResponse({"reason": None, "searches": data})
+    else:
+        return UJSONResponse(await request.app.state.db.get_bans(page))
+
+@router.post(
+    "/admin/bans",
+    tags=["admin"],
+#    include_in_schema=False
+)
+@limit("admin", "admin")
+async def post_ban(request: Request, reason: str, ip: str=None, userid: int=None):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    data = await request.app.state.db.ban_user(ip=ip, userid=userid, reason=reason)
+    return UJSONResponse({"success": data})
+
+@router.delete(
+    "/admin/bans",
+    tags=["admin"],
+#    include_in_schema=False
+)
+@limit("admin", "admin")
+async def remove_ban(request: Request, ip: str=None, userid: int=None):
+    if not ip and not userid:
+        return UJSONResponse({"error": "Bad Request"}, status_code=400)
+
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
