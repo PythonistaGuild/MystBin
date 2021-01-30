@@ -195,3 +195,15 @@ async def remove_ban(request: Request, ip: str=None, userid: int=None):
 
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+@router.get(
+    "/admin/recent",
+    tags=["admin"],
+#    include_in_schema=False
+)
+@limit("admin", "admin")
+async def get_recent_pastes(request: Request, offset: int=0, oldest_first: bool=False):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    return request.app.state.db.get_recent_pastes(offset, reverse=oldest_first)
