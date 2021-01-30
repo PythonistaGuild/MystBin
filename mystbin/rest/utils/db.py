@@ -114,6 +114,27 @@ class Database:
             return response
 
     @wrapped_hook_callback
+    async def get_recent_pastes(self, offset: int, reverse=False) -> List[Dict[str, Any]]:
+        """
+        Gets the most recent pastes (20) of them, or oldest if reverse is True
+
+        Parameters
+        -----------
+        offset: :class:`int`
+            The offset of pastes
+        reverse: :class:`bool`
+            whether to search for oldest pastes first
+        """
+        query = f"""
+                SELECT id, author_id, (SELECT names FROM users WHERE id=pastes.author_id) AS author_names, created_at,
+                views, expires, origin_ip FROM pastes
+                ORDER BY created_at {'ASC' if reverse else 'DESC'}
+                LIMIT 20
+                OFFSET $1
+                """
+        return [dict(x) for x in await self._do_query(query, offset)]
+
+    @wrapped_hook_callback
     async def get_paste(
         self, paste_id: str, password: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
