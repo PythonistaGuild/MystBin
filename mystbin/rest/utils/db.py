@@ -360,13 +360,12 @@ class Database:
             The paste record which was edited.
         """
         query = """
+                WITH upd AS (
+                    UPDATE pastes SET last_edit_time = (now() at time zone 'utc') WHERE id = $4 AND author_id IS NOT NULL RETURNING author_id
+                )
                 UPDATE files SET
                     content = $1, loc = $2, nick = COALESCE($3, nick)
-                WHERE parent_id = $4 AND (
-                    SELECT author_id
-                    FROM pastes
-                    WHERE paste_id = $4
-                ) = $5
+                WHERE parent_id = $4 AND (select * from upd) = $5
                 RETURNING *
                 """
 
@@ -578,7 +577,7 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, false)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, ARRAY[])
                 RETURNING *;
                 """
 
