@@ -131,7 +131,7 @@ function OptsButton(obj: {
       key={`opt-${obj.title}`}
       placement={"right"}
       overlay={
-        <Popover id={`opt-${obj.title}`}>
+        <Popover id={`opt-${obj.title}`} className={styles.popoverBody}>
           <Popover.Title className={styles.popoverHeader} as="h3">
             {obj.title}
             {obj.hotKey && (
