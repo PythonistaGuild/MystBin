@@ -65,3 +65,8 @@ body .monaco-aria-container {
     transform: translate(1px, -2px) rotate(-1deg);
   }
 }
+
+/* OPTS POPOVERS */
+.popover[x-placement^="right"] .arrow::after {
+  border-right-color: rgba(255, 255, 255, 0.8);
+}
