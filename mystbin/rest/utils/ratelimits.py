@@ -394,7 +394,7 @@ async def ratelimit_key(request: Request) -> str:
 async def _fetch_user(request: Request):
     auth = request.headers.get("Authorization", None)
     if not auth:
-        query = "SELECT * FROM ipbans WHERE ip = $1"
+        query = "SELECT * FROM bans WHERE ip = $1"
         bans = await request.app.state.db._do_query(query, request.client.host)
         if bans:
             raise IPBanned
