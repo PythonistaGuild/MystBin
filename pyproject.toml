@@ -15,7 +15,7 @@ toml = "*"
 aiohttp = "*"
 PyJWT = "*"
 pycryptodome = "*"
-slowapi = "^0.1.3"
+slowapi = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"

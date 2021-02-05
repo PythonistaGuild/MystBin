@@ -84,6 +84,7 @@ class User(BaseModel):
     banned: bool
     bookmarks: List[str]
 
+
 class SmallUser(BaseModel):
     id: int
     authorizations: List[str]
@@ -93,6 +94,7 @@ class SmallUser(BaseModel):
     banned: bool
     last_seen: Optional[str]
     paste_count: int
+
 
 class UserList(BaseModel):
     users: List[SmallUser]
