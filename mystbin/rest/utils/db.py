@@ -492,6 +492,19 @@ class Database:
         return response
 
     @wrapped_hook_callback
+    async def get_paste_count(self) -> asyncpg.Record:
+        """Get total paste count from Database.
+
+        Returns
+        ---------
+        :class:`asyncpg.Record`
+            The record containing total paste count.
+        """
+        query = """SELECT count(*) FROM pastes"""
+
+        return await self._do_query(query)
+
+    @wrapped_hook_callback
     async def delete_paste(
         self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False
     ) -> Optional[asyncpg.Record]:

@@ -16,8 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
 from typing import Dict, List, Optional, Union
 
+import psutil
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import UJSONResponse
@@ -27,6 +29,11 @@ from utils.ratelimits import limit
 
 router = APIRouter()
 auth_model = HTTPBearer()
+
+
+# Statistic consts
+PROC = psutil.Process()
+START_TIME = datetime.datetime.utcnow()
 
 
 @router.get(
@@ -207,3 +214,26 @@ async def get_recent_pastes(request: Request, offset: int=0, oldest_first: bool=
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return request.app.state.db.get_recent_pastes(offset, reverse=oldest_first)
+
+
+@router.get(
+    "/admin/stats",
+    tags=["admin"],
+#    include_in_schema=False
+)
+@limit("admin", "admin")
+async def get_server_stats(request: Request):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    data = {
+        'memory': PROC.memory_full_info().uss / 1024**2,
+        'memory_percent': PROC.memory_percent(memtype='uss'),
+        'cpu_percent': PROC.cpu_percent(),
+        'uptime': datetime.datetime.utcnow() - START_TIME,
+        'total_pastes': (await request.app.state.db.get_paste_count())['count'],
+        'requests': request.app.state.request_stats['total'],
+        'latest_request': request.app.state.request_stats['latest'],
+    }
+
+    return UJSONResponse(data, status_code=200)

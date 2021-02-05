@@ -17,13 +17,14 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
+import datetime
 import pathlib
 from typing import Any, Dict
 
 import aiohttp
 import slowapi
 import toml
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from routers import admin, apps, pastes, user
 from utils import ratelimits
@@ -51,11 +52,21 @@ class MystbinApp(FastAPI):
 app = MystbinApp()
 
 
+@app.middleware('http')
+async def request_stats(request: Request, call_next):
+    request.app.state.request_stats['total'] += 1
+    request.app.state.request_stats['latest'] = datetime.datetime.utcnow()
+
+    response = await call_next(request)
+    return response
+
+
 @app.on_event("startup")
 async def app_startup():
     """ Async app startup. """
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
+    app.state.request_stats = {'total': 0, 'latest': None}
 
 
 app.include_router(admin.router)
