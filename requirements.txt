@@ -7,3 +7,4 @@ aiohttp>=3.7.2
 PyJWT>=1.7.1
 pycryptodome>=3.9.9
 slowapi
+psutil==5.8.0
