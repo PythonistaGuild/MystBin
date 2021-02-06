@@ -258,6 +258,7 @@ async def get_server_stats(request: Request):
         "total_pastes": (await request.app.state.db.get_paste_count())["count"],
         "requests": request.app.state.request_stats["total"],
         "latest_request": request.app.state.request_stats["latest"],
+
     }
 
     return UJSONResponse(data, status_code=200)
