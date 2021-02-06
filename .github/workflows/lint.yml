@@ -22,5 +22,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BRANCH: main
           VALIDATE_PYTHON_FLAKE8: true
-          VALIDATE_PYTHON_ISORT: true
           VALIDATE_PYTHON_BLACK: true
