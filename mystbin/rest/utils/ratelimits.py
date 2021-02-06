@@ -325,9 +325,7 @@ class Limiter(slowapi.Limiter):
                     )
                 except ValueError as e:
                     self.logger.error(
-                        "Failed to configure throttling for %s (%s)",
-                        name,
-                        e,
+                        "Failed to configure throttling for %s (%s)", name, e,
                     )
             self.__marked_for_limiting.setdefault(name, []).append(func)
             if dynamic_limit:
@@ -339,7 +337,7 @@ class Limiter(slowapi.Limiter):
             sig = inspect.signature(func)
             for idx, parameter in enumerate(sig.parameters.values()):
                 if parameter.name == "request" or parameter.name == "websocket":
-                    connection_type = parameter.name
+                    _ = parameter.name
                     break
             else:
                 raise Exception(
@@ -403,12 +401,12 @@ async def _fetch_user(request: Request):
     query = """
             SELECT *, bans.ip as _is_ip_banned , bans.userid as _is_user_banned FROM users FULL OUTER JOIN bans ON ip = $2 OR userid = users.id WHERE token = $1
             """
-    user = (await request.app.state.db._do_query(
-                    query,
-                    auth.replace("Bearer ", ""),
-                    request.client.host)
-                 )[0]
-    if user['_is_ip_banned'] or user['_is_user_banned']:
+    user = (
+        await request.app.state.db._do_query(
+            query, auth.replace("Bearer ", ""), request.client.host
+        )
+    )[0]
+    if user["_is_ip_banned"] or user["_is_user_banned"]:
         raise IPBanned
 
     request.state.user = user

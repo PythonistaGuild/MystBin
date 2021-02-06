@@ -18,8 +18,8 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
 import datetime
-import functools
 import difflib
+import functools
 import math
 import pathlib
 from typing import Any, Dict, List, Optional, Union
@@ -76,8 +76,7 @@ class Database:
 
     def __init__(self, app):
         self._pool: asyncpg.pool.Pool = None
-        self.env = "staging" if app.config["debug"]["db"] == "True" else "production"
-        self._config = app.config[f"{self.env}-database"]
+        self._config = app.config["database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
         self.ban_cache = None
 
@@ -88,7 +87,6 @@ class Database:
 
     async def __ainit__(self):
         await asyncio.sleep(5)
-        print(self._config["dsn"])
         self._pool = await asyncpg.create_pool(
             self._config["dsn"], max_inactive_connection_lifetime=0
         )
@@ -114,7 +112,9 @@ class Database:
             return response
 
     @wrapped_hook_callback
-    async def get_recent_pastes(self, offset: int, reverse=False) -> List[Dict[str, Any]]:
+    async def get_recent_pastes(
+        self, offset: int, reverse=False
+    ) -> List[Dict[str, Any]]:
         """
         Gets the most recent pastes (20) of them, or oldest if reverse is True
 
@@ -326,7 +326,6 @@ class Database:
             )
 
             resp = resp[0]
-            print(resp)
             to_insert = []
             for page in pages:
                 to_insert.append(
@@ -382,12 +381,15 @@ class Database:
         """
         query = """
                 WITH upd AS (
-                    UPDATE pastes SET last_edit_time = (now() at time zone 'utc') WHERE id = $4 AND author_id IS NOT NULL RETURNING author_id
+                    UPDATE pastes
+                    SET last_edit_time = (now() at time zone 'utc')
+                    WHERE id = $4 AND author_id IS NOT NULL
+                    RETURNING author_id
                 )
                 UPDATE files SET
                     content = $1, loc = $2, nick = COALESCE($3, nick)
                 WHERE parent_id = $4 AND (select * from upd) = $5
-                RETURNING *
+                RETURNING *;
                 """
 
         response = await self._do_query(
@@ -704,7 +706,7 @@ class Database:
         await self._do_query(query, admin, userid)
 
     @wrapped_hook_callback
-    async def ban_user(self, userid: int=None, ip: str=None, reason: str=None):
+    async def ban_user(self, userid: int = None, ip: str = None, reason: str = None):
         """
         Bans a user.
         Returns False if the user/ip doesnt exist, or is already banned, otherwise returns True
@@ -721,7 +723,7 @@ class Database:
             return True
 
     @wrapped_hook_callback
-    async def unban_user(self, userid: int=None, ip: str=None):
+    async def unban_user(self, userid: int = None, ip: str = None):
         """
         Unbans a user.
         Returns True if the user/ip was successfully unbanned, otherwise False
@@ -739,14 +741,14 @@ class Database:
             return len(await self._do_query(query, ip)) > 0
 
     @wrapped_hook_callback
-    async def get_bans(self, page: int=1):
+    async def get_bans(self, page: int = 1):
         """
         Lists the bans. Pages by 40
         """
         query = """
                 SELECT * FROM bans LIMIT 40 OFFSET $1 * 20
                 """
-        data = await self._do_query(query, page-1)
+        data = await self._do_query(query, page - 1)
         return data
 
     @wrapped_hook_callback
@@ -768,7 +770,9 @@ class Database:
     async def regen_token(
         self, *, userid: int = None, token: str = None
     ) -> Optional[str]:
-        """Generates a new token for the given user id or token. Returns the new token, or None if the user does not exist."""
+        """Generates a new token for the given user id or token.
+        Returns the new token, or None if the user does not exist.
+        """
         if not self._pool:
             await self.__ainit__()
 
@@ -893,35 +897,39 @@ class Database:
         return {"users": users, "page_count": pageinfo, "page": page}
 
     @wrapped_hook_callback
-    async def search_bans(self, *, ip=None, userid=None, search=None) -> Union[Optional[str], Dict[str, Any]]:
+    async def search_bans(
+        self, *, ip=None, userid=None, search=None
+    ) -> Union[Optional[str], Dict[str, Any]]:
         assert any((ip, userid, search))
         if not self.ban_cache:
             if ip and userid:
-                r = await self._do_query("SELECT reason FROM bans WHERE ip = $1 OR userid = $2", ip, userid)
-                return r[0]['reason'] if r else None
+                r = await self._do_query(
+                    "SELECT reason FROM bans WHERE ip = $1 OR userid = $2", ip, userid
+                )
+                return r[0]["reason"] if r else None
 
-            if ip: # quick path: select directly from the db
+            if ip:  # quick path: select directly from the db
                 r = await self._do_query("SELECT reason FROM bans WHERE ip = $1", ip)
-                return r[0]['reason'] if r else None
+                return r[0]["reason"] if r else None
 
-            elif userid: # quick path: select directly from the db
+            elif userid:  # quick path: select directly from the db
                 r = await self._do_query("SELECT reason FROM bans WHERE id = $1", ip)
-                return r[0]['reason'] if r else None
+                return r[0]["reason"] if r else None
 
             # long path, sequence search
             self.ban_cache = await self._do_query("SELECT * FROM bans")
 
         if ip and userid:
-            v = [x for x in self.ban_cache if x['ip'] == ip or x['userid'] == userid]
-            return v[0]['reason'] if v else None
+            v = [x for x in self.ban_cache if x["ip"] == ip or x["userid"] == userid]
+            return v[0]["reason"] if v else None
 
         if ip:
-            v = [x for x in self.ban_cache if x['ip'] == ip]
-            return v[0]['reason'] if v else None
+            v = [x for x in self.ban_cache if x["ip"] == ip]
+            return v[0]["reason"] if v else None
 
         elif userid:
-            v = [x for x in self.ban_cache if x['ip'] == ip]
-            return v[0]['reason'] if v else None
+            v = [x for x in self.ban_cache if x["ip"] == ip]
+            return v[0]["reason"] if v else None
 
         # long path
         # in reality this should only ever be called by the admin ban search endpoint
@@ -929,33 +937,35 @@ class Database:
         matcher.set_seq1(search)
         close = []
 
-        if "." in search: # a really stupid way to detect a possible ip, but hey, it works
+        if (
+            "." in search
+        ):  # a really stupid way to detect a possible ip, but hey, it works
             for ban in self.ban_cache:
-                if not ban['ip']:
+                if not ban["ip"]:
                     continue
 
-                if ban['ip'] == search:
-                    return ban['reason']
+                if ban["ip"] == search:
+                    return ban["reason"]
 
-                matcher.set_seq2(ban['ip'])
+                matcher.set_seq2(ban["ip"])
                 if matcher.quick_ratio() > 0.7:
                     close.append(dict(ban))
 
         for ban in self.ban_cache:
-            if not ban['id']:
+            if not ban["id"]:
                 continue
 
-            if ban['id'] == search:
-                return ban['reason']
-            if search in ban['names']:
-                return ban['reason']
+            if ban["id"] == search:
+                return ban["reason"]
+            if search in ban["names"]:
+                return ban["reason"]
 
-            matcher.set_seq2(ban['id'])
+            matcher.set_seq2(ban["id"])
             if matcher.quick_ratio() > 0.7:
                 close.append(dict(ban))
                 continue
 
-            for name in ban['names']:
+            for name in ban["names"]:
                 matcher.set_seq2(name)
                 if matcher.quick_ratio() > 0.7:
                     close.append(dict(ban))

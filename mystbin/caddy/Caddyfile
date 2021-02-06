@@ -1,0 +1,7 @@
+{$DOMAIN} {
+    reverse_proxy frontend
+}
+
+{$API_DOMAIN} {
+    reverse_proxy api:9000
+}

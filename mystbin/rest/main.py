@@ -52,10 +52,10 @@ class MystbinApp(FastAPI):
 app = MystbinApp()
 
 
-@app.middleware('http')
+@app.middleware("http")
 async def request_stats(request: Request, call_next):
-    request.app.state.request_stats['total'] += 1
-    request.app.state.request_stats['latest'] = datetime.datetime.utcnow()
+    request.app.state.request_stats["total"] += 1
+    request.app.state.request_stats["latest"] = datetime.datetime.utcnow()
 
     response = await call_next(request)
     return response
@@ -66,7 +66,7 @@ async def app_startup():
     """ Async app startup. """
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
-    app.state.request_stats = {'total': 0, 'latest': None}
+    app.state.request_stats = {"total": 0, "latest": None}
 
 
 app.include_router(admin.router)

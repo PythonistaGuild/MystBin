@@ -17,11 +17,11 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import psutil
 from asyncpg import Record
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, responses
@@ -45,7 +45,7 @@ START_TIME = datetime.datetime.utcnow()
         401: {"model": errors.Unauthorized},
         400: {"response": {"example": {"error": "The given user was not found"}}},
     },
-#    include_in_schema=False,
+    #    include_in_schema=False,
 )
 @limit("admin")
 async def get_any_user(
@@ -65,12 +65,18 @@ async def get_any_user(
     return UJSONResponse({"error": "The given user was not found"}, status_code=400)
 
 
-@router.post("/admin/users/{user_id}/ban", tags=["admin"],
-#             include_in_schema=False
+@router.post(
+    "/admin/users/{user_id}/ban",
+    tags=["admin"],
+    #             include_in_schema=False
 )
 @limit("admin", "admin")
 async def ban_user(
-    request: Request, user_id: int, ip: str = None, reason: str=None, authorization: str = Depends(auth_model)
+    request: Request,
+    user_id: int,
+    ip: str = None,
+    reason: str = None,
+    authorization: str = Depends(auth_model),
 ) -> UJSONResponse:
     """
     Bans a user from the service
@@ -83,12 +89,17 @@ async def ban_user(
     return UJSONResponse({"success": success})
 
 
-@router.post("/admin/users/{user_id}/unban", tags=["admin"],
-#             include_in_schema=False
+@router.post(
+    "/admin/users/{user_id}/unban",
+    tags=["admin"],
+    #             include_in_schema=False
 )
 @limit("admin", "admin")
 async def unban_user(
-    request: Request, user_id: int, ip: str = None, authorization: str = Depends(auth_model)
+    request: Request,
+    user_id: int,
+    ip: str = None,
+    authorization: str = Depends(auth_model),
 ) -> UJSONResponse:
     """
     Unbans a user from the service
@@ -100,46 +111,53 @@ async def unban_user(
     success = await request.app.state.db.unban_user(user_id, ip)
     return UJSONResponse({"success": success})
 
+
 @router.post(
     "/admin/users/{user_id}/subscribe",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def subscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+async def subscribe_user(
+    request: Request, user_id: int, authorization: str = Depends(auth_model)
+) -> UJSONResponse:
     """
     Gives a user subscriber access
     * Requires admin authentication
     """
-    if not request.state.user or not request.state.user['admin']:
+    if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     success = await request.app.state.db.toggle_subscription(user_id, True)
     return UJSONResponse({"success": success})
 
+
 @router.post(
     "/admin/users/{user_id}/unsubscribe",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def unsubscribe_user(request: Request, user_id: int, authorization: str = Depends(auth_model)) -> UJSONResponse:
+async def unsubscribe_user(
+    request: Request, user_id: int, authorization: str = Depends(auth_model)
+) -> UJSONResponse:
     """
     Revokes a users subscriber access
     * Requires admin authentication
     """
-    if not request.state.user or not request.state.user['admin']:
+    if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     success = await request.app.state.db.toggle_subscription(user_id, False)
     return UJSONResponse({"success": success})
+
 
 @router.get(
     "/admin/users",
     tags=["admin"],
     response_model=responses.UserList,
     responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
-#    include_in_schema=False,
+    #    include_in_schema=False,
 )
 @limit("admin", "admin")
 async def get_admin_userlist(
@@ -158,13 +176,14 @@ async def get_admin_userlist(
     data = await request.app.state.db.get_admin_userlist(page)
     return UJSONResponse(data)
 
+
 @router.get(
     "/admin/bans",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def search_bans(request: Request, search: str=None, page: int=1):
+async def search_bans(request: Request, search: str = None, page: int = 1):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -177,39 +196,44 @@ async def search_bans(request: Request, search: str=None, page: int=1):
     else:
         return UJSONResponse(await request.app.state.db.get_bans(page))
 
+
 @router.post(
     "/admin/bans",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def post_ban(request: Request, reason: str, ip: str=None, userid: int=None):
+async def post_ban(request: Request, reason: str, ip: str = None, userid: int = None):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     data = await request.app.state.db.ban_user(ip=ip, userid=userid, reason=reason)
     return UJSONResponse({"success": data})
 
+
 @router.delete(
     "/admin/bans",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def remove_ban(request: Request, ip: str=None, userid: int=None):
+async def remove_ban(request: Request, ip: str = None, userid: int = None):
     if not ip and not userid:
         return UJSONResponse({"error": "Bad Request"}, status_code=400)
 
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
+
 @router.get(
     "/admin/recent",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def get_recent_pastes(request: Request, offset: int=0, oldest_first: bool=False):
+async def get_recent_pastes(
+    request: Request, offset: int = 0, oldest_first: bool = False
+):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -219,7 +243,7 @@ async def get_recent_pastes(request: Request, offset: int=0, oldest_first: bool=
 @router.get(
     "/admin/stats",
     tags=["admin"],
-#    include_in_schema=False
+    #    include_in_schema=False
 )
 @limit("admin", "admin")
 async def get_server_stats(request: Request):
@@ -227,13 +251,14 @@ async def get_server_stats(request: Request):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     data = {
-        'memory': PROC.memory_full_info().uss / 1024**2,
-        'memory_percent': PROC.memory_percent(memtype='uss'),
-        'cpu_percent': PROC.cpu_percent(),
-        'uptime': datetime.datetime.utcnow() - START_TIME,
-        'total_pastes': (await request.app.state.db.get_paste_count())['count'],
-        'requests': request.app.state.request_stats['total'],
-        'latest_request': request.app.state.request_stats['latest'].timestamp(),
+        "memory": PROC.memory_full_info().uss / 1024 ** 2,
+        "memory_percent": PROC.memory_percent(memtype="uss"),
+        "cpu_percent": PROC.cpu_percent(),
+        "uptime": datetime.datetime.utcnow() - START_TIME,
+        "total_pastes": (await request.app.state.db.get_paste_count())["count"],
+        "requests": request.app.state.request_stats["total"],
+        "latest_request": request.app.state.request_stats["latest"],
+
     }
 
     return UJSONResponse(data, status_code=200)

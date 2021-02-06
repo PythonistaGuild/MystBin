@@ -49,11 +49,7 @@ class ListedPastePut(BaseModel):
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": "string",
                 "files": [
-                    {
-                        "content": "string",
-                        "filename": "string",
-                        "syntax": "string",
-                    },
+                    {"content": "string", "filename": "string", "syntax": "string"},
                     {
                         "content": "another_string",
                         "filename": "another_string",
