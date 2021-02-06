@@ -31,7 +31,25 @@ services:
     depends_on:
       - postgres
 
+  postgres:
+    image: postgres:13-alpine
+    ports:
+      - 59123:5432
+    container_name: "staging-postgresql"
+    volumes:
+      - postgresdata:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_DB: mystbin
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_HOST_AUTH_METHOD: "md5"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    networks:
+      main:
+        ipv4_address: 172.25.0.12
+
 volumes:
+  postgresdata:
   caddy_data:
   caddy_config:
 
