@@ -22,9 +22,11 @@ import pathlib
 from typing import Any, Dict
 
 import aiohttp
+import sentry_sdk
 import slowapi
 import toml
 from fastapi import FastAPI, Request
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from routers import admin, apps, pastes, user
 from utils import ratelimits
@@ -73,3 +75,10 @@ app.include_router(admin.router)
 app.include_router(apps.router)
 app.include_router(pastes.router)
 app.include_router(user.router)
+
+
+sentry_dsn = app.config['sentry']['dsn']
+
+if sentry_dsn:
+    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=1.0, attach_stacktrace=True)
+    app.add_middleware(SentryAsgiMiddleware)
