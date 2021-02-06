@@ -80,5 +80,5 @@ app.include_router(user.router)
 sentry_dsn = app.config['sentry']['dsn']
 
 if sentry_dsn:
-    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=1.0, attach_stacktrace=True)
+    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=app.config['sentry']['dsn'], attach_stacktrace=True)
     app.add_middleware(SentryAsgiMiddleware)
