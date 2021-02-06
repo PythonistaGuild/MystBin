@@ -76,8 +76,7 @@ class Database:
 
     def __init__(self, app):
         self._pool: asyncpg.pool.Pool = None
-        self.env = "staging" if app.config["debug"]["db"] == "True" else "production"
-        self._config = app.config[f"{self.env}-database"]
+        self._config = app.config["database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
         self.ban_cache = None
 

@@ -1,35 +1,37 @@
-[production-database]
+[database]
+# Production Database values. Should be self explanatory.
 user = "prod-username"
 password = "prod-password"
 dsn = "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
 schema_path = "database/schema.sql"
 
-[staging-database]
-user = "staging-username"
-password = "staging-password"
-dsn = "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
-schema_path = "database/schema.sql"
-
 [apps]
+# Discord application ID and Secret for OAuth2
 discord_application_id = ""
 discord_application_secret = ""
+# Google application ID and Secret for OAuth2
 google_application_id = ""
 google_application_secret = ""
+# Github application for OAuth2.
 github_application = ""
 
 [site]
+# Base site URL
 base_site = "http://127.0.0.1:8000"
 
 [paste]
+# Paste limitations
 character_limit = 300000
 file_limit = 5
 log_ip = true
 
 [debug]
+# Debug booleans
 db = "False"
 site = "False"
 
 [ratelimits]
+# Ratelimit values. Written in the format of `"time/unit"` ("60/minute")
 global_limit = "60/minute"
 authed_global_limit = "120/minute"
 premium_global_limit = "360/minute"
@@ -42,6 +44,6 @@ premium_getpaste = "80/minute"
 deletepaste = "1/minute"
 authed_deletepaste = "10/minute"
 premium_deletepaste = "20/minute"
-self = "20/minute"
+self = "20/minute" #?
 tokengen = "2/hour"
 admin = "5/second"
