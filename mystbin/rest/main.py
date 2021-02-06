@@ -77,8 +77,12 @@ app.include_router(pastes.router)
 app.include_router(user.router)
 
 
-sentry_dsn = app.config['sentry']['dsn']
+try:
+    sentry_dsn = app.config['sentry']['dsn']
+except KeyError:
+    pass
+else:
+    traces_sample_rate = app.config['sentry'].get('traces_sample_rate', 0.3)
+    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=traces_sample_rate, attach_stacktrace=True)
 
-if sentry_dsn:
-    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=app.config['sentry']['dsn'], attach_stacktrace=True)
     app.add_middleware(SentryAsgiMiddleware)
