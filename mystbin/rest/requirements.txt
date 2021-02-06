@@ -8,3 +8,4 @@ PyJWT
 pycryptodome
 slowapi
 psutil
+sentry-sdk

@@ -30,6 +30,12 @@ log_ip = true
 db = "False"
 site = "False"
 
+[sentry]
+# Performance and error data via sentry.io. If left blank sentry will be disabled
+dsn = ""
+# See Sentry docs for more info.
+traces_sample_rate = 0.3
+
 [ratelimits]
 # Ratelimit values. Written in the format of `"time/unit"` ("60/minute")
 global_limit = "60/minute"
