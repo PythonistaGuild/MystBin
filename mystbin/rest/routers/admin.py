@@ -233,7 +233,7 @@ async def get_server_stats(request: Request):
         'uptime': datetime.datetime.utcnow() - START_TIME,
         'total_pastes': (await request.app.state.db.get_paste_count())['count'],
         'requests': request.app.state.request_stats['total'],
-        'latest_request': request.app.state.request_stats['latest'],
+        'latest_request': request.app.state.request_stats['latest'].timestamp(),
     }
 
     return UJSONResponse(data, status_code=200)
