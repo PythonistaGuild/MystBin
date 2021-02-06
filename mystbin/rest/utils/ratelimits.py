@@ -401,11 +401,13 @@ async def _fetch_user(request: Request):
     query = """
             SELECT *, bans.ip as _is_ip_banned , bans.userid as _is_user_banned FROM users FULL OUTER JOIN bans ON ip = $2 OR userid = users.id WHERE token = $1
             """
-    user = (
-        await request.app.state.db._do_query(
-            query, auth.replace("Bearer ", ""), request.client.host
-        )
-    )[0]
+
+    user = await request.app.state.db._do_query(
+            query, auth.replace("Bearer ", ""), request.client.host)
+    if not user:
+        return
+
+    user = user[0]
     if user["_is_ip_banned"] or user["_is_user_banned"]:
         raise IPBanned
 
