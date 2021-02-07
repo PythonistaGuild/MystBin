@@ -1,5 +1,5 @@
 import { Nav, Navbar, OverlayTrigger, Popover } from "react-bootstrap";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveIcon from "@material-ui/icons/Save";
@@ -13,11 +13,18 @@ import FiberNewIcon from "@material-ui/icons/FiberNew";
 import BrushIcon from "@material-ui/icons/Brush";
 import LogoMinimalMain from "../public/LogoMinimalMain";
 import { useRouter } from "next/router";
+import pasteStore from "../stores/PasteStore";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
   const router = useRouter();
+  const [paste, setPaste] = useState(pasteStore.getPaste());
+
+  useEffect(() => {
+    pasteStore.addChangeListener(() => setPaste(pasteStore.getPaste()));
+    return () => pasteStore.removeChangeListener({});
+  }, []);
 
   const personal = [
     {
@@ -50,7 +57,9 @@ export default function OptsBar() {
       content: "Create a new paste to share.",
       icon: <FiberNewIcon />,
       callback: () => {
-        router.push("/");
+        router.push("/").then(() => {
+          router.reload();
+        });
       },
     },
 
@@ -59,7 +68,7 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
-        alert("test!");
+        console.log(paste);
       },
       hotKey: "ctrl+s",
     },

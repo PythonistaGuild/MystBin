@@ -3,13 +3,14 @@ import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import { Toast } from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
-import AES from "crypto-js/aes";
-import Utf8 from "crypto-js/enc-utf8";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
+import pasteDispatcher from "../dispatchers/PasteDispatcher";
 
 export default function EditorTabs({ initialData, hasPassword, pid }) {
-  const [value, setValue] = useState<Record<string, string>[]>(initialData);
+  const [value, setValue] = useState<Record<string, string>[]>([
+    { title: "default.ext", content: "" },
+  ]);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!hasPassword);
@@ -17,6 +18,14 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<string[]>([]);
   const id = pid;
+  const [initialState, setInitialState] = useState(false);
+
+  pasteDispatcher.dispatch({ paste: value });
+
+  if (!!id && !initialState) {
+    setValue(initialData);
+    setInitialState(true);
+  }
 
   useEffect(() => {
     if (!value[currTab]) {
