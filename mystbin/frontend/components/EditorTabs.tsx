@@ -14,7 +14,7 @@ interface TabInfo {
 }
 
 export default function EditorTabs({
-  initialData = {},
+  initialData = null,
   hasPassword = false,
   pid = null,
 }: TabInfo) {
