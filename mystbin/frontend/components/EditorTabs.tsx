@@ -8,13 +8,14 @@ import Utf8 from "crypto-js/enc-utf8";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
 
-export default function EditorTabs({ initialData, encryptedPayload }) {
+export default function EditorTabs({ initialData, hasPassword, pid }) {
   const [value, setValue] = useState<Record<string, string>[]>(initialData);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
-  const [passwordModal, setPasswordModal] = useState(!!encryptedPayload);
+  const [passwordModal, setPasswordModal] = useState(!!hasPassword);
   const [shake, setShake] = useState(false);
   const [lang, setLang] = useState<string[]>([]);
+  const id = pid;
 
   useEffect(() => {
     if (!value[currTab]) {
@@ -43,12 +44,24 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
     });
   }, [value]);
 
-  const handlePasswordAttempt = (attempt: string) => {
-    let decryptedBytes = AES.decrypt(encryptedPayload, attempt);
+  const handlePasswordAttempt = async (attempt: string) => {
+    const response = await fetch('https://api-staging.mystb.in/paste/' + id + '?password=' + attempt,
+        {headers: {'Accept': 'application/json'}});
+    const paste = await response.json();
+    let actualData = [];
+
     try {
-      let actualData = JSON.parse(decryptedBytes.toString(Utf8));
-      setPasswordModal(false);
-      setValue(actualData);
+      if (response.status === 200) {
+        setPasswordModal(false);
+
+        for (let file of paste['pastes']) {
+          actualData.push({'title': file['filename'], 'content': file['content']});
+        }
+        setValue(actualData);
+      }
+      else {
+        throw () => {}
+      }
     } catch {
       setShake(true);
       setTimeout(function () {
@@ -70,7 +83,8 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
             <Tab
               key={i}
               current={currTab === i}
-              deletable={value.length > 1}
+              editable={!initialData}
+              deletable={value.length > 1 && !initialData}
               filename={v.title}
               onFocus={() => setCurrTab(i)}
               onChange={(filename) => {
@@ -92,7 +106,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
               setValue(newValue);
               setCurrTab(value.length);
             }}
-            enabled={value.length <= 4}
+            enabled={value.length <= 4 && !initialData}
           />
         </div>
 
@@ -119,7 +133,7 @@ export default function EditorTabs({ initialData, encryptedPayload }) {
               }}
               value={v.content}
               theme={"mystBinDark"}
-              readOnly={false}
+              readOnly={!!initialData}
             />
           </div>
         ))}
