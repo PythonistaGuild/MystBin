@@ -74,3 +74,24 @@
 .logoMinimal:hover {
   cursor: pointer;
 }
+
+.saveSuccessToast {
+  z-index: 9999;
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+.saveSuccessToastHeader {
+  background-color: #47e54f;
+  color: #36393f;
+  user-select: none;
+}
+
+.maxCountToastHeader > button {
+  outline: none;
+}
