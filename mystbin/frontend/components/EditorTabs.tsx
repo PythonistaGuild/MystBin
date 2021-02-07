@@ -7,7 +7,13 @@ import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
 import pasteDispatcher from "../dispatchers/PasteDispatcher";
 
-export default function EditorTabs({ initialData, hasPassword, pid }) {
+interface TabInfo {
+  initialData?: any;
+  hasPassword?: boolean;
+  pid?: string;
+}
+
+export default function EditorTabs({ initialData={}, hasPassword=false, pid=null }: TabInfo) {
   const [value, setValue] = useState<Record<string, string>[]>([
     { title: "default.ext", content: "" },
   ]);
