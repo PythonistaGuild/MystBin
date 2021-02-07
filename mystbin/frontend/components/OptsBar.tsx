@@ -94,8 +94,7 @@ export default function OptsBar() {
             if (d && d.id) {
               let path = `/${d.id}`;
               navigator.clipboard.writeText(window.location.origin + path);
-              router.push(path);
-              setSaveSuccessToast(d.id);
+              router.push(path).then(setSaveSuccessToast(d.id));
             }
           });
       },
