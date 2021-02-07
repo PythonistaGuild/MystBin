@@ -26,6 +26,7 @@ import sentry_sdk
 import slowapi
 import toml
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from routers import admin, apps, pastes, user
@@ -75,6 +76,14 @@ app.include_router(admin.router)
 app.include_router(apps.router)
 app.include_router(pastes.router)
 app.include_router(user.router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['http://localhost:3000'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 try:
