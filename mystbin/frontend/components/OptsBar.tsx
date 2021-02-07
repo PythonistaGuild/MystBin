@@ -72,7 +72,25 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
-        console.log(paste);
+        let files = [];
+
+        for (let file of paste) {
+          files.push({ filename: file["title"], content: file["content"] });
+        }
+
+        const response = fetch("https://api-staging.mystb.in/paste", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ files: files }),
+        });
+
+        if (response.status !== 200) {
+          return console.log(response.status);
+        }
+
+        let data = response.json();
+        navigator.clipboard.writeText("http://localhost:3000/" + data["id"]);
+        router.push("/" + data["id"]);
       },
       hotKey: "ctrl+s",
     },
