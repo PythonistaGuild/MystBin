@@ -78,19 +78,24 @@ export default function OptsBar() {
           files.push({ filename: file["title"], content: file["content"] });
         }
 
-        const response = fetch("https://api-staging.mystb.in/paste", {
+        fetch("https://api-staging.mystb.in/paste", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ files: files }),
-        });
-
-        if (response.status !== 200) {
-          return console.log(response.status);
-        }
-
-        let data = response.json();
-        navigator.clipboard.writeText("http://localhost:3000/" + data["id"]);
-        router.push("/" + data["id"]);
+        })
+          .then((r) => {
+            if (r.status === 200) {
+              return r.json();
+            }
+            console.error(r.status);
+          })
+          .then(async (d) => {
+            if (d && d.id) {
+              let path = `/${d.id}`;
+              navigator.clipboard.writeText(window.location.origin + path);
+              router.push(path);
+            }
+          });
       },
       hotKey: "ctrl+s",
     },
