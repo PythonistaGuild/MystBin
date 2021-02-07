@@ -9,6 +9,7 @@ export default function Tab({
   onDelete,
   filename,
   deletable,
+  editable,
 }: {
   current: boolean;
   onFocus: () => void;
@@ -16,6 +17,7 @@ export default function Tab({
   onDelete: () => void;
   filename: string;
   deletable: boolean;
+  editable: boolean;
 }) {
   const spanRef = React.createRef<HTMLSpanElement>();
 
@@ -44,7 +46,7 @@ export default function Tab({
       >
         <span
           ref={spanRef}
-          contentEditable={current}
+          contentEditable={current && editable}
           className={styles.tabsFilename}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
