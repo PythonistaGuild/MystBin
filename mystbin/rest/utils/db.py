@@ -134,7 +134,9 @@ class Database:
                 """
         return [dict(x) for x in await self._do_query(query, offset)]
 
-    @wrapped_hook_callback
+    # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
+    # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the
+    # process twice
     async def get_paste(
         self, paste_id: str, password: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
