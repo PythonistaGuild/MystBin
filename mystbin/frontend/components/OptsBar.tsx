@@ -12,7 +12,7 @@ import DashboardIcon from "@material-ui/icons/Dashboard";
 import FiberNewIcon from "@material-ui/icons/FiberNew";
 import BrushIcon from "@material-ui/icons/Brush";
 import LogoMinimalMain from "../public/LogoMinimalMain";
-import Link from 'next/link'
+import Link from "next/link";
 
 export default function OptsBar({ disabledActions }) {
   const [currentModal, setCurrentModal] = useState(null);
@@ -49,8 +49,8 @@ export default function OptsBar({ disabledActions }) {
       content: "Create a new paste to share.",
       icon: <FiberNewIcon />,
       callback: () => {},
-      link: '/',
-      },
+      link: "/",
+    },
 
     {
       title: "Save Paste",
@@ -159,9 +159,12 @@ function OptsButton(obj: {
       }
     >
       <Link href={obj.link !== undefined ? obj.link : ""}>
-      <div className={styles.optsIconContainer} onClick={() => obj.callback()}>
-        {obj.icon}
-      </div>
+        <div
+          className={styles.optsIconContainer}
+          onClick={() => obj.callback()}
+        >
+          {obj.icon}
+        </div>
       </Link>
     </OverlayTrigger>
   );
