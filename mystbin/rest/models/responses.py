@@ -46,7 +46,7 @@ class PastePatchResponse(BaseModel):
 
 class PasteGetResponse(BaseModel):
     id: str
-    workspace_name: str
+    workspace_name: Optional[str]
     nick: Optional[str] = None
     syntax: Optional[str] = None
     created_at: datetime
