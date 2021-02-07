@@ -10,11 +10,7 @@ const PostMonacoEditor = dynamic(() => import("../components/EditorTabs"), {
   ssr: false,
 });
 
-export default function Home(
-  props: PropsWithoutRef<{ initialData; encryptedPayload }>
-) {
-  const { initialData, encryptedPayload } = props;
-
+export default function Home() {
   return (
     <div>
       <Head>
@@ -22,40 +18,8 @@ export default function Home(
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Base className={styles.Tabs}>
-        <PostMonacoEditor
-          initialData={initialData}
-          encryptedPayload={encryptedPayload}
-        />
+        <PostMonacoEditor />
       </Base>
     </div>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  const password = "abc";
-  let initialData;
-  let dummyData = [
-    { title: "test.py", content: "print('Hello World!')" },
-    { title: "other.py", content: "print('other.py')" },
-  ];
-
-  var encryptedPayload = AES.encrypt(
-    JSON.stringify(dummyData),
-    password
-  ).toString();
-
-  if (password) {
-    initialData = [
-      { title: "!protected!", content: "Password protected paste." },
-    ];
-  } else {
-    initialData = dummyData;
-  }
-
-  return {
-    props: {
-      initialData,
-      encryptedPayload,
-    },
-  };
-};
