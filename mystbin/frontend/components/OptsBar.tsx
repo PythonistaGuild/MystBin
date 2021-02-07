@@ -1,4 +1,4 @@
-import {Nav, Navbar, OverlayTrigger, Popover, Toast} from "react-bootstrap";
+import { Nav, Navbar, OverlayTrigger, Popover, Toast } from "react-bootstrap";
 import React, { useEffect, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
@@ -93,7 +93,7 @@ export default function OptsBar() {
         navigator.clipboard.writeText("http://localhost:3000/" + data["id"]);
         router.push("/" + data["id"]);
 
-        setSaveSuccessToast(data['id'])
+        setSaveSuccessToast(data["id"]);
       },
       hotKey: "ctrl+s",
     },
@@ -155,19 +155,17 @@ export default function OptsBar() {
       </Navbar>
 
       <Toast
-          className={styles.saveSuccessToast}
-          onClose={() => setSaveSuccessToast(null)}
-          show={saveSuccessToast}
-          delay={5000}
-          autohide
+        className={styles.saveSuccessToast}
+        onClose={() => setSaveSuccessToast(null)}
+        show={saveSuccessToast}
+        delay={5000}
+        autohide
       >
         <Toast.Header className={styles.saveSuccessToastHeader}>
           <strong className="mr-auto">Save Successful!</strong>
           <small>{saveSuccessToast}</small>
         </Toast.Header>
-        <Toast.Body>
-          Your paste URL has been copied to clipboard.
-        </Toast.Body>
+        <Toast.Body>Your paste URL has been copied to clipboard.</Toast.Body>
       </Toast>
     </>
   );
