@@ -75,21 +75,22 @@ export default function OptsBar() {
         let files = [];
 
         for (let file of paste) {
-          files.push({'filename': file['title'], 'content': file['content']})
+          files.push({ filename: file["title"], content: file["content"] });
         }
 
-        const response = fetch('https://api-staging.mystb.in/paste',
-            {method: 'PUT',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({'files': files})})
+        const response = fetch("https://api-staging.mystb.in/paste", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ files: files }),
+        });
 
         if (response.status !== 200) {
-          return console.log(response.status)
+          return console.log(response.status);
         }
 
         let data = response.json();
-        navigator.clipboard.writeText('http://localhost:3000/' + data['id']);
-        router.push('/' + data['id']);
+        navigator.clipboard.writeText("http://localhost:3000/" + data["id"]);
+        router.push("/" + data["id"]);
       },
       hotKey: "ctrl+s",
     },
