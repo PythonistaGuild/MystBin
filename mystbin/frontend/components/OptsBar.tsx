@@ -50,7 +50,7 @@ export default function OptsBar() {
       content: "Create a new paste to share.",
       icon: <FiberNewIcon />,
       callback: () => {
-        router.push("/");
+        router.push("/").then(() => {router.reload()});
       },
     },
 
