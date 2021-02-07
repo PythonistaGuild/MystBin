@@ -14,6 +14,7 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!hasPassword);
   const [shake, setShake] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<string[]>([]);
   const id = pid;
 
@@ -45,6 +46,7 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
   }, [value]);
 
   const handlePasswordAttempt = async (attempt: string) => {
+    setLoading(true);
     const response = await fetch(
       "https://api-staging.mystb.in/paste/" + id + "?password=" + attempt,
       { headers: { Accept: "application/json" } }
@@ -72,6 +74,7 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
         setShake(false);
       }, 500);
     }
+    setLoading(false);
   };
 
   return (
@@ -79,6 +82,7 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
       <PasswordModal
         show={passwordModal}
         shake={shake}
+        loading={loading}
         onAttempt={handlePasswordAttempt}
       />
       <div>
