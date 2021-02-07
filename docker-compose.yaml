@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 
 services:
   proxy:
@@ -34,7 +34,7 @@ services:
   postgres:
     image: postgres:13-alpine
     ports:
-      - 127.0.0.1:59123:5432
+      - 127.0.0.1:5558:5432
     container_name: "staging-postgresql"
     volumes:
       - postgresdata:/var/lib/postgresql/data/pgdata
