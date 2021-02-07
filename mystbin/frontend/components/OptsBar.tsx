@@ -74,15 +74,15 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
-        if (window.location.pathname !== '/') {
-          return
+        if (window.location.pathname !== "/") {
+          return;
         }
 
         if (!paste) {
-          return
+          return;
         }
 
-        if (paste.length === 1 && paste[0]['content'] === "") {
+        if (paste.length === 1 && paste[0]["content"] === "") {
           return setSaveBlankToast(true);
         }
 
@@ -185,16 +185,18 @@ export default function OptsBar() {
       </Toast>
 
       <Toast
-          className={styles.saveBlankToast}
-          onClose={() => setSaveBlankToast(false)}
-          show={saveBlankToast}
-          delay={5000}
-          autohide
+        className={styles.saveBlankToast}
+        onClose={() => setSaveBlankToast(false)}
+        show={saveBlankToast}
+        delay={5000}
+        autohide
       >
         <Toast.Header className={styles.saveBlankToastHeader}>
           <strong className="mr-auto">Save Error!</strong>
         </Toast.Header>
-        <Toast.Body>Your paste is empty, cannot save an empty paste.</Toast.Body>
+        <Toast.Body>
+          Your paste is empty, cannot save an empty paste.
+        </Toast.Body>
       </Toast>
     </>
   );
