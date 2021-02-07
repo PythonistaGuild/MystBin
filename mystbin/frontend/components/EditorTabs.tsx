@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
 import { Toast } from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
+import pasteDispatcher from "../dispatchers/PasteDispatcher";
 
 export default function EditorTabs({ initialData, hasPassword, pid }) {
   const [value, setValue] = useState<Record<string, string>[]>([
@@ -17,6 +18,8 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
   const [lang, setLang] = useState<string[]>([]);
   const id = pid;
   const [initialState, setInitialState] = useState(false);
+
+  pasteDispatcher.dispatch({ paste: value });
 
   if (!!id && !initialState) {
     setValue(initialData);
