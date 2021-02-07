@@ -27,6 +27,7 @@ from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, payloads, responses
 from utils.ratelimits import limit
+from utils.db import _recursive_hook as recursive_hook
 
 WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 
@@ -183,13 +184,17 @@ async def put_pastes(
 @limit("getpaste", "zones.pastes.get")
 async def get_paste(
     request: Request, paste_id: str, password: Optional[str] = None
-) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
+) -> UJSONResponse:
     """Get a paste from MystBin."""
-    pastes = await request.app.state.db.get_paste(paste_id, password)
-    if pastes is None:
+    paste = await request.app.state.db.get_paste(paste_id, password)
+    if paste is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
-    return UJSONResponse(pastes)
+    if paste['has_password'] and not paste['password_ok']:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    resp = responses.PasteGetResponse(**paste)
+    return UJSONResponse(recursive_hook(resp.dict()))
 
 
 @router.get(
