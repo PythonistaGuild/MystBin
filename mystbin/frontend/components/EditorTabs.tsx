@@ -13,7 +13,11 @@ interface TabInfo {
   pid?: string;
 }
 
-export default function EditorTabs({ initialData={}, hasPassword=false, pid=null }: TabInfo) {
+export default function EditorTabs({
+  initialData = {},
+  hasPassword = false,
+  pid = null,
+}: TabInfo) {
   const [value, setValue] = useState<Record<string, string>[]>([
     { title: "default.ext", content: "" },
   ]);
