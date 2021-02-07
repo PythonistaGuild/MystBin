@@ -21,6 +21,7 @@ export default function OptsBar() {
   const router = useRouter();
   const [paste, setPaste] = useState(pasteStore.getPaste());
   const [saveSuccessToast, setSaveSuccessToast] = useState(null);
+  const [saveBlankToast, setSaveBlankToast] = useState(false);
 
   useEffect(() => {
     pasteStore.addChangeListener(onChange);
@@ -73,6 +74,18 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
+        if (window.location.pathname !== '/') {
+          return
+        }
+
+        if (!paste) {
+          return
+        }
+
+        if (paste.length === 1 && paste[0]['content'] === "") {
+          return setSaveBlankToast(true);
+        }
+
         let files = [];
 
         for (let file of paste) {
@@ -95,7 +108,6 @@ export default function OptsBar() {
               let path = `/${d.id}`;
               navigator.clipboard.writeText(window.location.origin + path);
               router.push(path).then(setSaveSuccessToast(d.id));
-              setPaste(null);
             }
           });
       },
@@ -170,6 +182,19 @@ export default function OptsBar() {
           <small>{saveSuccessToast}</small>
         </Toast.Header>
         <Toast.Body>Your paste URL has been copied to clipboard.</Toast.Body>
+      </Toast>
+
+      <Toast
+          className={styles.saveBlankToast}
+          onClose={() => setSaveBlankToast(false)}
+          show={saveBlankToast}
+          delay={5000}
+          autohide
+      >
+        <Toast.Header className={styles.saveBlankToastHeader}>
+          <strong className="mr-auto">Save Error!</strong>
+        </Toast.Header>
+        <Toast.Body>Your paste is empty, cannot save an empty paste.</Toast.Body>
       </Toast>
     </>
   );

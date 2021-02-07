@@ -75,7 +75,7 @@
   cursor: pointer;
 }
 
-.saveSuccessToast {
+.saveSuccessToast, .saveBlankToast {
   z-index: 9999;
   position: absolute;
   margin-left: auto;
@@ -92,6 +92,12 @@
   user-select: none;
 }
 
-.maxCountToastHeader > button {
+.saveSuccessToastHeader, .saveBlankToastHeader > button {
   outline: none;
+}
+
+.saveBlankToastHeader {
+  background-color: #F7665E;
+  color: #36393f;
+  user-select: none;
 }
