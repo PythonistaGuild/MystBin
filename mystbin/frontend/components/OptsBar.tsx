@@ -95,6 +95,7 @@ export default function OptsBar() {
               let path = `/${d.id}`;
               navigator.clipboard.writeText(window.location.origin + path);
               router.push(path).then(setSaveSuccessToast(d.id));
+              setPaste(null);
             }
           });
       },
