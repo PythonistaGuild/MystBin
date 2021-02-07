@@ -22,9 +22,13 @@ export default function OptsBar() {
   const [paste, setPaste] = useState(pasteStore.getPaste());
 
   useEffect(() => {
-    pasteStore.addChangeListener(() => setPaste(pasteStore.getPaste()));
-    return () => pasteStore.removeChangeListener({});
+    pasteStore.addChangeListener(onChange);
+    return () => pasteStore.removeChangeListener(onChange);
   }, []);
+
+  function onChange() {
+    setPaste(pasteStore.getPaste());
+  }
 
   const personal = [
     {
