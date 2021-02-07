@@ -1,5 +1,5 @@
 import { Nav, Navbar, OverlayTrigger, Popover } from "react-bootstrap";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveIcon from "@material-ui/icons/Save";
@@ -57,7 +57,9 @@ export default function OptsBar() {
       content: "Create a new paste to share.",
       icon: <FiberNewIcon />,
       callback: () => {
-        router.push("/").then(() => {router.reload()});
+        router.push("/").then(() => {
+          router.reload();
+        });
       },
     },
 
@@ -66,7 +68,7 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
-        console.log(paste)
+        console.log(paste);
       },
       hotKey: "ctrl+s",
     },
