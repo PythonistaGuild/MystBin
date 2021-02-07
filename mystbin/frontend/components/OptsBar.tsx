@@ -159,12 +159,9 @@ function OptsButton(obj: {
         </Popover>
       }
     >
-        <div
-          className={styles.optsIconContainer}
-          onClick={() => obj.callback()}
-        >
-          {obj.icon}
-        </div>
+      <div className={styles.optsIconContainer} onClick={() => obj.callback()}>
+        {obj.icon}
+      </div>
     </OverlayTrigger>
   );
 }
