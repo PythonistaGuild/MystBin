@@ -11,7 +11,6 @@ const PostMonacoEditor = dynamic(() => import("../components/EditorTabs"), {
 });
 
 export default function Home() {
-
   return (
     <div>
       <Head>
