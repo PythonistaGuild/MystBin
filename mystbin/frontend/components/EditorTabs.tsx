@@ -45,8 +45,10 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
   }, [value]);
 
   const handlePasswordAttempt = async (attempt: string) => {
-    const response = await fetch('https://api-staging.mystb.in/paste/' + id + '?password=' + attempt,
-        {headers: {'Accept': 'application/json'}});
+    const response = await fetch(
+      "https://api-staging.mystb.in/paste/" + id + "?password=" + attempt,
+      { headers: { Accept: "application/json" } }
+    );
     const paste = await response.json();
     let actualData = [];
 
@@ -54,13 +56,15 @@ export default function EditorTabs({ initialData, hasPassword, pid }) {
       if (response.status === 200) {
         setPasswordModal(false);
 
-        for (let file of paste['pastes']) {
-          actualData.push({'title': file['filename'], 'content': file['content']});
+        for (let file of paste["pastes"]) {
+          actualData.push({
+            title: file["filename"],
+            content: file["content"],
+          });
         }
         setValue(actualData);
-      }
-      else {
-        throw () => {}
+      } else {
+        throw () => {};
       }
     } catch {
       setShake(true);
