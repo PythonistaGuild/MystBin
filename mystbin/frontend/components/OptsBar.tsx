@@ -216,7 +216,7 @@ function OptsButton(obj: {
   title: string;
   content: string;
   icon: JSX.Element;
-  callback: () => void;
+  callback: () => any;
   hotKey?: string;
   optional?: boolean;
 }): JSX.Element {
