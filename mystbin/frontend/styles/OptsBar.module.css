@@ -1,0 +1,103 @@
+.popoverHeader {
+  background-color: #4C709E;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.popoverBody {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.optsNavContainer {
+  top: 0;
+  left: 0;
+  margin-top: .9rem;
+  position: fixed;
+  z-index: 3;
+  flex-direction: column !important;
+  background-color: #1b1b1b;
+  height: 100%;
+}
+
+.optsIconContainer {
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-self: flex-end;
+  padding: 1rem;
+}
+
+.optsIconContainer:hover {
+  background-color: #286395;
+  filter: brightness(150%);
+  cursor: pointer;
+}
+
+.navGap {
+  margin-top: none;
+  margin-bottom: none;
+  border-top: 2px solid rgba(255, 255, 255, 0.4);
+  width: 30px;
+  height: 0;
+  box-sizing: content-box;
+}
+
+.optsDivider {
+  height: 40px;
+  margin-top: -8px;
+  margin-right: 1rem;
+  margin-left: 1rem;
+}
+
+.expiryModal {
+  background-color: #202225;
+}
+
+.expiryModalHeader {
+  background-color: #fadfa3;
+}
+
+.expiryModalTitle {
+  margin-bottom: 0.4rem;
+  margin-left: 1rem;
+}
+
+.expiryModalLabel {
+  margin: auto 0.25rem auto 1rem;
+}
+
+.logoMinimal {
+  width: 2rem;
+  display: flex;
+  align-self: center;
+  margin-bottom: 1.1rem;
+}
+
+.logoMinimal:hover {
+  cursor: pointer;
+}
+
+.saveSuccessToast, .saveBlankToast {
+  z-index: 9999;
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1rem;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+.saveSuccessToastHeader {
+  background-color: #47e54f;
+  color: #36393f;
+  user-select: none;
+}
+
+.saveSuccessToastHeader, .saveBlankToastHeader > button {
+  outline: none;
+}
+
+.saveBlankToastHeader {
+  background-color: #F7665E;
+  color: #36393f;
+  user-select: none;
+}
