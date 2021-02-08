@@ -14,6 +14,7 @@ import BrushIcon from "@material-ui/icons/Brush";
 import LogoMinimalMain from "../public/LogoMinimalMain";
 import { useRouter } from "next/router";
 import pasteStore from "../stores/PasteStore";
+import LoginModal from "./LoginModal";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -38,6 +39,15 @@ export default function OptsBar() {
       content:
         "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
       icon: <DashboardIcon />,
+      callback: () => {
+        setCurrentModal(
+            <LoginModal
+                onHide={() => {
+                  setCurrentModal(null);
+                }}
+            />
+        );
+      }
     },
 
     {
