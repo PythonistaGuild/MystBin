@@ -1,4 +1,4 @@
-import { Nav, Navbar, OverlayTrigger, Popover, Toast } from "react-bootstrap";
+import {Nav, Navbar, OverlayTrigger, Popover, Spinner, Toast} from "react-bootstrap";
 import React, { useEffect, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
@@ -23,6 +23,7 @@ export default function OptsBar() {
   const [paste, setPaste] = useState(pasteStore.getPaste());
   const [saveSuccessToast, setSaveSuccessToast] = useState(null);
   const [saveBlankToast, setSaveBlankToast] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     pasteStore.addChangeListener(onChange);
@@ -96,6 +97,7 @@ export default function OptsBar() {
           return setSaveBlankToast(true);
         }
 
+        setSaving(true);
         let files = [];
 
         for (let file of paste) {
@@ -111,6 +113,7 @@ export default function OptsBar() {
             if (r.status === 200) {
               return r.json();
             }
+            setSaving(false);
             console.error(r.status);
           })
           .then(async (d) => {
@@ -119,6 +122,7 @@ export default function OptsBar() {
               await navigator.clipboard.writeText(window.location.origin + path);
               // @ts-ignore
               router.push(path).then(setSaveSuccessToast(d.id));
+            setSaving(false);
             }
           });
       },
@@ -209,6 +213,7 @@ export default function OptsBar() {
           Your paste is empty, cannot save an empty paste.
         </Toast.Body>
       </Toast>
+      <Spinner animation="border" variant="light" className={styles.saveSpinner} style={{ display: saving ? "block" : "none"}}/>
     </>
   );
 }
