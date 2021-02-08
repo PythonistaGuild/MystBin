@@ -116,7 +116,8 @@ export default function OptsBar() {
           .then(async (d) => {
             if (d && d.id) {
               let path = `/${d.id}`;
-              navigator.clipboard.writeText(window.location.origin + path);
+              await navigator.clipboard.writeText(window.location.origin + path);
+              // @ts-ignore
               router.push(path).then(setSaveSuccessToast(d.id));
             }
           });
