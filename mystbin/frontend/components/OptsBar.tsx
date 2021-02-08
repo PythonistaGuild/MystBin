@@ -41,13 +41,13 @@ export default function OptsBar() {
       icon: <DashboardIcon />,
       callback: () => {
         setCurrentModal(
-            <LoginModal
-                onHide={() => {
-                  setCurrentModal(null);
-                }}
-            />
+          <LoginModal
+            onHide={() => {
+              setCurrentModal(null);
+            }}
+          />
         );
-      }
+      },
     },
 
     {
