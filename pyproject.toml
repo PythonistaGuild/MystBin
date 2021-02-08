@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "mystbin-rewrite"
+version = "0.1.0"
+description = "A rewrite of Mystbin!"
+authors = ["Pythonista Guild <#todo>"]
+license = "GPL-3.0"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+uvicorn = "*"
+ujson = "*"
+asyncpg = "*"
+fastapi = "*"
+toml = "*"
+aiohttp = "*"
+PyJWT = "*"
+pycryptodome = "*"
+slowapi = "*"
+
+[tool.poetry.dev-dependencies]
+black = "*"
+flake8 = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
