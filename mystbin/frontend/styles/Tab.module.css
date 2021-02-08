@@ -1,0 +1,65 @@
+.tabsSelected {
+  background: #2b2b2b;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-bottom: 2px solid #286395;
+  outline: none !important;
+  font-size: 1em;
+  min-width: 4rem;
+  display: inline-flex;
+  margin-left: 1.9rem;
+  margin-right: -1.9rem;
+  min-height: 2.5rem;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.tabs {
+  background: #2b2b2b;
+  color: rgba(255, 255, 255, 0.4);
+  border-bottom: 2px solid transparent;
+  outline: none !important;
+  font-size: 1em;
+  min-width: 4rem;
+  display: inline-flex;
+  margin-left: 1.9rem;
+  margin-right: -1.9rem;
+  text-align: center;
+  vertical-align: bottom;
+  filter: brightness(70%);
+}
+
+.tabs:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tabs:hover,
+.tabsSelected:hover {
+  cursor: pointer;
+}
+
+.tabsFilename {
+  outline: none !important;
+  border: none;
+  display: block;
+  padding: 0.5rem;
+}
+
+.tabsCloseButton {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.2);
+  outline: none !important;
+  border: none;
+  margin-left: 0.4rem;
+  display: contents;
+}
+
+.tabsCloseButton:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tabsCloseButton > svg {
+  font-size: 1.2em;
+  display: flex;
+  align-self: center;
+}
