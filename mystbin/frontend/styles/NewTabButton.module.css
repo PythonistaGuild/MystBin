@@ -1,0 +1,15 @@
+.tabsNew {
+  background-color: #286395;
+  color: rgba(255, 255, 255, .8);
+  margin-left: 1.9rem;
+  outline: none !important;
+  border: none;
+  font-weight: bolder;
+  border-radius: 0 3px 3px 0;
+  padding: 0.3rem;
+  vertical-align: bottom;
+}
+
+.tabsNew:hover {
+  filter: brightness(120%);
+}

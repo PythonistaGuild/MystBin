@@ -24,3 +24,14 @@ NOTE: A docker-compose file has been provided for Docker use.
 python -m uvicorn main:app # --host 127.0.01 --port 8000
 ```
 You can uncomment the rest of the line to edit the default values.
+Easily share your code or text with syntax highlighting and themes for readability.
+
+## MystBin Frontend Development
+
+To Run:
+
+```sh
+$ cd mystbin/frontend
+$ yarn install
+$ yarn dev
+```

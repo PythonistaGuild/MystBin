@@ -23,3 +23,24 @@ jobs:
           DEFAULT_BRANCH: main
           VALIDATE_PYTHON_FLAKE8: true
           VALIDATE_PYTHON_BLACK: true
+
+      - name: Set up Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.0"
+      - run: yarn install
+        working-directory: ./mystbin/frontend
+
+      - name: Run linters
+        uses: wearerequired/lint-action@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          # Enable linters
+          auto_fix: true
+          git_name: PythonistaGuild Linter
+          # eslint: true
+          # eslint_dir: ./mystbin/frontend/
+          # eslint_extensions: js,ts,jsx,tsx
+          prettier: true
+          prettier_dir: ./mystbin/frontend/
+          prettier_extensions: js,ts,jsx,tsx
