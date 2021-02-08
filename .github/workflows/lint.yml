@@ -8,8 +8,8 @@ on:
 
 
 jobs:
-  linter:
-    name: Lint Code Base
+  backend-lint:
+    name: Lint Backend
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,15 @@ jobs:
           DEFAULT_BRANCH: main
           VALIDATE_PYTHON_FLAKE8: true
           VALIDATE_PYTHON_BLACK: true
+
+
+  frontend-lint:
+    name: Lint frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2
 
       - name: Set up Yarn
         uses: actions/setup-node@v1
