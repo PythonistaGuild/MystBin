@@ -74,7 +74,7 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: "Whitney Medium";
+  font-family: "Whitney Medium", sans-serif;
 }
 
 a {
