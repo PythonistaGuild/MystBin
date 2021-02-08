@@ -1,15 +1,28 @@
-name: Lint
+name: Lint Code Base
 
-on: push
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: [main]
+
 
 jobs:
-  run-linters:
-    name: Run linters
+  linter:
+    name: Lint Code Base
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out Git repository
+      - name: Checkout source
         uses: actions/checkout@v2
+
+      - name: Lint
+        uses: github/super-linter@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_PYTHON_BLACK: true
 
       - name: Set up Yarn
         uses: actions/setup-node@v1

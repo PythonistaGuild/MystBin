@@ -1,0 +1,11 @@
+uvicorn
+ujson
+asyncpg
+fastapi
+toml
+aiohttp
+PyJWT
+pycryptodome
+slowapi
+psutil
+sentry-sdk
