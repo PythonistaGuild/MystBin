@@ -88,9 +88,9 @@ body .monaco-aria-container {
 
 .maxed {
   border-top: 0.75rem solid #2b2b2b;
-  padding-left: 2rem;
+  padding-left: .5rem;
   background-color: #2b2b2b;
-  height: 90vh;
+  height: 90vh!important;
 }
 
 .maxed > section {
