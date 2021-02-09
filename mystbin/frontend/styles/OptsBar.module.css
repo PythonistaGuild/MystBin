@@ -8,14 +8,14 @@
 }
 
 .optsNavContainer {
-  top: 0;
-  left: 0;
-  margin-top: .9rem;
+  right: 0;
   position: fixed;
   z-index: 3;
   flex-direction: column !important;
   background-color: #1b1b1b;
   height: 100%;
+  display: flex;
+  justify-content: space-evenly;
 }
 
 .optsIconContainer {
@@ -34,7 +34,7 @@
 .navGap {
   margin-top: none;
   margin-bottom: none;
-  border-top: 2px solid rgba(255, 255, 255, 0.4);
+  border-top: 2px solid rgba(230, 230, 255, 0.2);
   width: 30px;
   height: 0;
   box-sizing: content-box;
