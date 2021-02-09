@@ -35,6 +35,7 @@ site = "False"
 dsn = ""
 # See Sentry docs for more info.
 traces_sample_rate = 0.3
+discord_webhook = ""
 
 [ratelimits]
 # Ratelimit values. Written in the format of `"time/unit"` ("60/minute")
@@ -53,3 +54,5 @@ premium_deletepaste = "20/minute"
 self = "20/minute" #?
 tokengen = "2/hour"
 admin = "5/second"
+apps = "5/hour"
+sentry = "10/minute"
