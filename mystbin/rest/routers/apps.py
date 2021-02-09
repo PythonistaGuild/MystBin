@@ -20,7 +20,7 @@ from typing import Dict, Optional, Union
 
 import yarl
 from fastapi import APIRouter, Query, Request, Body
-from fastapi.responses import UJSONResponse
+from fastapi.responses import UJSONResponse, Response
 from models import responses
 from utils.ratelimits import limit
 
@@ -194,3 +194,14 @@ async def auth_from_github(
     else:
         data = await request.app.state.db.new_user(email, github_id=userid)
         return UJSONResponse({"token": data["token"]})
+
+@router.post("/callbacks/sentry", include_in_schema=False)
+@limit("sentry")
+async def sentry_callback(request: Request, data: Body(None)):
+    if not request.app.config['sentry']['discord_webhook']:
+        return Response(status_code=204)
+
+    v = await request.app.state.client.post(request.app.config['sentry']['discord_webhook'], json={"text": str(data)})
+    v.raise_for_status()
+    v.close()
+    return Response(status_code=204)
