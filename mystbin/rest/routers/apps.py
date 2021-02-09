@@ -197,7 +197,8 @@ async def auth_from_github(
 
 @router.post("/callbacks/sentry", include_in_schema=False)
 @limit("sentry")
-async def sentry_callback(request: Request, data: Body(None)):
+async def sentry_callback(request: Request):
+    data = await request.json()
     if not request.app.config['sentry']['discord_webhook']:
         return Response(status_code=204)
 
