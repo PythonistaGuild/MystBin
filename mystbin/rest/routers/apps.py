@@ -202,7 +202,7 @@ async def sentry_callback(request: Request):
     if not request.app.config['sentry']['discord_webhook']:
         return Response(status_code=204)
 
-    v = await request.app.state.client.post(request.app.config['sentry']['discord_webhook'], json={"text": str(data)})
+    v = await request.app.state.client.post(request.app.config['sentry']['discord_webhook'], json={"content": str(data)})
     v.raise_for_status()
     v.close()
     return Response(status_code=204)
