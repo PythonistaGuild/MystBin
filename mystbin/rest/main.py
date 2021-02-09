@@ -22,6 +22,7 @@ import pathlib
 from typing import Any, Dict
 
 import aiohttp
+import discord
 import sentry_sdk
 import slowapi
 import toml
@@ -72,6 +73,13 @@ async def app_startup():
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
+    if app.config['sentry']['discord_webhook']:
+        app.state.webhook = discord.Webhook.from_url(
+            app.config['sentry']['discord_webhook'],
+            adapter=discord.AsyncWebhookAdapter(session=app.state.client)
+        )
+    else:
+        app.state.webhook = None
 
 
 app.include_router(admin.router)
