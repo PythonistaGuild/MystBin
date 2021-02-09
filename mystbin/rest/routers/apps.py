@@ -16,8 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
 from typing import Dict, Optional, Union
 
+import discord
 import yarl
 from fastapi import APIRouter, Query, Request, Body
 from fastapi.responses import UJSONResponse, Response
@@ -199,10 +201,18 @@ async def auth_from_github(
 @limit("sentry")
 async def sentry_callback(request: Request):
     data = await request.json()
-    if not request.app.config['sentry']['discord_webhook']:
+
+    hook: discord.Webhook = request.app.state.webhook
+    if not hook:
         return Response(status_code=204)
 
-    v = await request.app.state.client.post(request.app.config['sentry']['discord_webhook'], json={"content": str(data)})
-    v.raise_for_status()
-    v.close()
+    e = discord.Embed(title=data['data']['issue']['title'])
+    e.set_author(name=f"Issue {data['action']}")
+    e.description = f"Issue id: {data['data']['issue']['id']}\nTimes seen: {data['data']['issue']['count']}" \
+                    f"\nErrored at: {data['data']['issue']['culprit']}"
+    e.timestamp = datetime.datetime.strptime(data['data']['issue']['lastSeen'], "%Y-%m-%dT%H:%M:%S.%fZ")
+    e.set_footer(text="Last seen at", icon_url="https://cdn.discordapp.com/avatars/698366484975714355/9bad78779883b3bd6dfd4022d997e406.png")
+
+    await hook.send(embed=e)
+
     return Response(status_code=204)
