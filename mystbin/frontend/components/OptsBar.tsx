@@ -183,16 +183,15 @@ export default function OptsBar() {
   return (
     <>
       {currentModal && currentModal}
-      <Navbar className="justify-content-center">
-        <Nav className={styles.optsNavContainer}>
-          <LogoMinimalMain className={styles.logoMinimal} />
+      <div>
+        <div className={styles.optsNavContainer}>
           {personal.map(OptsButton)}
           <hr className={styles.navGap} />
           {actions.map(OptsButton)}
           <hr className={styles.navGap} />
           {opts.map(OptsButton)}
-        </Nav>
-      </Navbar>
+        </div>
+      </div>
 
       <Toast
         className={styles.saveSuccessToast}
@@ -243,7 +242,7 @@ function OptsButton(obj: {
   return (
     <OverlayTrigger
       key={`opt-${obj.title}`}
-      placement={"right"}
+      placement={"left"}
       overlay={
         <Popover id={`opt-${obj.title}`} className={styles.popoverBody}>
           <Popover.Title className={styles.popoverHeader} as="h3">
