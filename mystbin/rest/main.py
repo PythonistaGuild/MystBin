@@ -82,7 +82,10 @@ app.include_router(user.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://staging.mystb.in"],
+    allow_origins=[
+        app.config["site"]["base_site"],
+        app.config["site"]["external_site"],
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
