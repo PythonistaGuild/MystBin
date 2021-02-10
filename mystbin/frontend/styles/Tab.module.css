@@ -7,8 +7,6 @@
   font-size: 1em;
   min-width: 4rem;
   display: inline-flex;
-  margin-left: 1.9rem;
-  margin-right: -1.9rem;
   min-height: 2.5rem;
   text-align: center;
   vertical-align: bottom;
@@ -22,8 +20,6 @@
   font-size: 1em;
   min-width: 4rem;
   display: inline-flex;
-  margin-left: 1.9rem;
-  margin-right: -1.9rem;
   text-align: center;
   vertical-align: bottom;
   filter: brightness(70%);

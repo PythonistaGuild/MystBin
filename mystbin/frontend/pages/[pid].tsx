@@ -42,7 +42,7 @@ export default function Home(props: PropsWithoutRef<{ paste }>) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const API = "https://api-staging.mystb.in";
+  const API = "http://api:9000";
 
   const { pid } = query;
   const response = await fetch(`${API}/paste/${pid}`);
