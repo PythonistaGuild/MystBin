@@ -33,9 +33,12 @@ router = APIRouter()
 )
 @limit("apps", "zones.apps")
 async def auth_from_discord(
-    request: Request, code: str = Body(None)
+    request: Request
 ) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
+    data = await request.json()
+    code = data.get("code", None)
+
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
@@ -84,9 +87,12 @@ async def auth_from_discord(
 )
 @limit("apps", "zones.apps")
 async def auth_from_google(
-    request: Request, code: str = Body(None)
+    request: Request
 ) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
+    data = await request.json()
+    code = data.get("code", None)
+
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
@@ -138,9 +144,12 @@ async def auth_from_google(
 )
 @limit("apps", "zones.apps")
 async def auth_from_github(
-    request: Request, code: str = Body(None)
-) -> Union[Dict[str, str], UJSONResponse]:
+    request: Request
+) -> Union[Response, UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
+    data = await request.json()
+    code = data.get("code", None)
+
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
