@@ -48,10 +48,23 @@ services:
       main:
         ipv4_address: 172.25.0.12
 
+  frontend:
+    image: node:latest
+    volumes:
+      - node_modules:/app/node_modules
+    container_name: "staging-frontend"
+    build: ./mystbin/frontend
+    depends_on:
+      - api
+    networks:
+      main:
+        ipv4_address: 172.25.0.13
+
 volumes:
   postgresdata:
   caddy_data:
   caddy_config:
+  node_modules:
 
 
 networks:
