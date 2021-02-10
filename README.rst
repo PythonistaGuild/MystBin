@@ -1,0 +1,48 @@
+.. raw:: html
+
+    <h1 align="center">MystBin!</h1>
+    <p align="center">Easily share your code or text with syntax highlighting and themes for readability.</p>
+    <p align="left"><b>NOTE: This software in under heavy development and subject to change. At this time it is also not supported.</b?></p>
+
+----------
+
+.. raw:: html
+
+    <p align="center">
+        <a href="https://github.com/PythonistaGuild/actions?query=workflow%3AAnalyze">
+            <img alt="Analysis Status"
+                src="https://github.com/PythonistaGuild/MystBin/workflows/Analyze/badge.svg" />
+        </a>
+
+        <a href="https://github.com/PythonistaGuild/actions?query=workflow%3A'Lint+Code+Base'">
+            <img alt="Linting Status"
+                src="https://github.com/PythonistaGuild/MystBin/workflows/Lint%20Code%20Base/badge.svg" />
+        </a>
+    </p>
+
+----------
+
+Installation
+------------
+
+.. raw:: html
+
+    <h2 align="left"><b>Pre-requisites</b></h2>
+
+We have provided a ``docker-compose.yml`` file for use in Docker with Docker Compose.
+
+
+.. raw:: html
+
+    <h2 align="left">Setting up</h2>
+
+1. Make a copy of ``config-template.toml`` named ``config.toml`` and change the contents to match your environment.
+2. Make a copy of ``.env-template`` as ``.env`` and edit to match your environment.
+
+The template files have similar values to what is expected.
+
+.. code-block:: sh
+
+    docker-compose up -d --build
+
+Which will build the project and use your desired configuration.
