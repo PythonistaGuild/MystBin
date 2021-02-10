@@ -325,9 +325,7 @@ class Limiter(slowapi.Limiter):
                     )
                 except ValueError as e:
                     self.logger.error(
-                        "Failed to configure throttling for %s (%s)",
-                        name,
-                        e,
+                        "Failed to configure throttling for %s (%s)", name, e,
                     )
             self.__marked_for_limiting.setdefault(name, []).append(func)
             if dynamic_limit:
@@ -400,7 +398,12 @@ async def _fetch_user(request: Request):
         return
 
     query = """
-            SELECT *, bans.ip as _is_ip_banned , bans.userid as _is_user_banned FROM users FULL OUTER JOIN bans ON ip = $2 OR userid = users.id WHERE token = $1
+            SELECT *, bans.ip as _is_ip_banned , bans.userid as _is_user_banned
+            FROM users
+            FULL OUTER JOIN bans
+            ON ip = $2
+            OR userid = users.id
+            WHERE token = $1;
             """
 
     user = await request.app.state.db._do_query(
