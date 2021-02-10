@@ -3,7 +3,9 @@ version: "3.8"
 services:
   proxy:
     image: caddy:latest
-    env_file: mystbin/caddy/.env
+    environment:
+      - DOMAIN="${DOMAIN}:443"
+      - API_DOMAIN="${API_DOMAIN}:443"
     ports:
       - 127.0.0.1:5555:443/tcp
       - 127.0.0.1:5556:80/tcp
@@ -22,7 +24,7 @@ services:
     image: python:3.9.1-buster
     build: mystbin/rest
     ports:
-      - 5557:9000/tcp
+      - 127.0.0.1:5557:9000/tcp
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./mystbin/rest/config.toml:/usr/src/app/config.toml:ro
@@ -31,13 +33,13 @@ services:
       main:
         ipv4_address: 172.25.0.11
     depends_on:
-      - postgres
+      - database
 
-  postgres:
+  database:
     image: postgres:13-alpine
     ports:
       - 127.0.0.1:5558:5432
-    container_name: "staging-postgresql"
+    container_name: "staging-database"
     volumes:
       - postgresdata:/var/lib/postgresql/data/pgdata
     environment:
