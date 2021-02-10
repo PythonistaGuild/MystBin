@@ -325,7 +325,9 @@ class Limiter(slowapi.Limiter):
                     )
                 except ValueError as e:
                     self.logger.error(
-                        "Failed to configure throttling for %s (%s)", name, e,
+                        "Failed to configure throttling for %s (%s)",
+                        name,
+                        e,
                     )
             self.__marked_for_limiting.setdefault(name, []).append(func)
             if dynamic_limit:
@@ -333,7 +335,6 @@ class Limiter(slowapi.Limiter):
             else:
                 self._route_limits.setdefault(name, []).extend(static_limits)
 
-            connection_type: Optional[str] = None
             sig = inspect.signature(func)
             for idx, parameter in enumerate(sig.parameters.values()):
                 if parameter.name == "request" or parameter.name == "websocket":
@@ -403,7 +404,8 @@ async def _fetch_user(request: Request):
             """
 
     user = await request.app.state.db._do_query(
-            query, auth.replace("Bearer ", ""), request.client.host)
+        query, auth.replace("Bearer ", ""), request.client.host
+    )
     if not user:
         return
 

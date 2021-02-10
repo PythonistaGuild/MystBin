@@ -22,7 +22,6 @@ import pathlib
 from typing import Any, Dict
 
 import aiohttp
-import discord
 import sentry_sdk
 import slowapi
 import toml
@@ -60,7 +59,7 @@ app = MystbinApp()
 async def request_stats(request: Request, call_next):
     request.app.state.request_stats["total"] += 1
 
-    if request.url.path != '/admin/stats':
+    if request.url.path != "/admin/stats":
         request.app.state.request_stats["latest"] = datetime.datetime.utcnow()
 
     response = await call_next(request)
@@ -73,13 +72,7 @@ async def app_startup():
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
-    if app.config['sentry']['discord_webhook']:
-        app.state.webhook = discord.Webhook.from_url(
-            app.config['sentry']['discord_webhook'],
-            adapter=discord.AsyncWebhookAdapter(session=app.state.client)
-        )
-    else:
-        app.state.webhook = None
+    app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
 
 
 app.include_router(admin.router)
@@ -89,8 +82,7 @@ app.include_router(user.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:3000',
-                   'https://staging.mystb.in'],
+    allow_origins=["http://localhost:3000", "https://staging.mystb.in"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -98,11 +90,13 @@ app.add_middleware(
 
 
 try:
-    sentry_dsn = app.config['sentry']['dsn']
+    sentry_dsn = app.config["sentry"]["dsn"]
 except KeyError:
     pass
 else:
-    traces_sample_rate = app.config['sentry'].get('traces_sample_rate', 0.3)
-    sentry_sdk.init(dsn=sentry_dsn,  traces_sample_rate=traces_sample_rate, attach_stacktrace=True)
+    traces_sample_rate = app.config["sentry"].get("traces_sample_rate", 0.3)
+    sentry_sdk.init(
+        dsn=sentry_dsn, traces_sample_rate=traces_sample_rate, attach_stacktrace=True
+    )
 
     app.add_middleware(SentryAsgiMiddleware)
