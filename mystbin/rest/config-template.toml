@@ -17,7 +17,9 @@ github_application = ""
 
 [site]
 # Base site URL
-base_site = "http://127.0.0.1:8000"
+base_site = "http://localhost:3000"
+# External site URL
+external_site = "https://staging.site.com"
 
 [paste]
 # Paste limitations
