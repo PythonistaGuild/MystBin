@@ -1,7 +1,7 @@
 .Base {
   grid-template-areas:
-    "n c c c c c c" /* content */
-    "n c c c c c c"
+    "c c c c c c c" /* content */
+    "c c c c c c c"
     "f f f f f f f"; /* footer */
   grid-template-rows: min-content min-content auto;
   grid-template-columns: min-content;
