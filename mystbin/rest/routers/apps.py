@@ -69,7 +69,7 @@ async def auth_from_discord(
         resp.raise_for_status()
         data = await resp.json()
         userid = int(data["id"])
-        email = data["email"]
+        email = [data["email"]]
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
@@ -122,7 +122,7 @@ async def auth_from_google(
     ) as resp:
         resp.raise_for_status()
         data = await resp.json()
-        email = data["email"]
+        email = [data["email"]]
         userid = data["id"]
 
 
