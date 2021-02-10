@@ -620,7 +620,7 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, userid, token, [emails], [], discord_id, github_id, google_id
+            query, userid, token, emails, [], discord_id, github_id, google_id
         )
         return data[0]
 
