@@ -22,7 +22,7 @@ services:
     image: python:3.9.1-buster
     build: mystbin/rest
     ports:
-      - 5557:9000/tcp
+      - 127.0.0.1:5557:9000
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./mystbin/rest/config.toml:/usr/src/app/config.toml:ro
