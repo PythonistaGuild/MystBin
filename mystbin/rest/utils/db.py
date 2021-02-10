@@ -615,7 +615,7 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, ARRAY[])
+                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, ARRAY[]::text[])
                 RETURNING *;
                 """
 
