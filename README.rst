@@ -1,8 +1,13 @@
 .. raw:: html
 
-    <h1 align="center">MystBin!</h1>
+    <h1 align="center">
+        <sub>
+            <img src="res/logo_mini.svg" height="36">
+        </sub>
+        MystBin!
+    </h1>
     <p align="center">Easily share your code or text with syntax highlighting and themes for readability.</p>
-    <p align="left"><b>NOTE: This software in under heavy development and subject to change. At this time it is also not supported.</b?></p>
+    <p align="center"><b>NOTE: This software in under heavy development and subject to change. At this time it is also not supported.</b?></p>
 
 ----------
 
