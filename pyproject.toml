@@ -16,6 +16,8 @@ aiohttp = "*"
 PyJWT = "*"
 pycryptodome = "*"
 slowapi = "*"
+sentry-sdk = "*"
+psutil = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"
