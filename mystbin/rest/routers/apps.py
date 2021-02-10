@@ -44,7 +44,7 @@ async def auth_from_discord(
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/discord")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
 
     data = {
         "client_id": client_id,
@@ -98,7 +98,7 @@ async def auth_from_google(
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/google")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
 
     data = {
         "client_id": client_id,
@@ -155,7 +155,7 @@ async def auth_from_github(
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/github")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
 
     data = {
         "client_id": client_id,
