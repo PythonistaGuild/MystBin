@@ -22,7 +22,7 @@ from typing import Dict, Optional, Union
 import psutil
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import UJSONResponse
+from fastapi.responses import UJSONResponse, Response
 from fastapi.security import HTTPBearer
 from models import errors, responses
 from utils.ratelimits import limit
@@ -223,6 +223,11 @@ async def remove_ban(request: Request, ip: str = None, userid: int = None):
 
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    if await request.app.state.db.unban_user(userid, ip):
+        return Response(status_code=204)
+
+    return Response(status_code=400)
 
 
 @router.get(
