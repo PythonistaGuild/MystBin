@@ -212,8 +212,11 @@ async def sentry_callback(request: Request):
 
     title = data["data"]["issue"]["title"]
     author = {"name": data["action"]}
-    description = f"Issue id: {data['data']['issue']['id']}\nTimes seen: {data['data']['issue']['count']}" \
-                  f"\nErrored at: {data['data']['issue']['culprit']}"
+    description = (
+        f"Issue id: {data['data']['issue']['id']}\n"
+        f"Times seen: {data['data']['issue']['count']}\n"
+        f"Errored at: {data['data']['issue']['culprit']}"
+    )
     timestamp = datetime.datetime.fromisoformat(data["data"]["issue"]["lastSeen"])
     footer = {
         "text": "Last seen at:",
