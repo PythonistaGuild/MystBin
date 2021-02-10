@@ -22,7 +22,7 @@ from typing import Dict, Optional, Union
 import psutil
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import UJSONResponse, Response
+from fastapi.responses import Response, UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, responses
 from utils.ratelimits import limit
@@ -263,7 +263,6 @@ async def get_server_stats(request: Request):
         "total_pastes": (await request.app.state.db.get_paste_count())[0]["count"],
         "requests": request.app.state.request_stats["total"],
         "latest_request": request.app.state.request_stats["latest"].isoformat(),
-
     }
 
     return UJSONResponse(data, status_code=200)

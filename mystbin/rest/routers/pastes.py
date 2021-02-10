@@ -26,8 +26,8 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, payloads, responses
-from utils.ratelimits import limit
 from utils.db import _recursive_hook as recursive_hook
+from utils.ratelimits import limit
 
 WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 
@@ -190,7 +190,7 @@ async def get_paste(
     if paste is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
-    if paste['has_password'] and not paste['password_ok']:
+    if paste["has_password"] and not paste["password_ok"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     resp = responses.PasteGetResponse(**paste)

@@ -17,24 +17,25 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
-from typing import Dict, Optional, Union
+from typing import Dict, Union
 
-import discord
 import yarl
-from fastapi import APIRouter, Query, Request, Body
-from fastapi.responses import UJSONResponse, Response
+from fastapi import APIRouter, Request
+from fastapi.responses import Response, UJSONResponse
 from models import responses
+from utils.embed import Embed
 from utils.ratelimits import limit
 
 router = APIRouter()
 
+
 @router.post(
-    "/users/connect/discord", response_model=responses.TokenResponse, include_in_schema=False
+    "/users/connect/discord",
+    response_model=responses.TokenResponse,
+    include_in_schema=False,
 )
 @limit("apps", "zones.apps")
-async def auth_from_discord(
-    request: Request
-) -> Union[Dict[str, str], UJSONResponse]:
+async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
     data = await request.json()
     code = data.get("code", None)
@@ -73,7 +74,7 @@ async def auth_from_discord(
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user['id'], discord_id=userid, email=email
+            request.state.user["id"], discord_id=userid, email=email
         )
         return {"token": token}
 
@@ -83,12 +84,12 @@ async def auth_from_discord(
 
 
 @router.post(
-    "/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False
+    "/users/connect/google",
+    response_model=responses.TokenResponse,
+    include_in_schema=False,
 )
 @limit("apps", "zones.apps")
-async def auth_from_google(
-    request: Request
-) -> Union[Dict[str, str], UJSONResponse]:
+async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
     data = await request.json()
     code = data.get("code", None)
@@ -125,10 +126,9 @@ async def auth_from_google(
         email = [data["email"]]
         userid = data["id"]
 
-
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user['id'], google_id=userid, email=email
+            request.state.user["id"], google_id=userid, email=email
         )
         return UJSONResponse({"token": token})
 
@@ -143,9 +143,7 @@ async def auth_from_google(
     include_in_schema=False,
 )
 @limit("apps", "zones.apps")
-async def auth_from_github(
-    request: Request
-) -> Union[Response, UJSONResponse]:
+async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
     data = await request.json()
     code = data.get("code", None)
@@ -198,7 +196,7 @@ async def auth_from_github(
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user['id'], github_id=userid, email=email
+            request.state.user["id"], github_id=userid, email=email
         )
         return UJSONResponse({"token": token})
 
@@ -206,22 +204,32 @@ async def auth_from_github(
         data = await request.app.state.db.new_user(email, github_id=userid)
         return UJSONResponse({"token": data["token"]})
 
+
 @router.post("/callbacks/sentry", include_in_schema=False)
 @limit("sentry")
 async def sentry_callback(request: Request):
     data = await request.json()
 
-    hook: discord.Webhook = request.app.state.webhook
-    if not hook:
-        return Response(status_code=204)
+    title = data["data"]["issue"]["title"]
+    author = {"name": data["action"]}
+    description = f"Issue id: {data['data']['issue']['id']}\nTimes seen: {data['data']['issue']['count']}\nErrored at: {data['data']['issue']['culprit']}"
+    timestamp = datetime.datetime.fromisoformat(data["data"]["issue"]["lastSeen"])
+    footer = {
+        "text": "Last seen at:",
+        "icon_url": "https://cdn.discordapp.com/avatars/698366484975714355/9bad78779883b3bd6dfd4022d997e406.png",
+    }
 
-    e = discord.Embed(title=data['data']['issue']['title'])
-    e.set_author(name=f"Issue {data['action']}")
-    e.description = f"Issue id: {data['data']['issue']['id']}\nTimes seen: {data['data']['issue']['count']}" \
-                    f"\nErrored at: {data['data']['issue']['culprit']}"
-    e.timestamp = datetime.datetime.strptime(data['data']['issue']['lastSeen'], "%Y-%m-%dT%H:%M:%S.%fZ")
-    e.set_footer(text="Last seen at", icon_url="https://cdn.discordapp.com/avatars/698366484975714355/9bad78779883b3bd6dfd4022d997e406.png")
+    embed = Embed(
+        title=title,
+        author=author,
+        description=description,
+        timestamp=timestamp,
+        footer=footer,
+    )
 
-    await hook.send(embed=e)
+    if request.state.webhook_url:
+        await request.state.session.post(
+            request.state.webhook_url, json={"embeds": [embed.to_dict()]}
+        )
 
     return Response(status_code=204)
