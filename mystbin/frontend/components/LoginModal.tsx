@@ -58,7 +58,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
         </Modal.Body>
         <Modal.Footer>
           <small>
-            By logging in via one of the provided routes above, you agree to our{" "}
+            By logging in via one of the provided services above, you agree to our{" "}
             <a href={"/"}>Terms and Conditions</a>,{" "}
             <a href={"/"}>Privacy Policy </a>
             and consent to our <a href={"/"}>Cookie Policy</a>.
