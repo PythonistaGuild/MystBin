@@ -9,3 +9,4 @@ pycryptodome>=3.9.9
 slowapi
 psutil==5.8.0
 sentry-sdk
+discord.py

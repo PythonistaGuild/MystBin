@@ -16,39 +16,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+import datetime
 from typing import Dict, Optional, Union
 
+import discord
 import yarl
-from fastapi import APIRouter, Query, Request
-from fastapi.responses import UJSONResponse
+from fastapi import APIRouter, Query, Request, Body
+from fastapi.responses import UJSONResponse, Response
 from models import responses
 from utils.ratelimits import limit
 
 router = APIRouter()
 
-
-@router.get(
-    "/apps/discord", response_model=responses.TokenResponse, include_in_schema=False
+@router.post(
+    "/users/connect/discord", response_model=responses.TokenResponse, include_in_schema=False
 )
 @limit("apps", "zones.apps")
 async def auth_from_discord(
-    request: Request, code: str = Query(None), state: Optional[str] = Query(None)
+    request: Request, code: str = Body(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
-    existing_user = state
-
-    if existing_user:
-        try:
-            existing_user = int(existing_user)
-        except TypeError:
-            existing_user = None
-
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/apps/discord")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/discord")
 
     data = {
         "client_id": client_id,
@@ -75,53 +68,31 @@ async def auth_from_discord(
         userid = int(data["id"])
         email = data["email"]
 
-    exists = await request.app.state.db.check_email(email)
-    if exists:
-        existing_user = exists
+    if request.state.user is not None:
+        token = await request.app.state.db.update_user(
+            request.state.user['id'], discord_id=userid, email=email
+        )
+        return {"token": token}
 
-    if existing_user:
-        if not isinstance(existing_user, int):
-            existing_user = await request.app.state.db.get_user(token=existing_user)
-
-        if not existing_user or existing_user in (400, 401):
-            existing_user = None
-
-        else:
-            token = await request.app.state.db.update_user(
-                existing_user, discord_id=userid, email=email
-            )
-            if token is None:
-                existing_user = None
-            else:
-                return {"token": token}
-
-    if not existing_user:
+    else:
         data = await request.app.state.db.new_user(email, userid)
         return UJSONResponse({"token": data["token"]})
 
 
-@router.get(
-    "/apps/google", response_model=responses.TokenResponse, include_in_schema=False
+@router.post(
+    "/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False
 )
 @limit("apps", "zones.apps")
 async def auth_from_google(
-    request: Request, code: str = Query(None), state: Optional[str] = Query(None)
+    request: Request, code: str = Body(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
-    existing_user = state
-
-    if existing_user:
-        try:
-            existing_user = int(existing_user)
-        except TypeError:
-            existing_user = None
-
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/apps/google")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/google")
 
     data = {
         "client_id": client_id,
@@ -148,56 +119,34 @@ async def auth_from_google(
         email = data["email"]
         userid = data["id"]
 
-    await request.app.state.db.get_user(token=existing_user)
 
-    exists = await request.app.state.db.check_email(email)
-    if exists:
-        existing_user = exists
+    if request.state.user is not None:
+        token = await request.app.state.db.update_user(
+            request.state.user['id'], google_id=userid, email=email
+        )
+        return UJSONResponse({"token": token})
 
-    if existing_user:
-        if not isinstance(existing_user, int):
-            existing_user = await request.app.state.db.get_user(token=existing_user)
-
-        if not existing_user or existing_user in (400, 401):
-            existing_user = None
-
-        else:
-            token = await request.app.state.db.update_user(
-                existing_user, google_id=userid, email=email
-            )
-            if token is None:
-                existing_user = None
-            else:
-                return {"token": token}
-
-    if not existing_user:
+    else:
         data = await request.app.state.db.new_user(email, google_id=userid)
         return UJSONResponse({"token": data["token"]})
 
 
-@router.get(
-    "/apps/github/{code}",
+@router.post(
+    "/users/connect/github",
     response_model=responses.TokenResponse,
     include_in_schema=False,
 )
 @limit("apps", "zones.apps")
 async def auth_from_github(
-    request: Request, code: str = Query(None), state: Optional[str] = Query(None)
+    request: Request, code: str = Body(None)
 ) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
-    existing_user = state
-    if existing_user:
-        try:
-            existing_user = int(existing_user)
-        except TypeError:
-            existing_user = None
-
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/apps/github")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/users/connect/github")
 
     data = {
         "client_id": client_id,
@@ -238,27 +187,32 @@ async def auth_from_github(
 
             email.append(entry["email"])
 
-    if email:
-        exists = await request.app.state.db.check_email(email)
-        if exists:
-            existing_user = exists
+    if request.state.user is not None:
+        token = await request.app.state.db.update_user(
+            request.state.user['id'], github_id=userid, email=email
+        )
+        return UJSONResponse({"token": token})
 
-    if existing_user:
-        if not isinstance(existing_user, int):
-            existing_user = await request.app.state.db.get_user(token=existing_user)
-
-        if not existing_user or existing_user in (400, 401):
-            existing_user = None
-
-        else:
-            token = await request.app.state.db.update_user(
-                existing_user, github_id=userid, email=email
-            )
-            if token is None:
-                existing_user = None
-            else:
-                return {"token": token}
-
-    if not existing_user:
+    else:
         data = await request.app.state.db.new_user(email, github_id=userid)
         return UJSONResponse({"token": data["token"]})
+
+@router.post("/callbacks/sentry", include_in_schema=False)
+@limit("sentry")
+async def sentry_callback(request: Request):
+    data = await request.json()
+
+    hook: discord.Webhook = request.app.state.webhook
+    if not hook:
+        return Response(status_code=204)
+
+    e = discord.Embed(title=data['data']['issue']['title'])
+    e.set_author(name=f"Issue {data['action']}")
+    e.description = f"Issue id: {data['data']['issue']['id']}\nTimes seen: {data['data']['issue']['count']}" \
+                    f"\nErrored at: {data['data']['issue']['culprit']}"
+    e.timestamp = datetime.datetime.strptime(data['data']['issue']['lastSeen'], "%Y-%m-%dT%H:%M:%S.%fZ")
+    e.set_footer(text="Last seen at", icon_url="https://cdn.discordapp.com/avatars/698366484975714355/9bad78779883b3bd6dfd4022d997e406.png")
+
+    await hook.send(embed=e)
+
+    return Response(status_code=204)
