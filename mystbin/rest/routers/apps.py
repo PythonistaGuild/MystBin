@@ -44,7 +44,7 @@ async def auth_from_discord(
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/discord_auth")
 
     data = {
         "client_id": client_id,
