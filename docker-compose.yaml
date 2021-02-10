@@ -21,6 +21,8 @@ services:
   api:
     image: python:3.9.1-buster
     build: mystbin/rest
+    ports:
+      - 5567:5567/tcp
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./mystbin/rest/config.toml:/usr/src/app/config.toml:ro

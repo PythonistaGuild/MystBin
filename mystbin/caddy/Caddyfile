@@ -2,6 +2,6 @@
     reverse_proxy frontend:3000
 }
 
-{$API_DOMAIN} {
-    reverse_proxy api:9000
+:80, :443 {
+    respond 404
 }
