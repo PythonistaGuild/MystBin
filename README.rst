@@ -1,8 +1,9 @@
 .. image:: res/mystbin_logo_light_full.svg?raw=True
     :align: center
 
-
+.. class:: center
 Easily share your code or text with syntax highlighting and themes for readability.
+
 **NOTE: This software in under heavy development and subject to change. At this time it is also not supported.**
 
 
