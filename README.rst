@@ -9,20 +9,20 @@ Easily share your code or text with syntax highlighting and themes for readabili
 
 .. image:: https://img.shields.io/badge/Python-3.8%20%7C%203.9-blue.svg
     :target: https://www.python.org
-    
-.. image:: https://img.shields.io/github/license/EvieePy/Wavelink.svg
+
+.. image:: https://img.shields.io/badge/license-GPL--3.0-blue.svg
     :target: LICENSE
-    
+
 .. image:: https://img.shields.io/discord/490948346773635102?color=%237289DA&label=Pythonista&logo=discord&logoColor=white
     :target: https://discord.gg/RAKc3HF
-    
+
 .. image:: https://github.com/PythonistaGuild/MystBin/workflows/Analyze/badge.svg
     :target: https://github.com/PythonistaGuild/actions?query=workflow%3AAnalyze
-    
+
 .. image:: https://github.com/PythonistaGuild/MystBin/workflows/Lint%20Code%20Base/badge.svg
     :target: https://github.com/PythonistaGuild/MystBin/actions?query=workflow%3A%22Lint+Code+Base%22
-   
-   
+
+
 --------------
 Installation
 --------------
