@@ -5,7 +5,6 @@ import { PropsWithoutRef } from "react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 
-
 const PostMonacoEditor = dynamic(() => import("../components/EditorTabs"), {
   ssr: false,
 });
@@ -28,12 +27,27 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
   return (
     <div>
       <Head>
-        <title key="pasteTitle">MystBin - {paste['pid']}</title>
-        <meta property="og:title" content={`MystBin - ${paste["pid"]}`} key="pasteTitleOg"/>
-        <meta property="og:description" content={`This paste has (${paste["pastes"].length}) attached file(s) and expires in 2 hours.`} key="pasteDesc"/>
-        <meta property="og:image" content={"https://i.imgur.com/6aYhtEf.png"} key="pasteLogo"/>
-        <meta property="og:url" content={"https://staging.mystb.in/" + paste["pid"]} key="pasteUrl"/>
-
+        <title key="pasteTitle">MystBin - {paste["pid"]}</title>
+        <meta
+          property="og:title"
+          content={`MystBin - ${paste["pid"]}`}
+          key="pasteTitleOg"
+        />
+        <meta
+          property="og:description"
+          content={`This paste has (${paste["pastes"].length}) attached file(s) and expires in 2 hours.`}
+          key="pasteDesc"
+        />
+        <meta
+          property="og:image"
+          content={"https://i.imgur.com/6aYhtEf.png"}
+          key="pasteLogo"
+        />
+        <meta
+          property="og:url"
+          content={"https://staging.mystb.in/" + paste["pid"]}
+          key="pasteUrl"
+        />
       </Head>
       <Base className={styles.Tabs}>
         <PostMonacoEditor
