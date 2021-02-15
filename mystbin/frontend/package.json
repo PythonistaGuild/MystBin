@@ -19,6 +19,7 @@
     "flux": "^4.0.1",
     "http-proxy": "^1.18.1",
     "next": "10.0.1",
+    "nookies": "^2.5.2",
     "react": "17.0.1",
     "react-bootstrap": "^1.4.0",
     "react-dom": "17.0.1",
