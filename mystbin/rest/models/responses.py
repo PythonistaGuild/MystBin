@@ -81,7 +81,6 @@ class User(BaseModel):
     admin: bool
     theme: str
     subscriber: bool
-    banned: bool
     bookmarks: List[str]
 
 

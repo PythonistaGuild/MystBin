@@ -99,7 +99,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/google_auth")
 
     data = {
         "client_id": client_id,
@@ -153,7 +153,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/auth")
+    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/github_auth")
 
     data = {
         "client_id": client_id,
