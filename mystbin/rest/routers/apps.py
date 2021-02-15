@@ -130,7 +130,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         resp.raise_for_status()
         data = await resp.json()
         email = [data["email"]]
-        userid = data["id"]
+        userid = int(data["id"])
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
