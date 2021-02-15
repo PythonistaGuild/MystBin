@@ -83,6 +83,12 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
         )
         return {"token": token}
 
+    elif _id := await request.app.state.db.check_email(email):
+        token = await request.app.state.db.update_user(
+            _id, discord_id=userid, email=email
+        )
+        return UJSONResponse({"token": token})
+
     else:
         data = await request.app.state.db.new_user(email, userid)
         return UJSONResponse({"token": data["token"]})
@@ -142,6 +148,12 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         )
         return UJSONResponse({"token": token})
 
+    elif _id := await request.app.state.db.check_email(email):
+        token = await request.app.state.db.update_user(
+            _id, google_id=userid, email=email
+        )
+        return UJSONResponse({"token": token})
+
     else:
         data = await request.app.state.db.new_user(email, google_id=userid)
         return UJSONResponse({"token": data["token"]})
@@ -194,7 +206,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
     ) as resp:
         resp.raise_for_status()
         data = await resp.json()
-        userid = data["id"]
+        userid = int(data["id"])
 
     async with request.app.state.client.get(
         "https://api.github.com/user/emails",
@@ -212,6 +224,12 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
             request.state.user["id"], github_id=userid, email=email
+        )
+        return UJSONResponse({"token": token})
+
+    elif _id := await request.app.state.db.check_email(email):
+        token = await request.app.state.db.update_user(
+            _id, github_id=userid, email=email
         )
         return UJSONResponse({"token": token})
 
