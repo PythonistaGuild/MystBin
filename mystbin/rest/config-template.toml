@@ -13,7 +13,8 @@ discord_application_secret = ""
 google_application_id = ""
 google_application_secret = ""
 # Github application for OAuth2.
-github_application = ""
+github_application_id = ""
+github_application_secret = ""
 
 [site]
 # Base site URL
