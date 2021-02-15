@@ -1,13 +1,13 @@
 import SleeperPush from "../components/Sleeper";
-import {setCookie} from "nookies";
+import { setCookie } from "nookies";
 
 export default function DiscordAuth(props) {
   const { token } = props;
   return (
     <div>
-
-      {token ? setCookie(null, 'state', 'true', {path: "/"}) : null }
-      {token ? <SleeperPush ms={0} route={"/success"} /> : "ERROR"}</div>
+      {token ? setCookie(null, "state", "true", { path: "/" }) : null}
+      {token ? <SleeperPush ms={0} route={"/success"} /> : "ERROR"}
+    </div>
   );
 }
 
@@ -19,7 +19,7 @@ export const getServerSideProps = async ({ query, ctx }) => {
   });
 
   const token = await response.json();
-  setCookie(ctx, 'auth', token, {httpOnly: true, path: "/"})
+  setCookie(ctx, "auth", token, { httpOnly: true, path: "/" });
 
   return { props: { token } };
 };
