@@ -5,9 +5,9 @@ import DiscordColorIcon from "../icons/DiscordColour";
 import GitHubIcon from "@material-ui/icons/GitHub";
 import GoogleIcon from "../icons/GoogleIcon";
 import { useRouter } from "next/router";
-import {useState} from "react";
+import { useState } from "react";
 import Popout from "react-popout";
-import {setCookie} from "nookies";
+import { setCookie } from "nookies";
 
 export default function LoginModal({ onHide }: { onHide: () => void }) {
   const router = useRouter();
@@ -15,10 +15,16 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
 
   return (
     <>
-      {window ? <Popout title={"MystBin - Login"} url={window} onClosing={() => {
-        setWindow(null);
-        router.reload();
-      }} /> : null }
+      {window ? (
+        <Popout
+          title={"MystBin - Login"}
+          url={window}
+          onClosing={() => {
+            setWindow(null);
+            router.reload();
+          }}
+        />
+      ) : null}
       <Modal
         show={true}
         onHide={onHide}
@@ -37,7 +43,9 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
           <div
             className={styles.iconsContainer}
             onClick={() => {
-              setWindow('https://discord.com/api/oauth2/authorize?client_id=569566608817782824&redirect_uri=https%3A%2F%2Fstaging.mystb.in%2Fdiscord_auth&response_type=code&scope=identify%20email')
+              setWindow(
+                "https://discord.com/api/oauth2/authorize?client_id=569566608817782824&redirect_uri=https%3A%2F%2Fstaging.mystb.in%2Fdiscord_auth&response_type=code&scope=identify%20email"
+              );
             }}
           >
             <DiscordColorIcon className={styles.icons} />

@@ -22,7 +22,7 @@ import LogoMinimalMain from "../public/LogoMinimalMain";
 import { useRouter } from "next/router";
 import pasteStore from "../stores/PasteStore";
 import LoginModal from "./LoginModal";
-import { parseCookies, setCookie, destroyCookie } from 'nookies'
+import { parseCookies, setCookie, destroyCookie } from "nookies";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -52,8 +52,8 @@ export default function OptsBar() {
         const cookies = parseCookies();
 
         if (cookies["state"] === "true") {
-          router.push('/dashboard')
-          return
+          router.push("/dashboard");
+          return;
         }
         setCurrentModal(
           <LoginModal

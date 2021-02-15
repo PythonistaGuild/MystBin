@@ -5,7 +5,8 @@ export default function success() {
   return (
     <div>
       <div className={styles.successImage}>
-        <Image src={"/success.gif"} height={"300px"} width={"500px"} /><br />
+        <Image src={"/success.gif"} height={"300px"} width={"500px"} />
+        <br />
         You may close this window
       </div>
     </div>
