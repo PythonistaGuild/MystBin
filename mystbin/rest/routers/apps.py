@@ -37,15 +37,18 @@ router = APIRouter()
 @limit("apps", "zones.apps")
 async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
-    data = await request.json()
-    code = data.get("code", None)
+    try:
+        data = await request.json()
+        code = data.get("code", None)
+    except:
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
 
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/discord_auth")
+    url = yarl.URL(request.app.config["site"]["external_site"]).with_path("/discord_auth")
 
     data = {
         "client_id": client_id,
@@ -91,15 +94,18 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
 @limit("apps", "zones.apps")
 async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
-    data = await request.json()
-    code = data.get("code", None)
+    try:
+        data = await request.json()
+        code = data.get("code", None)
+    except:
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
 
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/google_auth")
+    url = yarl.URL(request.app.config["site"]["external_site"]).with_path("/google_auth")
 
     data = {
         "client_id": client_id,
@@ -145,15 +151,18 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 @limit("apps", "zones.apps")
 async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
-    data = await request.json()
-    code = data.get("code", None)
+    try:
+        data = await request.json()
+        code = data.get("code", None)
+    except:
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
 
     if not code:
         return UJSONResponse({"error": "Missing code query"}, status_code=400)
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["base_site"]).with_path("/github_auth")
+    url = yarl.URL(request.app.config["site"]["external_site"]).with_path("/github_auth")
 
     data = {
         "client_id": client_id,
