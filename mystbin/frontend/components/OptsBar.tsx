@@ -22,7 +22,7 @@ import LogoMinimalMain from "../public/LogoMinimalMain";
 import { useRouter } from "next/router";
 import pasteStore from "../stores/PasteStore";
 import LoginModal from "./LoginModal";
-import { parseCookies, setCookie, destroyCookie } from "nookies";
+import cookieCutter from 'cookie-cutter'
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -49,11 +49,11 @@ export default function OptsBar() {
         "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
       icon: <DashboardIcon />,
       callback: () => {
-        const cookies = parseCookies();
+        const loginState = cookieCutter.get('state');
 
-        if (cookies["state"] === "true") {
-          router.push("/dashboard");
-          return;
+        if (loginState === 'true') {
+          router.push('/dashboard')
+          return
         }
         setCurrentModal(
           <LoginModal
