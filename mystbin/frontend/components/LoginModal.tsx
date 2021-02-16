@@ -7,7 +7,7 @@ import GoogleIcon from "../icons/GoogleIcon";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import Popout from "react-popout";
-import cookieCutter from 'cookie-cutter'
+import cookieCutter from "cookie-cutter";
 
 export default function LoginModal({ onHide }: { onHide: () => void }) {
   const router = useRouter();
@@ -15,11 +15,17 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
 
   return (
     <>
-      {window ? <Popout title={"MystBin - Login"} url={window} onClosing={() => {
-        cookieCutter.set('state', 'true');
-        setWindow(null);
-        router.reload();
-      }} /> : null }
+      {window ? (
+        <Popout
+          title={"MystBin - Login"}
+          url={window}
+          onClosing={() => {
+            cookieCutter.set("state", "true");
+            setWindow(null);
+            router.reload();
+          }}
+        />
+      ) : null}
       <Modal
         show={true}
         onHide={onHide}
@@ -48,7 +54,9 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
           <div
             className={styles.iconsContainer}
             onClick={() => {
-              setWindow("https://github.com/login/oauth/authorize?client_id=b7706c70bf211e796c70&redirect_uri=https://staging.mystb.in/github_auth&scope=user");
+              setWindow(
+                "https://github.com/login/oauth/authorize?client_id=b7706c70bf211e796c70&redirect_uri=https://staging.mystb.in/github_auth&scope=user"
+              );
             }}
           >
             <GitHubIcon className={styles.icons} />
@@ -56,7 +64,9 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
           <div
             className={styles.iconsContainer}
             onClick={() => {
-              setWindow('https://accounts.google.com/o/oauth2/v2/auth?client_id=441802425406-seonbv5tmcu2htuhgs544imp9rtk0giu.apps.googleusercontent.com&redirect_uri=https://staging.mystb.in/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email')
+              setWindow(
+                "https://accounts.google.com/o/oauth2/v2/auth?client_id=441802425406-seonbv5tmcu2htuhgs544imp9rtk0giu.apps.googleusercontent.com&redirect_uri=https://staging.mystb.in/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email"
+              );
             }}
           >
             <GoogleIcon className={styles.googleIcon} />
