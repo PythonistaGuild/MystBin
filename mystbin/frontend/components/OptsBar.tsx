@@ -182,11 +182,10 @@ export default function OptsBar() {
     },   
   ];
 
-  let optsHideShow = () => {optsVisible ? "Show" : " Hide"};
 
   const collapse = [{
-    title: "Hide Options",
-    content: optsHideShow(),
+    title: "View Options",
+    content: "Show or hide the options ",
     optional: true,
     icon: optsVisible ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
     callback: () => setOptsVisible(!optsVisible),
@@ -199,7 +198,6 @@ export default function OptsBar() {
   return (
     <>
       {currentModal && currentModal}
-
       <div>
       {optsVisible ? <div></div> : <div className={styles.optsNavContainerCollapsed}>{collapse.map(OptsButton)}</div>}
       <Slide direction="down" in={optsVisible}>
