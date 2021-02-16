@@ -19,6 +19,16 @@
   background-color: #1b1b1b;
   margin-top: 2.6rem;
 }
+.optsNavContainerCollapsed {
+  right: 0;
+  position: fixed;
+  z-index: 3;
+  flex-direction: column !important;
+  background-color: #1b1b1b;
+  max-height: 2rem;
+  display: flex;
+  justify-content: space-evenly;
+}
 
 .optsIconContainer {
   color: rgba(255, 255, 255, 0.7);
