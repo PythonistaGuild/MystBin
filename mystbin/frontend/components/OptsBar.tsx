@@ -1,9 +1,4 @@
-import {
-  OverlayTrigger,
-  Popover,
-  Spinner,
-  Toast,
-} from "react-bootstrap";
+import { OverlayTrigger, Popover, Spinner, Toast } from "react-bootstrap";
 import React, { useEffect, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
@@ -20,8 +15,8 @@ import { useRouter } from "next/router";
 import pasteStore from "../stores/PasteStore";
 import LoginModal from "./LoginModal";
 import cookieCutter from "cookie-cutter";
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
 import { LensTwoTone } from "@material-ui/icons";
 
@@ -179,17 +174,18 @@ export default function OptsBar() {
           />
         );
       },
-    },   
+    },
   ];
 
-
-  const collapse = [{
-    title: "View Options",
-    content: "Show or hide the options ",
-    optional: true,
-    icon: optsVisible ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
-    callback: () => setOptsVisible(!optsVisible),
-  }];
+  const collapse = [
+    {
+      title: "View Options",
+      content: "Show or hide the options ",
+      optional: true,
+      icon: optsVisible ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
+      callback: () => setOptsVisible(!optsVisible),
+    },
+  ];
 
   actions.forEach(({ callback, hotKey }) => {
     useHotkeys(hotKey, callback);
@@ -199,16 +195,22 @@ export default function OptsBar() {
     <>
       {currentModal && currentModal}
       <div>
-      {optsVisible ? <div></div> : <div className={styles.optsNavContainerCollapsed}>{collapse.map(OptsButton)}</div>}
-      <Slide direction="down" in={optsVisible}>
-        <div className={styles.optsNavContainer}>
-          {personal.map(OptsButton)}
-          <hr className={styles.navGap} />
-          {actions.map(OptsButton)}
-          <hr className={styles.navGap} />
-          {opts.map(OptsButton)}
-          {collapse.map(OptsButton)}
-        </div>
+        {optsVisible ? (
+          <div></div>
+        ) : (
+          <div className={styles.optsNavContainerCollapsed}>
+            {collapse.map(OptsButton)}
+          </div>
+        )}
+        <Slide direction="down" in={optsVisible}>
+          <div className={styles.optsNavContainer}>
+            {personal.map(OptsButton)}
+            <hr className={styles.navGap} />
+            {actions.map(OptsButton)}
+            <hr className={styles.navGap} />
+            {opts.map(OptsButton)}
+            {collapse.map(OptsButton)}
+          </div>
         </Slide>
       </div>
 
