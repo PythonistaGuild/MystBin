@@ -5,8 +5,7 @@ export default function DiscordAuth(props) {
   const { token } = props;
 
   return (
-    <div>
-      {token ? <SleeperPush ms={0} route={"/success"} /> : "ERROR"}</div>
+    <div>{token ? <SleeperPush ms={0} route={"/success"} /> : "ERROR"}</div>
   );
 }
 
@@ -18,8 +17,8 @@ export const getServerSideProps = async ({ req, res, query }) => {
   });
 
   const token = await response.json();
-  const cookies = new Cookies(req, res)
-  cookies.set('auth', token["token"], {httpOnly: true})
+  const cookies = new Cookies(req, res);
+  cookies.set("auth", token["token"], { httpOnly: true });
 
   return { props: { token } };
 };
