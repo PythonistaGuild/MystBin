@@ -1,6 +1,4 @@
 import {
-  Nav,
-  Navbar,
   OverlayTrigger,
   Popover,
   Spinner,
@@ -18,11 +16,14 @@ import ExpiryModal from "./ExpiryModal";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import FiberNewIcon from "@material-ui/icons/FiberNew";
 import BrushIcon from "@material-ui/icons/Brush";
-import LogoMinimalMain from "../public/LogoMinimalMain";
 import { useRouter } from "next/router";
 import pasteStore from "../stores/PasteStore";
 import LoginModal from "./LoginModal";
 import cookieCutter from "cookie-cutter";
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import { Slide } from "@material-ui/core";
+import { LensTwoTone } from "@material-ui/icons";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -32,12 +33,11 @@ export default function OptsBar() {
   const [saveSuccessToast, setSaveSuccessToast] = useState(null);
   const [saveBlankToast, setSaveBlankToast] = useState(false);
   const [saving, setSaving] = useState(false);
-
+  const [optsVisible, setOptsVisible] = useState(true);
   useEffect(() => {
     pasteStore.addChangeListener(onChange);
     return () => pasteStore.removeChangeListener(onChange);
   }, []);
-
   function onChange() {
     setPaste(pasteStore.getPaste());
   }
@@ -155,7 +155,6 @@ export default function OptsBar() {
       hotKey: "ctrl+e",
     },
   ];
-
   const opts = [
     {
       title: "Create Password",
@@ -180,8 +179,17 @@ export default function OptsBar() {
           />
         );
       },
-    },
+    },   
   ];
+
+
+  const collapse = [{
+    title: "View Options",
+    content: "Show or hide the options ",
+    optional: true,
+    icon: optsVisible ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
+    callback: () => setOptsVisible(!optsVisible),
+  }];
 
   actions.forEach(({ callback, hotKey }) => {
     useHotkeys(hotKey, callback);
@@ -191,13 +199,17 @@ export default function OptsBar() {
     <>
       {currentModal && currentModal}
       <div>
+      {optsVisible ? <div></div> : <div className={styles.optsNavContainerCollapsed}>{collapse.map(OptsButton)}</div>}
+      <Slide direction="down" in={optsVisible}>
         <div className={styles.optsNavContainer}>
           {personal.map(OptsButton)}
           <hr className={styles.navGap} />
           {actions.map(OptsButton)}
           <hr className={styles.navGap} />
           {opts.map(OptsButton)}
+          {collapse.map(OptsButton)}
         </div>
+        </Slide>
       </div>
 
       <Toast
