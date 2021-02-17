@@ -176,9 +176,13 @@ export default function OptsBar() {
       },
     },
   ];
-  function optionTitle(){return (optsVisible ? "Hide" : "Show") + " options"}
-  function optionDescription(){return (optsVisible ? "Hide" : "Show") + " the options"}
-  
+  function optionTitle() {
+    return (optsVisible ? "Hide" : "Show") + " options";
+  }
+  function optionDescription() {
+    return (optsVisible ? "Hide" : "Show") + " the options";
+  }
+
   const collapse = [
     {
       title: optionTitle(),
