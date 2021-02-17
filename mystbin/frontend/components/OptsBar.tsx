@@ -176,12 +176,13 @@ export default function OptsBar() {
       },
     },
   ];
-
+  function optionTitle(){return (optsVisible ? "Hide" : "Show") + " options"}
+  function optionDescription(){return (optsVisible ? "Hide" : "Show") + " the options"}
+  
   const collapse = [
     {
-      title: "View Options",
-      content: "Show or hide the options ",
-      optional: true,
+      title: optionTitle(),
+      content: optionDescription(),
       icon: optsVisible ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
       callback: () => setOptsVisible(!optsVisible),
     },
