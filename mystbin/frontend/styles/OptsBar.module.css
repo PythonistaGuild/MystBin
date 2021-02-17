@@ -21,13 +21,12 @@
 }
 .optsNavContainerCollapsed {
   right: 0;
+  top: -.5rem;
   position: fixed;
   z-index: 3;
-  flex-direction: column !important;
-  background-color: #1b1b1b;
   max-height: 2rem;
-  display: flex;
-  justify-content: space-evenly;
+  background-color: #1b1b1b;
+  padding-top: 0px;
 }
 
 .optsIconContainer {
