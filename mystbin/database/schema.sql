@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     admin BOOLEAN DEFAULT false,
     theme TEXT DEFAULT 'default',
     subscriber BOOLEAN DEFAULT false,
-    names text[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
+    names TEXT[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
 );
 
 CREATE TABLE IF NOT EXISTS pastes (
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS pastes (
     last_edited TIMESTAMP WITH TIME ZONE,
     password TEXT,
     views INTEGER DEFAULT 0,
-    origin_ip text
+    origin_ip TEXT
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -39,10 +39,10 @@ CREATE TABLE IF NOT EXISTS files (
 );
 
 CREATE TABLE IF NOT EXISTS bans (
-    ip text unique,
-    userid bigint unique,
-    names text[],
-    reason text
+    ip TEXT UNIQUE,
+    userid BIGINT UNIQUE,
+    names TEXT[],
+    reason TEXT
 );
 
 CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
