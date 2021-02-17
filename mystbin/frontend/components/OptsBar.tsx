@@ -199,7 +199,7 @@ export default function OptsBar() {
     <>
       {currentModal && currentModal}
       <div>
-      {optsVisible ? <div></div> : <div className={styles.optsNavContainerCollapsed}>{collapse.map(OptsButton)}</div>}
+      {optsVisible ? <div id="popsicle"></div> : <div className={styles.optsNavContainerCollapsed}>{collapse.map(OptsButton)}</div>}
       <Slide direction="down" in={optsVisible}>
         <div className={styles.optsNavContainer}>
           {personal.map(OptsButton)}
