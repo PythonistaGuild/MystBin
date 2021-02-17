@@ -587,9 +587,9 @@ class Database:
     async def new_user(
         self,
         emails: List[str],
-        discord_id: int = None,
-        github_id: int = None,
-        google_id: int = None,
+        discord_id: str = None,
+        github_id: str = None,
+        google_id: str = None,
     ) -> asyncpg.Record:
         """Creates a new User record.
 
@@ -630,8 +630,8 @@ class Database:
         user_id: int,
         email: Optional[str] = None,
         bookmarks: Optional[List[str]] = None,
-        discord_id: Optional[int] = None,
-        github_id: Optional[int] = None,
+        discord_id: Optional[str] = None,
+        github_id: Optional[str] = None,
         google_id: Optional[str] = None,
     ) -> Optional[str]:
         """Updates an existing user account.
@@ -644,11 +644,11 @@ class Database:
             The email to add to the User's list of emails.
         bookmarks: Optional[List[:class:`str`]]
             The bookmarks to update existing bookmarks.
-        discord_id: Optional[:class:`int`]
+        discord_id: Optional[:class:`str`]
             The user's Discord ID.
-        github_id: Optional[:class:`int`]
+        github_id: Optional[:class:`str`]
             The user's GitHub ID.
-        google_id: Optional[:class:`int`]
+        google_id: Optional[:class:`str`]
             The user's Google ID.
 
         Returns
@@ -668,7 +668,7 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, bookmarks, discord_id, github_id, google_id, user_id
+            query, bookmarks, str(discord_id), str(github_id), str(google_id), user_id
         )
         if not data:
             return None
