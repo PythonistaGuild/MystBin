@@ -597,11 +597,11 @@ class Database:
         ------------
         emails: List[:class:`str`]
             The email addresses the user has registered with.
-        discord_id: Optional[:class:`int`]
+        discord_id: Optional[:class:`str`]
             The Discord ID of the registering user.
-        github_id: Optional[:class:`int`]
+        github_id: Optional[:class:`str`]
             The GitHub ID of the registering user.
-        google_id: Optional[:class:`int`]
+        google_id: Optional[:class:`str`]
             The Google ID of the registering user.
 
         Returns
@@ -620,7 +620,7 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, userid, token, emails, [], discord_id, github_id, google_id
+            query, userid, token, emails, [], str(discord_id), str(github_id), str(google_id)
         )
         return data[0]
 
@@ -663,7 +663,7 @@ class Database:
                 discord_id = COALESCE($2, discord_id),
                 github_id = COALESCE($3, github_id),
                 google_id = COALESCE($4, google_id)
-                WHERE id = $4
+                WHERE id = $5
                 RETURNING token, emails;
                 """
 
