@@ -19,9 +19,9 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional, Union
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import UJSONResponse
+from fastapi.responses import UJSONResponse, Response
 from fastapi.security import HTTPBearer
-from models import errors, responses
+from models import errors, responses, payloads
 from utils.ratelimits import limit
 
 router = APIRouter()
@@ -49,7 +49,7 @@ async def get_self(
 
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Forbidden"}, status_code=403)
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return UJSONResponse(responses.User(**user).dict())
 
@@ -73,7 +73,7 @@ async def regen_token(
     * Requires authentication.
     """
     if not request.state.user:
-        return UJSONResponse({"error": "Forbidden"}, status_code=403)
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     token: Optional[str] = await request.app.state.db.regen_token(
         userid=request.state.user["id"]
@@ -82,3 +82,73 @@ async def regen_token(
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     return {"token": token}
+
+@router.put(
+    "/users/bookmarks",
+    tags=["users"],
+    responses={
+        201: {"description": "Created bookmark"},
+        400: {"model": errors.BadRequest},
+        401: {"model": errors.Unauthorized},
+        403: {"model": errors.Forbidden},
+    }
+)
+@limit("bookmarks", "users.bookmarks")
+async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete, authorization: str = Depends(auth_model)) -> Response:
+    """Creates a bookmark on the authorized user's account
+    * Requires authentication.
+    """
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        await request.app.state.db.create_bookmark(request.state.user['id'], bookmark.paste_id)
+        return Response(status_code=201)
+    except ValueError as e:
+        return UJSONResponse({"error": e.args[0]}, status_code=400)
+
+
+@router.delete(
+    "/users/bookmarks",
+    tags=["users"],
+    responses={
+        204: {"description": "Deleted bookmark"},
+        400: {"model": errors.BadRequest},
+        401: {"model": errors.Unauthorized},
+        403: {"model": errors.Forbidden},
+    }
+)
+@limit("bookmarks", "users.bookmarks")
+async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete, authorization: str = Depends(auth_model)) -> Response:
+    """Deletes a bookmark on the authorized user's account
+    * Requires authentication.
+    """
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    if not await request.app.state.db.delete_bookmark(request.state.user['id'], bookmark.paste_id):
+        return UJSONResponse({"error": "Bookmark does not exist"}, status_code=400)
+    else:
+        return Response(status_code=204)
+
+@router.get(
+    "/users/bookmarks",
+    tags=["users"],
+    response_model=responses.Bookmarks,
+    responses={
+        200: {"model": responses.Bookmarks},
+        400: {"model": errors.BadRequest},
+        401: {"model": errors.Unauthorized},
+        403: {"model": errors.Forbidden},
+    }
+)
+@limit("bookmarks", "users.bookmarks")
+async def get_bookmarks(request: Request, authorization: str = Depends(auth_model)):
+    """Fetches all of the authorized users bookmarks
+    * Requires authentication
+    """
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    data = await request.app.state.db.get_bookmark(request.state.user['id'])
+    return UJSONResponse({"bookmarks": data})
