@@ -398,7 +398,7 @@ async def _fetch_user(request: Request):
         return
 
     query = """
-            SELECT *, bans.ip as _is_ip_banned , bans.userid as _is_user_banned
+            SELECT users.*, bans.ip as _is_ip_banned , bans.userid as _is_user_banned
             FROM users
             FULL OUTER JOIN bans
             ON ip = $2
