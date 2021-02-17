@@ -15,7 +15,7 @@
   flex-direction: column !important;
   height: 90%;
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   background-color: #1b1b1b;
   margin-top: 2.6rem;
 }
