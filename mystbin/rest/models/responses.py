@@ -99,3 +99,12 @@ class UserList(BaseModel):
     users: List[SmallUser]
     page: int
     page_count: int
+
+class Bookmark(BaseModel):
+    id: str
+    created_at: datetime
+    expires: datetime
+    views: int
+
+class Bookmarks(BaseModel):
+    bookmarks: List[Bookmark]
