@@ -69,5 +69,5 @@ class PastePatch(BaseModel):
 class PasteDelete(BaseModel):
     pastes: List[str]
 
-class BookmarkCreateDelete(BaseModel):
+class BookmarkPutDelete(BaseModel):
     paste_id: str
