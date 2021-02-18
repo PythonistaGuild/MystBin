@@ -615,12 +615,12 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, $7, false, DEFAULT, false, ARRAY[]::text[])
+                VALUES ($1, $2, $3, $4, $5, $6, false, DEFAULT, false)
                 RETURNING *;
                 """
 
         data = await self._do_query(
-            query, userid, token, emails, [], str(discord_id), str(github_id), str(google_id)
+            query, userid, token, emails, str(discord_id) or None, str(github_id) or None, str(google_id) or None
         )
         return data[0]
 
@@ -628,8 +628,7 @@ class Database:
     async def update_user(
         self,
         user_id: int,
-        email: Optional[str] = None,
-        bookmarks: Optional[List[str]] = None,
+        emails: Optional[List[str]] = None,
         discord_id: Optional[str] = None,
         github_id: Optional[str] = None,
         google_id: Optional[str] = None,
@@ -640,10 +639,8 @@ class Database:
         ------------
         user_id: :class:`int`
             The ID of the user to edit.
-        email: Optional[:class:`str`]
+        emails: Optional[List[:class:`str`]]
             The email to add to the User's list of emails.
-        bookmarks: Optional[List[:class:`str`]]
-            The bookmarks to update existing bookmarks.
         discord_id: Optional[:class:`str`]
             The user's Discord ID.
         github_id: Optional[:class:`str`]
@@ -659,30 +656,36 @@ class Database:
 
         query = """
                 UPDATE users SET
-                bookmarks = COALESCE($1, bookmarks),
-                discord_id = COALESCE($2, discord_id),
-                github_id = COALESCE($3, github_id),
-                google_id = COALESCE($4, google_id)
-                WHERE id = $5
+                discord_id = COALESCE($1, discord_id),
+                github_id = COALESCE($2, github_id),
+                google_id = COALESCE($3, google_id)
+                WHERE id = $4
                 RETURNING token, emails;
                 """
 
         data = await self._do_query(
-            query, bookmarks, str(discord_id), str(github_id), str(google_id), user_id
+            query, str(discord_id), str(github_id), str(google_id), user_id
         )
         if not data:
             return None
 
-        token, emails = data[0]
+        token, _emails = data[0]
 
-        if not email or email in emails:
+        if not emails:
             return token
 
+        new_emails = set(_emails)
+        new_emails.update(emails)
+        new_emails = list(new_emails)
+        if new_emails == emails:
+            return token
+
+
         query = """
-                UPDATE users SET emails = array_append(emails, $1) WHERE id = $2
+                UPDATE users SET emails = $1 WHERE id = $2
                 """
 
-        await self._do_query(query, email, user_id)
+        await self._do_query(query, new_emails, user_id)
         return token
 
     @wrapped_hook_callback
@@ -715,7 +718,7 @@ class Database:
         """
         try:
             query = """
-                    INSERT INTO bans VALUES ($1, $2, (SELECT names FROM users WHERE id = $2 AND $2 is not NULL), $3)
+                    INSERT INTO bans VALUES ($1, $2, $3)
                     """
             assert userid or ip
             await self._do_query(query, ip, userid, reason)
@@ -801,6 +804,44 @@ class Database:
                 return None
 
             return token
+
+    @wrapped_hook_callback
+    async def get_bookmarks(self, userid: int) -> List[Dict[str, Any]]:
+        """
+        Gets a list of bookmarks from the db
+        """
+        query = """
+                SELECT paste as id, pastes.created_at, pastes.expires, pastes.views
+                FROM bookmarks
+                INNER JOIN pastes
+                    ON pastes.id = bookmarks.paste
+                WHERE userid = $1
+                ORDER BY created_at
+                """
+
+        data = await self._do_query(query, userid)
+        return [dict(x) for x in data]
+
+    async def create_bookmark(self, userid: int, paste_id: str): # doesnt return anything, no need for a hook
+        """creates a bookmark for a user"""
+        query = """
+                INSERT INTO bookmarks (userid, paste) VALUES ($1, $2)
+                """
+
+        try:
+            await self._do_query(query, userid, paste_id)
+        except asyncpg.UniqueViolationError:
+            raise ValueError("This paste is already bookmarked")
+        except asyncpg.ForeignKeyViolationError:
+            raise ValueError("This paste does not exist") # its an auth'ed endpoint, so the user has to exist
+
+    async def delete_bookmark(self, userid: int, paste_id: str) -> bool:
+        """deletes a users bookmark"""
+        query = """
+                DELETE FROM bookmarks WHERE userid = $1 AND paste = $2 RETURNING paste
+                """
+        data = await self._do_query(query, userid, paste_id)
+        return bool(data)
 
     @wrapped_hook_callback
     async def ensure_authorization(self, token: str) -> bool:
@@ -901,7 +942,7 @@ class Database:
     @wrapped_hook_callback
     async def search_bans(
         self, *, ip=None, userid=None, search=None
-    ) -> Union[Optional[str], Dict[str, Any]]:
+    ) -> Union[Optional[str], List[Dict[str, Any]]]:
         assert any((ip, userid, search))
         if not self.ban_cache:
             if ip and userid:
@@ -959,18 +1000,11 @@ class Database:
 
             if ban["id"] == search:
                 return ban["reason"]
-            if search in ban["names"]:
-                return ban["reason"]
 
             matcher.set_seq2(ban["id"])
             if matcher.quick_ratio() > 0.7:
                 close.append(dict(ban))
                 continue
 
-            for name in ban["names"]:
-                matcher.set_seq2(name)
-                if matcher.quick_ratio() > 0.7:
-                    close.append(dict(ban))
-                    break
 
         return close
