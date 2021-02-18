@@ -242,7 +242,7 @@ async def get_recent_pastes(
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return request.app.state.db.get_recent_pastes(offset, reverse=oldest_first)
+    return UJSONResponse({"recent": await request.app.state.db.get_recent_pastes(offset, reverse=oldest_first)})
 
 
 @router.get(

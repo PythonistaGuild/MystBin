@@ -154,3 +154,42 @@ body .monaco-aria-container {
 input[type=radio] {
   visibility: hidden;
 }
+
+
+/* Dashboard Tables */
+.MuiDataGrid-root {
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: none!important;
+  font-family: "Whitney Book Regular", sans-serif !important;
+  font-size: 0.8em !important;
+}
+
+.MuiIconButton-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.MuiDataGrid-row:nth-child(even) {
+  background-color: #3b3b3b;
+}
+
+.MuiDataGrid-row:hover {
+  background-color: rgba(200, 200, 255, 0.2)!important;
+}
+
+.MuiTablePagination-toolbar {
+  color: rgba(255, 255, 255, 0.7)
+}
+
+.MuiDataGrid-window::-webkit-scrollbar {
+  width: 20px;
+}
+
+/* Track */
+.MuiDataGrid-window::-webkit-scrollbar-track {
+  background: rgba(200, 200, 255, 0.3);
+}
+
+/* Handle */
+.MuiDataGrid-window::-webkit-scrollbar-thumb {
+  background: #6b6b6b;
+}

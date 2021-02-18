@@ -3,3 +3,4 @@ __pycache__/
 config.toml
 .env
 .venv
+.pytest_cache/

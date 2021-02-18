@@ -5,14 +5,12 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
     token TEXT,
     emails TEXT[],
-    bookmarks TEXT[],
     discord_id TEXT,
     github_id TEXT,
     google_id TEXT,
     admin BOOLEAN DEFAULT false,
     theme TEXT DEFAULT 'default',
-    subscriber BOOLEAN DEFAULT false,
-    names TEXT[] -- really this is only useful for searching. Plus it's kinda useless if the user changes their name cause these are set-and-forget
+    subscriber BOOLEAN DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS pastes (
@@ -38,10 +36,16 @@ CREATE TABLE IF NOT EXISTS files (
     PRIMARY KEY (parent_id, index)
 );
 
+CREATE TABLE IF NOT EXISTS bookmarks (
+    userid bigint not null references users(id) ON DELETE CASCADE,
+    paste text not null references pastes(id) ON DELETE CASCADE,
+    PRIMARY KEY (userid, paste),
+    created_at timestamp without time zone not null default (now() at time zone 'utc')
+);
+
 CREATE TABLE IF NOT EXISTS bans (
     ip TEXT UNIQUE,
     userid BIGINT UNIQUE,
-    names TEXT[],
     reason TEXT
 );
 
@@ -58,17 +62,3 @@ CREATE TRIGGER oldPastesExpiry
     ON pastes
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldPastes();
-
--- CREATE OR REPLACE FUNCTION setLastEditTime() RETURNS TRIGGER AS $$
--- BEGIN
---     UPDATE pastes SET last_edited = now() AT TIME ZONE 'utc' WHERE id = NEW.id;
---     RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- DROP TRIGGER IF EXISTS lastEditTime on public.pastes;
--- CREATE TRIGGER lastEditTime
---     AFTER UPDATE
---     ON pastes
---     FOR EACH ROW
---     EXECUTE PROCEDURE setLastEditTime();
