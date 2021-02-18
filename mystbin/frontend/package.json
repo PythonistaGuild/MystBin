@@ -10,6 +10,7 @@
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
+    "@material-ui/x-grid": "^4.0.0-alpha.20",
     "@monaco-editor/react": "^3.7.0",
     "@types/crypto-js": "^4.0.1",
     "bootstrap": "^4.5.3",
