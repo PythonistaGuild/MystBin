@@ -81,7 +81,6 @@ class User(BaseModel):
     admin: bool
     theme: str
     subscriber: bool
-    bookmarks: List[str]
 
 
 class SmallUser(BaseModel):
