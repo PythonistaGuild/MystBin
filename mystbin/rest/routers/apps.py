@@ -79,13 +79,13 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user["id"], discord_id=userid, email=email
+            request.state.user["id"], discord_id=userid, emails=email
         )
         return {"token": token}
 
     elif _id := await request.app.state.db.check_email(email):
         token = await request.app.state.db.update_user(
-            _id, discord_id=userid, email=email
+            _id, discord_id=userid, emails=email
         )
         return UJSONResponse({"token": token})
 
@@ -144,13 +144,13 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user["id"], google_id=userid, email=email
+            request.state.user["id"], google_id=userid, emails=email
         )
         return UJSONResponse({"token": token})
 
     elif _id := await request.app.state.db.check_email(email):
         token = await request.app.state.db.update_user(
-            _id, google_id=userid, email=email
+            _id, google_id=userid, emails=email
         )
         return UJSONResponse({"token": token})
 
@@ -223,13 +223,13 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(
-            request.state.user["id"], github_id=userid, email=email
+            request.state.user["id"], github_id=userid, emails=email
         )
         return UJSONResponse({"token": token})
 
     elif _id := await request.app.state.db.check_email(email):
         token = await request.app.state.db.update_user(
-            _id, github_id=userid, email=email
+            _id, github_id=userid, emails=email
         )
         return UJSONResponse({"token": token})
 
