@@ -615,12 +615,12 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $5, $6, $7, false, DEFAULT, false, ARRAY[]::text[])
+                VALUES ($1, $2, $3, $5, $6, $7, false, DEFAULT, false)
                 RETURNING *;
                 """
 
         data = await self._do_query(
-            query, userid, token, emails, str(discord_id), str(github_id), str(google_id)
+            query, userid, token, emails, str(discord_id) or None, str(github_id) or None, str(google_id) or None
         )
         return data[0]
 
