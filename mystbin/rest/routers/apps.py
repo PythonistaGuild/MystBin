@@ -266,9 +266,9 @@ async def sentry_callback(request: Request):
         footer=footer,
     )
 
-    if request.state.webhook_url:
-        await request.state.session.post(
-            request.state.webhook_url, json={"embeds": [embed.to_dict()]}
+    if request.app.state.webhook_url:
+        await request.app.state.session.post(
+            request.app.state.webhook_url, json={"embeds": [embed.to_dict()]}
         )
 
     return Response(status_code=204)
