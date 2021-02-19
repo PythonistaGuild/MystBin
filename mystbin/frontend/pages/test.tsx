@@ -946,39 +946,45 @@ export default function Test(props) {
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>Memory:</h5>{analytics["memory"].toFixed(2)} MiB
+                  <h5>Memory:</h5>
+                  {analytics["memory"].toFixed(2)} MiB
                 </div>
               </div>
 
-                <div className={styles.embededData}>
+              <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>Memory %:</h5>{analytics["memory_percent"].toFixed(2)} %
+                  <h5>Memory %:</h5>
+                  {analytics["memory_percent"].toFixed(2)} %
                 </div>
-                </div>
+              </div>
 
-                <div className={styles.embededData}>
+              <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>CPU %:</h5>{analytics["cpu_percent"].toFixed(2)} %
+                  <h5>CPU %:</h5>
+                  {analytics["cpu_percent"].toFixed(2)} %
                 </div>
-                </div>
+              </div>
 
-                <div className={styles.embededData}>
+              <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>Total Pastes:</h5>{analytics["total+pastes"]}
+                  <h5>Total Pastes:</h5>
+                  {analytics["total+pastes"]}
                 </div>
-                </div>
+              </div>
 
-                <div className={styles.embededData}>
+              <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>Requests since Up:</h5>{analytics["requests"]}
+                  <h5>Requests since Up:</h5>
+                  {analytics["requests"]}
                 </div>
-                </div>
+              </div>
 
-                <div className={styles.embededData}>
+              <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
-                  <h5>Uptime:</h5><PrettySeconds seconds={analytics["uptime"]}/>
+                  <h5>Uptime:</h5>
+                  <PrettySeconds seconds={analytics["uptime"]} />
                 </div>
-                </div>
+              </div>
             </div>
           </>
         ) : null}
