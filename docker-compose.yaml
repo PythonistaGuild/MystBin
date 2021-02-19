@@ -1,25 +1,6 @@
 version: "3.7"
 
 services:
-  proxy:
-    image: caddy:latest
-    environment:
-      - DOMAIN="${DOMAIN}:443"
-      - API_DOMAIN="${API_DOMAIN}:443"
-    ports:
-      - 127.0.0.1:5555:443/tcp
-      - 127.0.0.1:5556:80/tcp
-    volumes:
-      - caddy_config:/config
-      - caddy_data:/data
-      - ./mystbin/caddy/Caddyfile:/etc/caddy/Caddyfile
-    container_name: "staging-reverse-proxy"
-    networks:
-      main:
-        ipv4_address: 172.25.0.10
-    depends_on:
-      - api
-
   api:
     image: python:3.9.1-buster
     build: mystbin/rest
@@ -68,8 +49,6 @@ services:
 
 volumes:
   postgresdata:
-  caddy_data:
-  caddy_config:
   node_modules:
 
 
