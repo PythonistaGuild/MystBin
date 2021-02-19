@@ -6,6 +6,7 @@ import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
 import pasteDispatcher from "../dispatchers/PasteDispatcher";
+import config from "../config.json";
 
 interface TabInfo {
   initialData?: any;
@@ -67,7 +68,7 @@ export default function EditorTabs({
   const handlePasswordAttempt = async (attempt: string) => {
     setLoading(true);
     const response = await fetch(
-      "https://api-staging.mystb.in/paste/" + id + "?password=" + attempt,
+      config["API_DOMAIN"] + id + "?password=" + attempt,
       { headers: { Accept: "application/json" } }
     );
     const paste = await response.json();
