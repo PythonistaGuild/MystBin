@@ -21,15 +21,11 @@ import { Collapse } from "@material-ui/core";
 import PeopleIcon from "@material-ui/icons/People";
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import BubbleChartIcon from "@material-ui/icons/BubbleChart";
-import { display } from "@material-ui/system";
-import PatreonFireyIcon from "../icons/PatreonFirey";
-import { useRouter } from "next/router";
 import Cookies from "cookies";
-import SleeperPush from "../components/Sleeper";
+import PrettySeconds from "../components/PrettySeconds";
 
-export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
-  const { payload } = props;
-  const admin = payload["admin"];
+export default function Test(props) {
+  const { admin, analytics } = props;
 
   const [tokenRevealed, setTokenRevealed] = useState(false);
   const [themeSelected, setThemeSelected] = useState("dark");
@@ -681,7 +677,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
             style={
               selectedTab === 0
                 ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                : {}
+                : null
             }
             onClick={() => {
               setSelectedTab(0);
@@ -695,7 +691,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
             style={
               selectedTab === 1
                 ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                : {}
+                : null
             }
             onClick={() => {
               setSelectedTab(1);
@@ -709,7 +705,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
             style={
               selectedTab === 2
                 ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                : {}
+                : null
             }
             onClick={() => {
               setSelectedTab(2);
@@ -726,7 +722,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
                 style={
                   selectedTab === 3
                     ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                    : {}
+                    : null
                 }
                 onClick={() => {
                   setSelectedTab(3);
@@ -740,7 +736,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
                 style={
                   selectedTab === 4
                     ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                    : {}
+                    : null
                 }
                 onClick={() => {
                   setSelectedTab(4);
@@ -754,7 +750,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
                 style={
                   selectedTab === 5
                     ? { backgroundColor: "rgba(255, 255, 255, 0.2)" }
-                    : {}
+                    : null
                 }
                 onClick={() => {
                   setSelectedTab(5);
@@ -764,9 +760,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
                 <span className={styles.buttonText}>Admin - Analytics</span>
               </div>
             </>
-          ) : (
-            {}
-          )}
+          ) : null}
 
           <div className={styles.exitButton}>
             <ExitToAppIcon />
@@ -776,7 +770,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
 
         <div
           className={styles.accountDetails}
-          style={selectedTab === 0 ? {} : { display: "none" }}
+          style={selectedTab === 0 ? null : { display: "none" }}
         >
           <h4 className={styles.headerFullWidthFlex}>Account Details</h4>
           <br />
@@ -894,7 +888,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
 
         <div
           className={styles.tableContainer}
-          style={selectedTab === 1 ? {} : { display: "none" }}
+          style={selectedTab === 1 ? null : { display: "none" }}
         >
           <XGrid
             checkboxSelection={false}
@@ -907,7 +901,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
 
         <div
           className={styles.tableContainer}
-          style={selectedTab === 2 ? {} : { display: "none" }}
+          style={selectedTab === 2 ? null : { display: "none" }}
         >
           <XGrid
             checkboxSelection={false}
@@ -922,7 +916,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
           <>
             <div
               className={styles.tableContainer}
-              style={selectedTab === 3 ? {} : { display: "none" }}
+              style={selectedTab === 3 ? null : { display: "none" }}
             >
               <XGrid
                 checkboxSelection={false}
@@ -934,7 +928,7 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
             </div>
             <div
               className={styles.tableContainer}
-              style={selectedTab === 4 ? {} : { display: "none" }}
+              style={selectedTab === 4 ? null : { display: "none" }}
             >
               <XGrid
                 checkboxSelection={false}
@@ -946,17 +940,48 @@ export default function Discord_auth(props: PropsWithoutRef<{ payload }>) {
             </div>
             <div
               className={styles.accountDetails}
-              style={selectedTab === 5 ? {} : { display: "none" }}
+              style={selectedTab === 5 ? null : { display: "none" }}
             >
               <h4 className={styles.headerFullWidthFlex}>Server Details</h4>
-              <div className={styles.innerEmbedFlexCol}>
-                <h5>Memory</h5>300Mb
+
+              <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Memory:</h5>{analytics["memory"].toFixed(2)} MiB
+                </div>
               </div>
+
+                <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Memory %:</h5>{analytics["memory_percent"].toFixed(2)} %
+                </div>
+                </div>
+
+                <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>CPU %:</h5>{analytics["cpu_percent"].toFixed(2)} %
+                </div>
+                </div>
+
+                <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Total Pastes:</h5>{analytics["total+pastes"]}
+                </div>
+                </div>
+
+                <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Requests since Up:</h5>{analytics["requests"]}
+                </div>
+                </div>
+
+                <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Uptime:</h5><PrettySeconds seconds={analytics["uptime"]}/>
+                </div>
+                </div>
             </div>
           </>
-        ) : (
-          {}
-        )}
+        ) : null}
       </div>
     </>
   );
@@ -966,7 +991,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const cookies = new Cookies(req, res);
   const token = cookies.get("auth");
 
-  let analyticsData = null;
+  let analytics = {};
 
   const resp = await fetch("http://api:9000/users/me", {
     method: "GET",
@@ -988,7 +1013,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
     };
   }
 
-  let payload = {};
   let data = await resp.json();
   const admin = data["admin"];
 
@@ -998,12 +1022,8 @@ export const getServerSideProps = async ({ req, res, query }) => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    analyticsData = await analyticsResp.json();
+    analytics = await analyticsResp.json();
   }
 
-  console.debug("HERE!");
-  payload["admin"] = data["admin"];
-  payload["analytics"] = analyticsData;
-  console.debug(payload);
-  return { props: { payload } };
+  return { props: { admin, analytics } };
 };
