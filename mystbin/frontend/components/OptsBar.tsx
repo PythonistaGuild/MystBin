@@ -115,7 +115,6 @@ export default function OptsBar() {
         }
 
         fetch(config["API_DOMAIN"] + "/paste", {
-
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ files: files }),
