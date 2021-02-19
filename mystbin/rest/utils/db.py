@@ -624,7 +624,6 @@ class Database:
         )
         return data[0]
 
-    @wrapped_hook_callback
     async def update_user(
         self,
         user_id: int,
@@ -688,7 +687,19 @@ class Database:
         await self._do_query(query, new_emails, user_id)
         return token
 
-    @wrapped_hook_callback
+    async def unlink_account(self, user_id: int, account: str) -> bool:
+        """Unlinks an account. Doesnt do sanity checks."""
+        if account == "google":
+            query = "UPDATE users SET google_id = null WHERE id = $1 AND google_id is not null RETURNING id"
+        elif account == "github":
+            query = "UPDATE users SET github_id = null WHERE id = $1 AND users.github_id is not null RETURNING id"
+        elif account == "discord":
+            query = "UPDATE users SET discord_id = null WHERE id = $1 AND discord_id is not null RETURNING id"
+        else:
+            raise ValueError(f"Expected account to be one of google, github, or discord. Not '{account}'")
+
+        return bool(await self._do_query(query, user_id))
+
     async def check_email(self, emails: Union[str, List[str]]) -> Optional[int]:
         """Quick check to query an email."""
         query = """
@@ -701,7 +712,6 @@ class Database:
         if data:
             return data[0]["id"]
 
-    @wrapped_hook_callback
     async def toggle_admin(self, userid: int, admin: bool) -> None:
         """Quick query to toggle admin privileges."""
         query = """
@@ -727,8 +737,7 @@ class Database:
         else:
             return True
 
-    @wrapped_hook_callback
-    async def unban_user(self, userid: int = None, ip: str = None):
+    async def unban_user(self, userid: int = None, ip: str = None) -> bool:
         """
         Unbans a user.
         Returns True if the user/ip was successfully unbanned, otherwise False
@@ -756,7 +765,6 @@ class Database:
         data = await self._do_query(query, page - 1)
         return data
 
-    @wrapped_hook_callback
     async def switch_theme(self, userid: int, theme: str) -> None:
         """Quick query to set theme choices."""
         query = """
