@@ -6,6 +6,6 @@
     reverse_proxy api:9000
 }
 
-:80, :443 {
-    respond 404
-}
+#:80, :443 {
+#    respond 404
+#}
