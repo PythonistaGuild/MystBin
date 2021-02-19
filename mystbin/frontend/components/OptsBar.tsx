@@ -19,7 +19,6 @@ import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
 import { LensTwoTone } from "@material-ui/icons";
-import config from "../config.json";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -114,7 +113,7 @@ export default function OptsBar() {
           files.push({ filename: file["title"], content: file["content"] });
         }
 
-        fetch(config["API_DOMAIN"], {
+        fetch("https://api-staging.mystb.in/paste", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ files: files }),
