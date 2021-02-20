@@ -134,7 +134,7 @@ class Database:
                 LIMIT $1
                 OFFSET $2
                 """
-        return [dict(x) for x in await self._do_query(query, count, (page-1) * count or + count)]
+        return [dict(x) for x in await self._do_query(query, count, (page-1) * count)]
 
     # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
     # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the
