@@ -129,7 +129,7 @@ class Database:
                 SELECT id, author_id, created_at, views, expires, origin_ip, (password is not null) as has_password
                 FROM pastes
                 ORDER BY created_at {'ASC' if reverse else 'DESC'}
-                LIMIT 20
+                LIMIT 100
                 OFFSET $1
                 """
         return [dict(x) for x in await self._do_query(query, (page-1) * 100 or + 100)]
