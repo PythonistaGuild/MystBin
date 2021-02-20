@@ -213,6 +213,7 @@ class Database:
         *,
         paste_id: str,
         content: str,
+        origin_ip: str,
         filename: str = "file.txt",
         author: Optional[int] = None,
         syntax: str = "",
@@ -226,6 +227,8 @@ class Database:
             The paste ID we are storing.
         content: :class:`str`
             The paste content.
+        origin_ip: :class:`str`
+            The ip the paste originated from
         filename: :class:`str`
             The name of the file.
         author: Optional[:class:`int`]
@@ -234,7 +237,7 @@ class Database:
             The paste syntax, if present.
         expires: Optional[:class:`datetime.datetime`]
             The expiry time of this paste, if present.
-        password: Optioanl[:class:`str`]
+        password: Optional[:class:`str`]
             The password used to encrypt the paste, if present.
 
         Returns
@@ -244,8 +247,8 @@ class Database:
         """
         query = """
                 WITH file AS (
-                    INSERT INTO pastes (id, author_id, created_at, expires, password)
-                    VALUES ($1, $2, $3, $4, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null))
+                    INSERT INTO pastes (id, author_id, created_at, expires, password, origin_ip)
+                    VALUES ($1, $2, $3, $4, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null), $10)
                     RETURNING id
                 )
                 INSERT INTO files (parent_id, content, filename, syntax, loc)
@@ -268,6 +271,7 @@ class Database:
             filename,
             syntax,
             loc,
+            origin_ip
         )
 
         # we need to generate our own response here, as we cant get the full response from the single query
@@ -292,7 +296,7 @@ class Database:
         self,
         *,
         paste_id: str,
-        workspace_name: str,
+        origin_ip: str,
         pages: List[Dict[str, str]],
         expires: Optional[datetime.datetime] = None,
         author: Optional[int] = None,
@@ -303,8 +307,8 @@ class Database:
         -----------
         paste_id: :class:`str:
             The paste ID we are storing.
-        workspace_name: :class:`str`
-            The workspace name of this Paste.
+        origin_ip: :class:`str`
+            The ip the paste came from
         pages: List[Dict[:class:`str`, :class:`str`]]
             The paste content. A list of dictionaries containing `content`, `filename, and `syntax` (optional) keys.
         expires: Optional[:class:`datetime.datetime`]
@@ -320,13 +324,13 @@ class Database:
         """
         async with self._pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, workspace_name, expires, password)
-                    VALUES ($1, $2, $3, $4, (SELECT crypt($5, gen_salt('bf')) WHERE $5 is not null))
-                    RETURNING id, author_id, created_at, expires
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip)
+                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5)
+                    RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
             resp = await self._do_query(
-                query, paste_id, author, workspace_name, expires, password, conn=conn
+                query, paste_id, author, expires, password, origin_ip, conn=conn
             )
 
             resp = resp[0]

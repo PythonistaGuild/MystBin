@@ -120,6 +120,8 @@ async def post_paste(
         syntax=payload.syntax,
         expires=payload.expires,
         password=payload.password,
+        origin_ip=request.headers.get("x-forwarded-ip", request.client.host)
+        if request.app.config['paste']['log_ip'] else None
     )
 
     return UJSONResponse(dict(paste))
@@ -165,6 +167,8 @@ async def put_pastes(
         expires=payload.expires,
         author=author,
         password=payload.password,
+        origin_ip=request.headers.get("x-forwarded-ip", request.client.host)
+        if request.app.config['paste']['log_ip'] else None
     )
 
     return UJSONResponse(pastes)
@@ -302,9 +306,10 @@ async def delete_paste(
     if not user:
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
-    is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
-    if not is_owner:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    if not user['admin']:
+        is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
+        if not is_owner:
+            return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     deleted: Record = await request.app.state.db.delete_paste(
         paste_id, user["id"], admin=False
