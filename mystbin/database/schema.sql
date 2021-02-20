@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS pastes (
     id TEXT PRIMARY KEY,
     author_id BIGINT REFERENCES users(id),
-    workspace_name TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     expires TIMESTAMP WITH TIME ZONE,
     last_edited TIMESTAMP WITH TIME ZONE,
