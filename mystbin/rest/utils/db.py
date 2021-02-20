@@ -113,7 +113,7 @@ class Database:
 
     @wrapped_hook_callback
     async def get_all_pastes(
-        self, page: int, reverse=False
+        self, page: int, count: int, reverse=False
     ) -> List[Dict[str, Any]]:
         """
         Gets the most recent pastes (20) of them, or oldest if reverse is True
@@ -122,6 +122,8 @@ class Database:
         -----------
         page: :class:`int`
             The offset of pastes
+        count: :class:`int`
+            The amount of pastes to return
         reverse: :class:`bool`
             whether to search for oldest pastes first
         """
@@ -129,10 +131,10 @@ class Database:
                 SELECT id, author_id, created_at, views, expires, origin_ip, (password is not null) as has_password
                 FROM pastes
                 ORDER BY created_at {'ASC' if reverse else 'DESC'}
-                LIMIT 20
-                OFFSET $1
+                LIMIT $1
+                OFFSET $2
                 """
-        return [dict(x) for x in await self._do_query(query, (page-1) * 100 or + 100)]
+        return [dict(x) for x in await self._do_query(query, count, (page-1) * count or + count)]
 
     # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
     # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the

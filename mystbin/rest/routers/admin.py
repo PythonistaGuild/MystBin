@@ -286,12 +286,14 @@ async def get_paste(
 )
 @limit("admin", "admin")
 async def get_all_pastes(
-    request: Request, page: int = 1, oldest_first: bool = False
+    request: Request, count: int, page: int = 1, oldest_first: bool = False
 ):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     if page < 1:
         return UJSONResponse({"error": "Page must be greater than 1"}, status_code=421)
+    elif count < 1:
+        return UJSONResponse({"error": "Count must be greater than 1"}, status_code=421)
 
-    return UJSONResponse({"recent": await request.app.state.db.get_all_pastes(page, reverse=oldest_first)})
+    return UJSONResponse({"pastes": await request.app.state.db.get_all_pastes(page, count, reverse=oldest_first)})
