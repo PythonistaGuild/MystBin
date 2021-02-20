@@ -112,27 +112,27 @@ class Database:
             return response
 
     @wrapped_hook_callback
-    async def get_recent_pastes(
-        self, offset: int, reverse=False
+    async def get_all_pastes(
+        self, page: int, reverse=False
     ) -> List[Dict[str, Any]]:
         """
         Gets the most recent pastes (20) of them, or oldest if reverse is True
 
         Parameters
         -----------
-        offset: :class:`int`
+        page: :class:`int`
             The offset of pastes
         reverse: :class:`bool`
             whether to search for oldest pastes first
         """
         query = f"""
-                SELECT id, author_id, (SELECT names FROM users WHERE id=pastes.author_id) AS author_names, created_at,
-                views, expires, origin_ip FROM pastes
+                SELECT id, author_id, created_at, views, expires, origin_ip, (password is not null) as has_password
+                FROM pastes
                 ORDER BY created_at {'ASC' if reverse else 'DESC'}
                 LIMIT 20
                 OFFSET $1
                 """
-        return [dict(x) for x in await self._do_query(query, offset)]
+        return [dict(x) for x in await self._do_query(query, page-1*20)]
 
     # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
     # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the
@@ -466,7 +466,7 @@ class Database:
             return resp
 
     @wrapped_hook_callback
-    async def get_all_pastes(
+    async def get_all_user_pastes(
         self, author_id: Optional[int], limit: Optional[int] = None
     ) -> List[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
@@ -506,7 +506,7 @@ class Database:
         """
         query = """SELECT count(*) FROM pastes"""
 
-        return await self._do_query(query)
+        return (await self._do_query(query))[0]['count']
 
     @wrapped_hook_callback
     async def delete_paste(
