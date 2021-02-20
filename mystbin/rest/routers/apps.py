@@ -283,7 +283,7 @@ async def sentry_callback(request: Request):
     )
 
     if request.app.state.webhook_url:
-        await request.app.state.session.post(
+        await request.app.state.client.post(
             request.app.state.webhook_url, json={"embeds": [embed.to_dict()]}
         )
 
