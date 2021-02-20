@@ -483,7 +483,7 @@ class Database:
             The potential list of pastes.
         """
         query = """
-                SELECT id, author_id, nick, syntax, created_at,
+                SELECT id, author_id, created_at,
                 CASE WHEN password IS NOT NULL THEN true ELSE false END AS has_password
                 FROM pastes
                 WHERE author_id = $1
