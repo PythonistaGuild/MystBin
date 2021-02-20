@@ -26,6 +26,7 @@ from fastapi.responses import Response, UJSONResponse
 from fastapi.security import HTTPBearer
 from models import errors, responses
 from utils.ratelimits import limit
+from utils.db import _recursive_hook as recursive_hook
 
 router = APIRouter()
 auth_model = HTTPBearer()
@@ -229,22 +230,6 @@ async def remove_ban(request: Request, ip: str = None, userid: int = None):
 
     return Response(status_code=400)
 
-
-@router.get(
-    "/admin/recent",
-    tags=["admin"],
-    #    include_in_schema=False
-)
-@limit("admin", "admin")
-async def get_recent_pastes(
-    request: Request, offset: int = 0, oldest_first: bool = False
-):
-    if not request.state.user or not request.state.user["admin"]:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    return UJSONResponse({"recent": await request.app.state.db.get_recent_pastes(offset, reverse=oldest_first)})
-
-
 @router.get(
     "/admin/stats",
     tags=["admin"],
@@ -266,3 +251,47 @@ async def get_server_stats(request: Request):
     }
 
     return UJSONResponse(data, status_code=200)
+
+
+@router.get(
+    "/admin/pastes/{paste_id}",
+    tags=["admin"],
+    response_model=responses.PasteGetResponse,
+    responses={
+        200: {"model": responses.PasteGetResponse},
+        401: {"model": errors.Unauthorized},
+        404: {"model": errors.NotFound},
+    },
+    name="Retrieve paste file(s)"
+)
+@limit("admin", "admin")
+async def get_paste(
+    request: Request, paste_id: str, password: Optional[str] = None
+) -> Response:
+    """Get a paste from MystBin."""
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    paste = await request.app.state.db.get_paste(paste_id, password)
+    if paste is None:
+        return Response(status_code=404)
+
+    resp = responses.PasteGetResponse(**paste)
+    return UJSONResponse(recursive_hook(resp.dict()))
+
+@router.get(
+    "/admin/pastes",
+    tags=["admin"],
+    #    include_in_schema=False
+)
+@limit("admin", "admin")
+async def get_all_pastes(
+    request: Request, page: int = 1, oldest_first: bool = False
+):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    if page < 1:
+        return UJSONResponse({"error": "Page must be greater than 1"}, status_code=421)
+
+    return UJSONResponse({"recent": await request.app.state.db.get_all_pastes(page, reverse=oldest_first)})

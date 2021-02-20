@@ -220,7 +220,7 @@ async def get_all_pastes(
     if not user:
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
-    pastes = await request.app.state.db.get_all_pastes(user["id"], limit)
+    pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
     pastes = [dict(entry) for entry in pastes]
 
     return UJSONResponse({"pastes": pastes})
