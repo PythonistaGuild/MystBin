@@ -40,15 +40,11 @@ class PastePostResponse(BaseModel):
 
 class PastePatchResponse(BaseModel):
     id: str
-    nick: Optional[str] = None
     expires: Optional[datetime] = None
 
 
 class PasteGetResponse(BaseModel):
     id: str
-    workspace_name: Optional[str]
-    nick: Optional[str] = None
-    syntax: Optional[str] = None
     created_at: datetime
     expires: Optional[datetime] = None
     last_edited: Optional[datetime] = None
@@ -58,8 +54,6 @@ class PasteGetResponse(BaseModel):
 
 class PasteGetAllResponse(BaseModel):
     id: str
-    nick: Optional[str] = None
-    syntax: Optional[str] = None
     loc: int
     charcount: int
     created_at: datetime
