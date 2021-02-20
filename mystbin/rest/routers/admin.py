@@ -245,7 +245,7 @@ async def get_server_stats(request: Request):
         "memory_percent": PROC.memory_percent(memtype="uss"),
         "cpu_percent": PROC.cpu_percent(),
         "uptime": (datetime.datetime.utcnow() - START_TIME).total_seconds(),
-        "total_pastes": (await request.app.state.db.get_paste_count())[0]["count"],
+        "total_pastes": await request.app.state.db.get_paste_count(),
         "requests": request.app.state.request_stats["total"],
         "latest_request": request.app.state.request_stats["latest"].isoformat(),
     }
