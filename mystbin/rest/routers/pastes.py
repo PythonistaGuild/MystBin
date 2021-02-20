@@ -162,7 +162,6 @@ async def put_pastes(
 
     pastes = await request.app.state.db.put_pastes(
         paste_id=generate_paste_id(),
-        workspace_name=payload.workspace_name,
         pages=payload.files,
         expires=payload.expires,
         author=author,
