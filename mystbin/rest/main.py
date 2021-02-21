@@ -28,6 +28,7 @@ import toml
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 from routers import admin, apps, pastes, user
 from utils import ratelimits
@@ -103,3 +104,6 @@ else:
     )
 
     app.add_middleware(SentryAsgiMiddleware)
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics/", metrics)
