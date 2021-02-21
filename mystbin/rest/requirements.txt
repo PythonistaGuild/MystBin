@@ -9,3 +9,4 @@ pycryptodome
 slowapi
 psutil
 sentry-sdk
+starlette-prometheus
