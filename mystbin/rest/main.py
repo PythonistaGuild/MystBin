@@ -99,8 +99,8 @@ app.include_router(user.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        app.config["site"]["base_site"],
-        app.config["site"]["external_site"],
+        app.config["site"]["frontend_site"],
+        app.config["site"]["backend_site"],
     ],
     allow_credentials=True,
     allow_methods=["*"],
