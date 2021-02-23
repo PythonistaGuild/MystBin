@@ -48,7 +48,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["external_site"]).with_path(
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
         "/discord_auth"
     )
 
@@ -113,7 +113,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["external_site"]).with_path(
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
         "/google_auth"
     )
 
@@ -178,7 +178,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["external_site"]).with_path(
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
         "/github_auth"
     )
 
