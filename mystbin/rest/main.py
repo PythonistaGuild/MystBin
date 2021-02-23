@@ -48,7 +48,7 @@ class MystbinApp(FastAPI):
 
     def __init__(self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path=None):
         loop = loop or asyncio.get_event_loop()
-        with open(config or pathlib.Path("config.toml")) as f:
+        with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
 
         super().__init__(
