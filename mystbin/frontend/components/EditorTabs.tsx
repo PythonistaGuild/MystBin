@@ -68,7 +68,7 @@ export default function EditorTabs({
   const handlePasswordAttempt = async (attempt: string) => {
     setLoading(true);
     const response = await fetch(
-      config["backend_site"] + id + "?password=" + attempt,
+      config['site']["backend_site"] + id + "?password=" + attempt,
       { headers: { Accept: "application/json" } }
     );
     const paste = await response.json();
