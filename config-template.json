@@ -1,0 +1,57 @@
+{
+    "database": {
+        "user": "prod-username",
+        "password": "prod-password",
+        "dsn": "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>",
+        "schema_path": "database/schema.sql"
+    },
+    "apps": {
+        "discord_application_id": "",
+        "discord_application_secret": "",
+        "github_application_id": "",
+        "github_application_secret": "",
+        "google_application_id": "",
+        "google_application_secret": ""
+    },
+    "site": {
+        "frontend_site": "https://mysite.com",
+        "backend_site": "https://api.mysite.com"
+    },
+    "paste": {
+        "character_limit": 300000,
+        "file_limit": 5,
+        "log_ip": true
+    },
+    "debug": {
+        "db": false,
+        "site": false
+    },
+    "sentry": {
+        "_comment": "Performance and error data via sentry.io. If left blank sentry will be disabled",
+        "dsn": "",
+        "_comment_traces": "See Sentry docs for more info.",
+        "traces_sample_rate": 0.3,
+        "_commend_webhook": "If filled, and a sentry webhook is configured to mysite.com/callbacks/sentry, will forward all new errors to the webhook",
+        "discord_webhook": ""
+    },
+    "ratelimits": {
+        "_comment": "Ratelimit values. Written in the format of `time/unit` (60/minute)",
+        "global_limit": "60/minute",
+        "authed_global_limit": "120/minute",
+        "premium_global_limit": "360/minute",
+        "postpastes": "5/minute",
+        "authed_postpages": "10/minute",
+        "premium_postpastes": "20/minute",
+        "getpaste": "20/minute",
+        "authed_getpaste": "40/minute",
+        "premium_getpaste": "80/minute",
+        "deletepaste": "1/minute",
+        "authed_deletepaste": "10/minute",
+        "premium_deletepaste": "20/minute",
+        "self": "20/minute",
+        "tokengen": "2/hour",
+        "admin": "5/second",
+        "apps": "5/hour",
+        "sentry": "10/minute"
+    }
+}

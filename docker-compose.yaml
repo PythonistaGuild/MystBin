@@ -8,7 +8,7 @@ services:
       - 127.0.0.1:5557:9000/tcp
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
-      - ./mystbin/rest/config.toml:/usr/src/app/config.toml:ro
+      - ./config.json:/usr/src/app/config.json:ro
     container_name: "staging-api"
     networks:
       main:
@@ -37,6 +37,7 @@ services:
     image: node:latest
     volumes:
       - node_modules:/app/node_modules
+      - ./config.json:/app/config.json
     ports:
       - 127.0.0.1:5559:3000
     container_name: "staging-frontend"

@@ -24,7 +24,7 @@ from typing import Any, Dict
 import aiohttp
 import sentry_sdk
 import slowapi
-import toml
+import ujson
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -34,13 +34,23 @@ from routers import admin, apps, pastes, user
 from utils import ratelimits
 from utils.db import Database
 
+try:
+    from blackfire import probe # blackfire is used for debugging the memory heap. https://blackfire.io
+
+    probe.initialize()
+    probe.enable()
+except ModuleNotFoundError:
+    probe = None
+
 
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
     def __init__(self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path=None):
         loop = loop or asyncio.get_event_loop()
-        self.config: Dict[str, Dict[str, Any]] = toml.load(config or pathlib.Path("config.toml"))
+        with open(config or pathlib.Path("config.toml")) as f:
+            self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
+
         super().__init__(
             title="MystBin",
             version="3.0.0",
@@ -74,6 +84,11 @@ async def app_startup():
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
+
+if probe is not None:
+    @app.on_event("shutdown")
+    async def app_shutdown():
+        probe.end()
 
 
 app.include_router(admin.router)
