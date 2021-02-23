@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import Popout from "react-popout";
 import cookieCutter from "cookie-cutter";
+import config from "../config.json";
 
 export default function LoginModal({ onHide }: { onHide: () => void }) {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                "https://discord.com/api/oauth2/authorize?client_id=569566608817782824&redirect_uri=https%3A%2F%2Fstaging.mystb.in%2Fdiscord_auth&response_type=code&scope=identify%20email"
+                `https://discord.com/api/oauth2/authorize?client_id=${config['apps']['discord_client_id']}&redirect_uri=${config['site']['frontend_site']}/discord_auth&response_type=code&scope=identify%20email`
               );
             }}
           >
@@ -55,7 +56,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                "https://github.com/login/oauth/authorize?client_id=b7706c70bf211e796c70&redirect_uri=https://staging.mystb.in/github_auth&scope=user"
+                `https://github.com/login/oauth/authorize?client_id=${config['apps']['github_client_id']}&redirect_uri=${config['site']['frontend_site']}/github_auth&scope=user`
               );
             }}
           >
@@ -65,7 +66,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                "https://accounts.google.com/o/oauth2/v2/auth?client_id=441802425406-seonbv5tmcu2htuhgs544imp9rtk0giu.apps.googleusercontent.com&redirect_uri=https://staging.mystb.in/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email"
+                `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config['apps']['google_client_id']}&redirect_uri=${config['site']['frontend_site']}/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`
               );
             }}
           >
