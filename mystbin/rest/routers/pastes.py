@@ -120,7 +120,7 @@ async def post_paste(
         syntax=payload.syntax,
         expires=payload.expires,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-ip", request.client.host)
+        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
         if request.app.config['paste']['log_ip'] else None
     )
 
@@ -166,7 +166,7 @@ async def put_pastes(
         expires=payload.expires,
         author=author,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-ip", request.client.host)
+        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
         if request.app.config['paste']['log_ip'] else None
     )
 
