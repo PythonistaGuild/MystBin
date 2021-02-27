@@ -29,8 +29,9 @@ from models import errors, payloads, responses
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
 
-WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
-
+_WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
+word_list = [word.title() for word in _WORDS_LIST if len(word) > 3]
+del _WORDS_LIST
 
 router = APIRouter()
 auth_model = HTTPBearer()
@@ -39,7 +40,6 @@ optional_auth_model = HTTPBearer(auto_error=False)
 
 def generate_paste_id():
     """Generate three random words."""
-    word_list = [word.title() for word in WORDS_LIST if len(word) > 3]
     word_samples = sample(word_list, 3)
     return "".join(word_samples).replace("\n", "")
 
