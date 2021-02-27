@@ -363,3 +363,27 @@ async def delete_pastes(
         await request.app.state.db.delete_paste(paste, author["id"], admin=False)
 
     return UJSONResponse(response, status_code=200)
+
+
+## backwards compat with hastebin
+
+@router.post(
+    "/documents",
+    tags=['pastes'],
+    deprecated=True,
+    response_description='{"key": "string"}'
+)
+@limit("postpastes", "zones.pastes.post")
+async def compat_create_paste(request: Request):
+    """
+    A compatibility endpoint to maintain hastbin compat. Depreciated in favour of /paste
+    This endpoint does not allow for syntax highlighting, multi-file, password protection, expiry, etc. Use the /paste endpoint for these features
+    """
+    content = await request.body()
+    paste: Record = await request.app.state.db.put_paste(
+        paste_id=generate_paste_id(),
+        content=content,
+        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
+        if request.app.config['paste']['log_ip'] else None
+    )
+    return UJSONResponse({"key": paste['id']})
