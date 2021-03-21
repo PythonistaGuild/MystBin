@@ -37,7 +37,7 @@ services:
     image: node:latest
     volumes:
       - node_modules:/app/node_modules
-      - ./config.json:/app/config.json
+      - ./config.json:/app/config.json:ro
     ports:
       - 127.0.0.1:5559:3000
     container_name: "staging-frontend"

@@ -5,8 +5,7 @@ WORKDIR /app
 
 COPY . /app
 
-RUN yarn install --production && yarn add --dev typescript @types/node
+RUN yarn install --production
+RUN yarn add --dev typescript @types/node
 
-RUN yarn run build
-
-CMD ["yarn", "run", "start"]
+CMD ["yarn", "run", "launch"]
