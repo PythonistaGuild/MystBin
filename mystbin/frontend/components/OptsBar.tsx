@@ -79,16 +79,18 @@ export default function OptsBar() {
         }
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
-          headers: { "Authorization": cookieCutter.get("token"), "Content-Type": "application/json" },
-          body: JSON.stringify({ paste_id: paste.id })
-        }).then(((value) => {
+          headers: {
+            Authorization: cookieCutter.get("token"),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ paste_id: paste.id }),
+        }).then((value) => {
           if (value.status !== 201) {
             console.error(value.json()["error"]);
           } else {
             alert("Bookmark Saved!"); //TODO make this a pretty popup
           }
-          })
-        )
+        });
       },
     },
   ];
