@@ -73,7 +73,22 @@ export default function OptsBar() {
       content: "Bookmark this paste to your favourites for later viewing.",
       icon: <FavoriteIcon />,
       callback: () => {
-        alert("Bookmark thing.");
+        if (!paste) {
+          alert("Not a valid paste");
+          return;
+        }
+        fetch(config["site"]["backend_site"] + "/users/bookmarks", {
+          method: "PUT",
+          headers: { "Authorization": cookieCutter.get("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ paste_id: paste.id })
+        }).then(((value) => {
+          if (value.status !== 201) {
+            console.error(value.json()["error"]);
+          } else {
+            alert("Bookmark Saved!"); //TODO make this a pretty popup
+          }
+          })
+        )
       },
     },
   ];
@@ -114,7 +129,7 @@ export default function OptsBar() {
           files.push({ filename: file["title"], content: file["content"] });
         }
 
-        fetch(config["API_DOMAIN"] + "paste", {
+        fetch(config["site"]["backend_site"] + "/paste", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ files: files }),
