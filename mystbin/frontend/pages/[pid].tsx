@@ -5,6 +5,8 @@ import { PropsWithoutRef } from "react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 
+import config from "../config.json";
+
 const PostMonacoEditor = dynamic(() => import("../components/EditorTabs"), {
   ssr: false,
 });
@@ -45,7 +47,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
         />
         <meta
           property="og:url"
-          content={"https://staging.mystb.in/" + paste["pid"]}
+          content={`${config.site.frontend_site}/${paste["pid"]}`}
           key="pasteUrl"
         />
       </Head>

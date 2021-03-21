@@ -25,7 +25,7 @@ import Cookies from "cookies";
 import PrettySeconds from "../components/PrettySeconds";
 
 export default function Test(props) {
-  const { admin, analytics } = props;
+  const { admin, analytics, token, subscriber } = props;
 
   const [tokenRevealed, setTokenRevealed] = useState(false);
   const [themeSelected, setThemeSelected] = useState("dark");
@@ -56,6 +56,12 @@ export default function Test(props) {
       ),
     },
   ];
+  let subscribertext = "";
+  if (subscriber) {
+    subscribertext = "Subscribed :)";
+  } else {
+    subscribertext = "Not Subscribed :(";
+  }
 
   const standardPasteRows: RowsProp = [
     {
@@ -796,8 +802,7 @@ export default function Test(props) {
                 </span>
               ) : (
                 <span className={styles.tokenRevealed}>
-                  isuf8u2
-                  n87f2n2nf98n29fn92n9fn2983fn9283nf98n239fn32ff98n329fn923nf9n239f8n923nfurhfguhefbgjdfvlkdfnvposnocwc9idh9q8h23riubweejfbiusdbf887gfuywebfui
+                  {token}
                 </span>
               )}
             </div>
@@ -811,7 +816,7 @@ export default function Test(props) {
           </div>
           <div className={styles.embededData}>
             <div className={styles.innerEmbedFlexCol}>
-              <h6>Subscriber:</h6>Not Subscribed :(
+              <h6>Subscriber:</h6>{subscribertext}
             </div>
           </div>
 
@@ -1021,6 +1026,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
 
   let data = await resp.json();
   const admin = data["admin"];
+  const subscriber = data["subscriber"];
 
   if (!!admin) {
     const analyticsResp = await fetch("http://api:9000/admin/stats", {
@@ -1031,5 +1037,5 @@ export const getServerSideProps = async ({ req, res, query }) => {
     analytics = await analyticsResp.json();
   }
 
-  return { props: { admin, analytics } };
+  return { props: { admin, analytics, token, subscriber } };
 };
