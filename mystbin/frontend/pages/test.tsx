@@ -801,9 +801,7 @@ export default function Test(props) {
                   Click to reveal
                 </span>
               ) : (
-                <span className={styles.tokenRevealed}>
-                  {token}
-                </span>
+                <span className={styles.tokenRevealed}>{token}</span>
               )}
             </div>
 
@@ -816,7 +814,8 @@ export default function Test(props) {
           </div>
           <div className={styles.embededData}>
             <div className={styles.innerEmbedFlexCol}>
-              <h6>Subscriber:</h6>{subscribertext}
+              <h6>Subscriber:</h6>
+              {subscribertext}
             </div>
           </div>
 
