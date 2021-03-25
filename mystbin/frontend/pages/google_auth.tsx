@@ -18,7 +18,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
 
   const token = await response.json();
   const cookies = new Cookies(req, res);
-  cookies.set("auth", token["token"], { httpOnly: true });
+  cookies.set("auth", token["token"]);
 
   return { props: { token } };
 };
