@@ -1,5 +1,6 @@
 import SleeperPush from "../components/Sleeper";
 import Cookies from "cookies";
+import config from "..config.json";
 
 export default function DiscordAuth(props) {
   const { token } = props;
@@ -10,7 +11,7 @@ export default function DiscordAuth(props) {
 }
 
 export const getServerSideProps = async ({ req, res, query }) => {
-  let response = await fetch("http://api:9000/users/connect/discord/", {
+  let response = await fetch(`${config["app"]["backend_site"]}/users/connect/discord/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(query),
@@ -18,7 +19,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
 
   const token = await response.json();
   const cookies = new Cookies(req, res);
-  cookies.set("auth", token["token"]);
+  cookies.set("auth", token["token"], { httpOnly: false });
 
   return { props: { token } };
 };
