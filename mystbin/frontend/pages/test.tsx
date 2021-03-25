@@ -15,7 +15,7 @@ import {
   RowsProp,
   ColDef,
   LicenseInfo,
-  CellParams,
+  CellParams, RowParams,
 } from "@material-ui/x-grid";
 import { Collapse } from "@material-ui/core";
 import PeopleIcon from "@material-ui/icons/People";
@@ -23,13 +23,19 @@ import AssignmentIcon from "@material-ui/icons/Assignment";
 import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import Cookies from "cookies";
 import PrettySeconds from "../components/PrettySeconds";
+import cookieCutter from "cookie-cutter";
 
 export default function Test(props) {
-  const { admin, analytics, token, subscriber } = props;
+  const { admin, token, analytics, initialAdminPastes, subscriber } = props;
 
   const [tokenRevealed, setTokenRevealed] = useState(false);
   const [themeSelected, setThemeSelected] = useState("dark");
   const [selectedTab, setSelectedTab] = useState(0);
+
+  const [adminPasteRows, setAdminPasteRows] = useState(initialAdminPastes["pastes"]);
+  const [adminPasteLoading, setAdminPasteLoading] = useState(false);
+
+  const adminTotalPastes = analytics['total_pastes'];
 
   const standardPasteColumns: ColDef[] = [
     { field: "id", headerName: "ID", width: 250 },
@@ -63,607 +69,34 @@ export default function Test(props) {
     subscribertext = "Not Subscribed :(";
   }
 
+  const realPasteColumns: ColDef[] = [
+    { field: "id", headerName: "ID", width: 250 },
+    { field: "author_id", headerName: "Author ID", width: 240},
+    {
+      field: "created_at",
+      headerName: "Created at",
+      resizable: true,
+      width: 240,
+    },
+    { field: "expires", headerName: "Expiry", resizable: true, width: 240 },
+    { field: "has_password", headerName: "Password" },
+    { field: "views", headerName: "Views" },
+    { field: "origin_ip", headerName: "IP Addr"},
+    {
+      field: "delete",
+      headerName: "Delete",
+      width: 125,
+      renderCell: (params: CellParams) => (
+          <h5>
+            <Badge className={styles.tableRowDelete} variant={"danger"}>
+              Delete Paste
+            </Badge>
+          </h5>
+      ),
+    },
+  ];
+
   const standardPasteRows: RowsProp = [
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
-    {
-      id: "ThreeRandomWords",
-      file_count: 3,
-      created_at: "Datetime",
-      expires: "Datetime",
-      password: "True",
-      views: 666,
-    },
     {
       id: "ThreeRandomWords",
       file_count: 3,
@@ -829,15 +262,15 @@ export default function Test(props) {
           >
             <h4 style={{ marginTop: "1rem" }}>Dark</h4>
             <div
-              className={
-                themeSelected === "dark"
-                  ? styles.radioCheckDarkSelected
-                  : styles.radioCheckDark
-              }
-              onClick={() => {
-                setThemeSelected("dark");
-              }}
-            ></div>
+    className={
+      themeSelected === "dark"
+          ? styles.radioCheckDarkSelected
+          : styles.radioCheckDark
+    }
+    onClick={() => {
+      setThemeSelected("dark");
+    }}
+    />
           </div>
 
           <div
@@ -848,15 +281,15 @@ export default function Test(props) {
           >
             <h4 style={{ marginTop: "1rem" }}>Light</h4>
             <div
-              className={
-                themeSelected === "light"
-                  ? styles.radioCheckLightSelected
-                  : styles.radioCheckLight
-              }
-              onClick={() => {
-                setThemeSelected("light");
-              }}
-            ></div>
+    className={
+      themeSelected === "light"
+          ? styles.radioCheckLightSelected
+          : styles.radioCheckLight
+    }
+    onClick={() => {
+      setThemeSelected("light");
+    }}
+    />
           </div>
 
           <h4 className={styles.headerFullWidthFlex}>Linked Logins</h4>
@@ -895,12 +328,12 @@ export default function Test(props) {
           style={selectedTab === 1 ? null : { display: "none" }}
         >
           <XGrid
-            checkboxSelection={false}
-            columns={standardPasteColumns}
-            rows={standardPasteRows}
-            pagination={true}
-            rowsPerPageOptions={[50, 100, 250, 500, 1000]}
-          ></XGrid>
+    checkboxSelection={false}
+    columns={standardPasteColumns}
+    rows={standardPasteRows}
+    pagination={true}
+    rowsPerPageOptions={[50, 100, 250, 500, 1000]}
+    />
         </div>
 
         <div
@@ -908,12 +341,12 @@ export default function Test(props) {
           style={selectedTab === 2 ? null : { display: "none" }}
         >
           <XGrid
-            checkboxSelection={false}
-            columns={standardPasteColumns}
-            rows={standardPasteRows}
-            pagination={true}
-            rowsPerPageOptions={[50, 100, 250, 500, 1000]}
-          ></XGrid>
+    checkboxSelection={false}
+    columns={standardPasteColumns}
+    rows={standardPasteRows}
+    pagination={true}
+    rowsPerPageOptions={[50, 100, 250, 500, 1000]}
+    />
         </div>
 
         {!!admin ? (
@@ -923,30 +356,77 @@ export default function Test(props) {
               style={selectedTab === 3 ? null : { display: "none" }}
             >
               <XGrid
-                checkboxSelection={false}
-                columns={standardPasteColumns}
-                rows={standardPasteRows}
-                pagination={true}
-                rowsPerPageOptions={[50, 100, 250, 500, 1000]}
-              ></XGrid>
+    checkboxSelection={false}
+    columns={standardPasteColumns}
+    rows={standardPasteRows}
+    pagination={true}
+    rowsPerPageOptions={[50, 100, 250, 500, 1000]}
+    />
             </div>
             <div
               className={styles.tableContainer}
               style={selectedTab === 4 ? null : { display: "none" }}
             >
               <XGrid
-                checkboxSelection={false}
-                columns={standardPasteColumns}
-                rows={standardPasteRows}
-                pagination={true}
-                rowsPerPageOptions={[50, 100, 250, 500, 1000]}
-              ></XGrid>
+    checkboxSelection
+    columns={realPasteColumns}
+    rows={adminPasteRows}
+    pagination={true}
+    rowsPerPageOptions={[25, 50, 100]}
+    pageSize={100}
+    rowCount={adminTotalPastes}
+    paginationMode={'server'}
+    filterMode={'server'}
+    loading={adminPasteLoading}
+    onFilterModelChange={(param) => {
+      setAdminPasteLoading(true);
+
+      fetch("https://api-staging.mystb.in/admin/pastes?page=0&count=999999999", {
+        method: "GET",
+        headers: {Authorization: `Bearer ${token}`}
+      }).
+      then(r => r.json()).
+      then(d => {
+        const newRows = d.pastes.filter(p => (!!p.id.toLowerCase().includes(param.filterModel.items[0].value)))
+        setAdminPasteRows(newRows);
+        setAdminPasteLoading(false);
+      })
+    }}
+    onPageChange={(param) => {
+      setAdminPasteLoading(true);
+
+      fetch("https://api-staging.mystb.in/admin/pastes?count=100&page=" + param.page , {
+        method: "GET",
+        headers: {Authorization: `Bearer ${token}`}
+      }).
+      then(r => r.json()).
+      then(d => {
+        setAdminPasteRows(d["pastes"]);
+        setAdminPasteLoading(false)})
+    }}
+    />
             </div>
             <div
               className={styles.accountDetails}
               style={selectedTab === 5 ? null : { display: "none" }}
             >
-              <h4 className={styles.headerFullWidthFlex}>Server Details</h4>
+              <h4 className={styles.headerFullWidthFlex}>Server Controls</h4>
+
+              <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Git Pull</h5>This will pull and update from "main" on GitHub. Please make sure any changes are tested before using this command.
+                </div>
+                <Button variant={"info"} className={styles.copyButton}>Confirm</Button>
+              </div>
+
+              <div className={styles.embededData}>
+                <div className={styles.innerEmbedFlexCol}>
+                  <h5>Restart Stack</h5>This will rebuild MystBin and update any changes fetched via GitHub. Please make sure you have tested any changes before using this command.
+                </div>
+                <Button variant={"danger"} className={styles.copyButton}>Confirm</Button>
+              </div>
+
+              <h4 className={styles.headerFullWidthFlex}>Server Performance</h4>
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
@@ -969,10 +449,12 @@ export default function Test(props) {
                 </div>
               </div>
 
+              <h4 className={styles.headerFullWidthFlex}>General Usage</h4>
+
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Total Pastes:</h5>
-                  {analytics["total+pastes"]}
+                  {analytics["total_pastes"]}
                 </div>
               </div>
 
@@ -989,6 +471,16 @@ export default function Test(props) {
                   <PrettySeconds seconds={analytics["uptime"]} />
                 </div>
               </div>
+
+              <h4 className={styles.headerFullWidthFlex}>Server Graphs</h4>
+
+              <iframe
+    src="https://metrics.mystb.in/d-solo/Es8N4GyGk/api?orgId=1&from=1613874854877&to=1613896454877&refresh=5s&panelId=2"
+    width="49.5%" height="400" frameBorder="0"/>
+              <iframe
+    src="https://metrics.mystb.in/d-solo/Es8N4GyGk/api?orgId=1&from=1613874922449&to=1613896522449&refresh=5s&panelId=4"
+    width="49.5%" height="400" frameBorder="0"/>
+
             </div>
           </>
         ) : null}
@@ -1002,6 +494,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const token = cookies.get("auth");
 
   let analytics = {};
+  let initialAdminPastes = {};
 
   const resp = await fetch("http://api:9000/users/me", {
     method: "GET",
@@ -1012,7 +505,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
   });
 
   if (resp.status !== 200) {
-    cookies.set("state");
     cookies.set("auth");
 
     return {
@@ -1036,5 +528,5 @@ export const getServerSideProps = async ({ req, res, query }) => {
     analytics = await analyticsResp.json();
   }
 
-  return { props: { admin, analytics, token, subscriber } };
+  return { props: { admin, token, analytics, initialAdminPastes, subscriber } };
 };
