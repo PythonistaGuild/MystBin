@@ -77,10 +77,16 @@ export default function OptsBar() {
           alert("Not a valid paste");
           return;
         }
+        let auth = cookieCutter.get("auth");
+        if (!auth) {
+          alert("You are not logged in"); // TODO: make this pretty popup
+          return;
+        }
+        console.log(paste);
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
           headers: {
-            Authorization: cookieCutter.get("auth"),
+            Authorization: auth,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ paste_id: paste.id }),
