@@ -56,7 +56,7 @@ export default function EditorTabs({
   useEffect(() => {
     let initialLangs = [];
     value.map(function (v) {
-      let filetype = v["title"].split(".")[-1];
+      let filetype = v["title"].split(".").pop();
       let val = getLanguage(filetype);
       console.log(val, filetype);
       initialLangs.push(val);
