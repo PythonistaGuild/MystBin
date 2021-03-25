@@ -80,7 +80,7 @@ export default function OptsBar() {
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
           headers: {
-            Authorization: cookieCutter.get("token"),
+            Authorization: cookieCutter.get("auth"),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ paste_id: paste.id }),
