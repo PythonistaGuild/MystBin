@@ -12,7 +12,7 @@ export default function GoogleAuth(props) {
 
 export const getServerSideProps = async ({ req, res, query }) => {
   let response = await fetch(
-    `${config["app"]["backend_site"]}/users/connect/github/`,
+    `${config["site"]["backend_site"]}/users/connect/github/`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
