@@ -78,7 +78,7 @@ export default function OptsBar() {
           return;
         }
         let auth = cookieCutter.get("auth");
-        if (!auth || auth === undefined) {
+        if (!auth) {
           alert("You are not logged in"); // TODO: make this pretty popup
           return;
         }
@@ -86,7 +86,7 @@ export default function OptsBar() {
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
           headers: {
-            Authorization: auth,
+            Authorization: `Bearer ${auth}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ paste_id: paste.id }),
