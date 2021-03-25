@@ -21,7 +21,6 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
           title={"MystBin - Login"}
           url={window}
           onClosing={() => {
-            cookieCutter.set("state", "true");
             setWindow(null);
             router.reload();
           }}
