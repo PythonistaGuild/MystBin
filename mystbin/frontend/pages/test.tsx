@@ -344,7 +344,11 @@ export default function Test(props) {
               <DiscordColorIcon
                 style={{ fontSize: "6rem", marginBottom: "-0.75rem" }}
               />
-              {!!discord_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!discord_id ? (
+                <BeenhereIcon className={styles.loginConfirmed} />
+              ) : (
+                <AddBoxIcon className={styles.loginAddButton} />
+              )}
               {!!discord_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
@@ -353,7 +357,11 @@ export default function Test(props) {
             <div className={styles.innerLoginEmbed}>
               <h5>GitHub</h5>
               <GitHubIcon style={{ fontSize: "5.25rem" }} />
-              {!!github_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!github_id ? (
+                <BeenhereIcon className={styles.loginConfirmed} />
+              ) : (
+                <AddBoxIcon className={styles.loginAddButton} />
+              )}
               {!!github_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
@@ -362,7 +370,11 @@ export default function Test(props) {
             <div className={styles.innerLoginEmbed}>
               <h5>Google</h5>
               <GoogleIcon style={{ height: "5.25rem" }} />
-              {!!google_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!google_id ? (
+                <BeenhereIcon className={styles.loginConfirmed} />
+              ) : (
+                <AddBoxIcon className={styles.loginAddButton} />
+              )}
               {!!google_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
