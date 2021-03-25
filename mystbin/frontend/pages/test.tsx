@@ -344,8 +344,8 @@ export default function Test(props) {
               <DiscordColorIcon
                 style={{ fontSize: "6rem", marginBottom: "-0.75rem" }}
               />
-              <BeenhereIcon className={styles.loginConfirmed} />
-              Account linked
+              {!!discord_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!discord_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
 
@@ -353,8 +353,8 @@ export default function Test(props) {
             <div className={styles.innerLoginEmbed}>
               <h5>GitHub</h5>
               <GitHubIcon style={{ fontSize: "5.25rem" }} />
-              <BeenhereIcon className={styles.loginConfirmed} />
-              Account linked
+              {!!github_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!github_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
 
@@ -362,8 +362,8 @@ export default function Test(props) {
             <div className={styles.innerLoginEmbed}>
               <h5>Google</h5>
               <GoogleIcon style={{ height: "5.25rem" }} />
-              <AddBoxIcon className={styles.loginAddButton} />
-              Link this account
+              {!!google_id ? <BeenhereIcon className={styles.loginConfirmed}/> : <AddBoxIcon className={styles.loginAddButton}/>}
+              {!!google_id ? "Account Linked" : "Link this account"}
             </div>
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function Test(props) {
                   setAdminPasteLoading(true);
 
                   fetch(
-                    "https://api-staging.mystb.in/admin/pastes?page=0&count=999999999",
+                    `${config["site"]["backend_site"]}/admin/pastes?page=0&count=999999999`,
                     {
                       method: "GET",
                       headers: { Authorization: `Bearer ${token}` },
@@ -449,8 +449,7 @@ export default function Test(props) {
                   setAdminPasteLoading(true);
 
                   fetch(
-                    "https://api-staging.mystb.in/admin/pastes?count=100&page=" +
-                      param.page,
+                    `${config["site"]["backend_site"]}/admin/pastes?count=100&page=${param.page}`,
                     {
                       method: "GET",
                       headers: { Authorization: `Bearer ${token}` },
