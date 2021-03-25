@@ -46,7 +46,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                `https://discord.com/api/oauth2/authorize?client_id=${config["apps"]["discord_client_id"]}&redirect_uri=${config["site"]["frontend_site"]}/discord_auth&response_type=code&scope=identify%20email`
+                `https://discord.com/api/oauth2/authorize?client_id=${config["apps"]["discord_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/discord_auth&response_type=code&scope=identify%20email`
               );
             }}
           >
@@ -56,7 +56,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                `https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_client_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=user`
+                `https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=user`
               );
             }}
           >
@@ -66,7 +66,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config["apps"]["google_client_id"]}&redirect_uri=${config["site"]["frontend_site"]}/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`
+                `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config["apps"]["google_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`
               );
             }}
           >
