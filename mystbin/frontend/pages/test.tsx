@@ -27,9 +27,19 @@ import PrettySeconds from "../components/PrettySeconds";
 import cookieCutter from "cookie-cutter";
 import config from "../config.json";
 
-
 export default function Test(props) {
-  const { admin, _token, analytics, initialAdminPastes, subscriber, id , theme, discord_id, github_id, google_id } = props;
+  const {
+    admin,
+    _token,
+    analytics,
+    initialAdminPastes,
+    subscriber,
+    id,
+    theme,
+    discord_id,
+    github_id,
+    google_id,
+  } = props;
 
   const [token, setToken] = useState(_token);
   const [tokenRevealed, setTokenRevealed] = useState(false);
@@ -221,9 +231,16 @@ export default function Test(props) {
           <br />
           <div className={styles.embededData}>
             <div className={styles.innerEmbedFlexCol}>
-              <h6>Account ID:</h6>{id}
+              <h6>Account ID:</h6>
+              {id}
             </div>
-            <Button variant="primary" className={styles.copyButton} onClick={() => {navigator.clipboard.writeText(id.toString())}}>
+            <Button
+              variant="primary"
+              className={styles.copyButton}
+              onClick={() => {
+                navigator.clipboard.writeText(id.toString());
+              }}
+            >
               Copy
             </Button>
           </div>
@@ -244,22 +261,32 @@ export default function Test(props) {
               )}
             </div>
 
-            <Button variant="info" className={styles.copyButton} onClick={() => {
-              fetch(config["app"]["backend_site"] + "/users/regenerate", {
-                headers: { "Authorization": token }
-              }).then((result) => {
-                if (result.status === 200) {
-                  let data = result.json();
-                  setToken(data["token"]);
-                  cookieCutter.set("auth", data["token"])
-                } else {
-                  console.error(result.text());
-                }
-              })
-            }}>
+            <Button
+              variant="info"
+              className={styles.copyButton}
+              onClick={() => {
+                fetch(config["app"]["backend_site"] + "/users/regenerate", {
+                  headers: { Authorization: token },
+                }).then((result) => {
+                  if (result.status === 200) {
+                    let data = result.json();
+                    setToken(data["token"]);
+                    cookieCutter.set("auth", data["token"]);
+                  } else {
+                    console.error(result.text());
+                  }
+                });
+              }}
+            >
               Regenerate
             </Button>
-            <Button variant="primary" className={styles.copyButton} onClick={() => {navigator.clipboard.writeText(token)}}>
+            <Button
+              variant="primary"
+              className={styles.copyButton}
+              onClick={() => {
+                navigator.clipboard.writeText(token);
+              }}
+            >
               Copy
             </Button>
           </div>
@@ -586,5 +613,18 @@ export const getServerSideProps = async ({ req, res, query }) => {
     analytics = await analyticsResp.json();
   }
 
-  return { props: { admin, token, analytics, initialAdminPastes, subscriber, id , theme, discord_id, github_id, google_id } };
+  return {
+    props: {
+      admin,
+      token,
+      analytics,
+      initialAdminPastes,
+      subscriber,
+      id,
+      theme,
+      discord_id,
+      github_id,
+      google_id,
+    },
+  };
 };
