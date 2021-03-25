@@ -73,7 +73,7 @@ export default function OptsBar() {
       content: "Bookmark this paste to your favourites for later viewing.",
       icon: <FavoriteIcon />,
       callback: () => {
-        if (!paste) {
+        if (!paste.id) {
           alert("Not a valid paste");
           return;
         }
@@ -82,7 +82,6 @@ export default function OptsBar() {
           alert("You are not logged in"); // TODO: make this pretty popup
           return;
         }
-        console.log(typeof paste, typeof auth, auth, paste, !auth, !paste);
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
           headers: {
