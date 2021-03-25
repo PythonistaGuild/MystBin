@@ -6,6 +6,7 @@ import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
 import pasteDispatcher from "../dispatchers/PasteDispatcher";
+import getLanguage from "../stores/languageStore";
 import config from "../config.json";
 
 interface TabInfo {
@@ -20,7 +21,7 @@ export default function EditorTabs({
   pid = null,
 }: TabInfo) {
   const [value, setValue] = useState<Record<string, string>[]>([
-    { title: "default.ext", content: "" },
+    { title: "file.txt", content: "" },
   ]);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
@@ -55,12 +56,7 @@ export default function EditorTabs({
   useEffect(() => {
     let initialLangs = [];
     value.map(function (v) {
-      if (v["title"].endsWith(".py")) {
-        initialLangs.push("python");
-      } else {
-        initialLangs.push("none");
-      }
-
+      initialLangs.push(getLanguage(v["title"].split(".")[-1]))
       setLang(initialLangs);
     });
   }, [value]);
