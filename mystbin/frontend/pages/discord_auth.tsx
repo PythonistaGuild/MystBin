@@ -1,6 +1,6 @@
 import SleeperPush from "../components/Sleeper";
 import Cookies from "cookies";
-import config from "..config.json";
+import config from "../config.json";
 
 export default function DiscordAuth(props) {
   const { token } = props;
