@@ -73,7 +73,8 @@ export default function OptsBar() {
       content: "Bookmark this paste to your favourites for later viewing.",
       icon: <FavoriteIcon />,
       callback: () => {
-        if (!paste.id) {
+        let pasteId = window.location.pathname.replace("/", "");
+        if (!pasteId) {
           alert("Not a valid paste");
           return;
         }
@@ -88,7 +89,7 @@ export default function OptsBar() {
             Authorization: `Bearer ${auth}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ paste_id: paste.id }),
+          body: JSON.stringify({ paste_id: pasteId }),
         }).then((value) => {
           if (value.status !== 201) {
             console.error(value.json()["error"]);
