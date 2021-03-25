@@ -45,9 +45,9 @@ export default function OptsBar() {
         "Login into your account via Discord, Google or GitHub and view your saved pastes and bookmarks or manage your preferences.",
       icon: <DashboardIcon />,
       callback: () => {
-        const loginState = cookieCutter.get("state");
+        const loginState = cookieCutter.get("auth");
 
-        if (loginState === "true") {
+        if (!!loginState) {
           router.push("/dashboard");
           return;
         }
