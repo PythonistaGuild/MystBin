@@ -550,19 +550,6 @@ export default function Test(props) {
               </div>
 
               <h4 className={styles.headerFullWidthFlex}>Server Graphs</h4>
-
-              <iframe
-                src="https://metrics.mystb.in/d-solo/Es8N4GyGk/api?orgId=1&from=1613874854877&to=1613896454877&refresh=5s&panelId=2"
-                width="49.5%"
-                height="400"
-                frameBorder="0"
-              />
-              <iframe
-                src="https://metrics.mystb.in/d-solo/Es8N4GyGk/api?orgId=1&from=1613874922449&to=1613896522449&refresh=5s&panelId=4"
-                width="49.5%"
-                height="400"
-                frameBorder="0"
-              />
             </div>
           </>
         ) : null}
