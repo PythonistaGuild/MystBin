@@ -52,6 +52,7 @@
         "tokengen": "2/hour",
         "admin": "5/second",
         "apps": "5/hour",
-        "sentry": "10/minute"
+        "sentry": "10/minute",
+        "bookmarks": "30/minute"
     }
 }
