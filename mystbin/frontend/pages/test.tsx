@@ -574,11 +574,13 @@ export const getServerSideProps = async ({ req, res, query }) => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const initialPastes = await fetch("http://api:9000/admin/pastes?count=100&page=0", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
+    const initialPastes = await fetch(
+      "http://api:9000/admin/pastes?count=100&page=0",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     initialAdminPastes = await initialPastes.json();
     analytics = await analyticsResp.json();
