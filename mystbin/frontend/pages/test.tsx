@@ -25,12 +25,15 @@ import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import Cookies from "cookies";
 import PrettySeconds from "../components/PrettySeconds";
 import cookieCutter from "cookie-cutter";
+import config from "../config.json";
+
 
 export default function Test(props) {
-  const { admin, token, analytics, initialAdminPastes, subscriber } = props;
+  const { admin, _token, analytics, initialAdminPastes, subscriber, id , theme, discord_id, github_id, google_id } = props;
 
+  const [token, setToken] = useState(_token);
   const [tokenRevealed, setTokenRevealed] = useState(false);
-  const [themeSelected, setThemeSelected] = useState("dark");
+  const [themeSelected, setThemeSelected] = useState(theme);
   const [selectedTab, setSelectedTab] = useState(0);
 
   const [adminPasteRows, setAdminPasteRows] = useState(
@@ -65,7 +68,7 @@ export default function Test(props) {
       ),
     },
   ];
-  let subscribertext = "";
+  let subscribertext: string;
   if (subscriber) {
     subscribertext = "Subscribed :)";
   } else {
@@ -218,9 +221,9 @@ export default function Test(props) {
           <br />
           <div className={styles.embededData}>
             <div className={styles.innerEmbedFlexCol}>
-              <h6>Account ID:</h6>2396858253982753
+              <h6>Account ID:</h6>{id}
             </div>
-            <Button variant="primary" className={styles.copyButton}>
+            <Button variant="primary" className={styles.copyButton} onClick={() => {navigator.clipboard.writeText(id.toString())}}>
               Copy
             </Button>
           </div>
@@ -241,10 +244,22 @@ export default function Test(props) {
               )}
             </div>
 
-            <Button variant="info" className={styles.copyButton}>
+            <Button variant="info" className={styles.copyButton} onClick={() => {
+              fetch(config["app"]["backend_site"] + "/users/regenerate", {
+                headers: { "Authorization": token }
+              }).then((result) => {
+                if (result.status === 200) {
+                  let data = result.json();
+                  setToken(data["token"]);
+                  cookieCutter.set("auth", data["token"])
+                } else {
+                  console.error(result.text());
+                }
+              })
+            }}>
               Regenerate
             </Button>
-            <Button variant="primary" className={styles.copyButton}>
+            <Button variant="primary" className={styles.copyButton} onClick={() => {navigator.clipboard.writeText(token)}}>
               Copy
             </Button>
           </div>
@@ -547,6 +562,11 @@ export const getServerSideProps = async ({ req, res, query }) => {
   let data = await resp.json();
   const admin = data["admin"];
   const subscriber = data["subscriber"];
+  const id = data["id"];
+  const theme = data["theme"];
+  const github_id = data["github_id"];
+  const discord_id = data["discord_id"];
+  const google_id = data["google_id"];
 
   if (!!admin) {
     const analyticsResp = await fetch("http://api:9000/admin/stats", {
@@ -557,5 +577,5 @@ export const getServerSideProps = async ({ req, res, query }) => {
     analytics = await analyticsResp.json();
   }
 
-  return { props: { admin, token, analytics, initialAdminPastes, subscriber } };
+  return { props: { admin, token, analytics, initialAdminPastes, subscriber, id , theme, discord_id, github_id, google_id } };
 };
