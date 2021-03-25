@@ -78,11 +78,11 @@ export default function OptsBar() {
           return;
         }
         let auth = cookieCutter.get("auth");
-        if (!auth) {
+        if (!auth || auth === undefined) {
           alert("You are not logged in"); // TODO: make this pretty popup
           return;
         }
-        console.log(paste);
+        console.log(typeof paste, typeof auth, auth, paste, !auth, !paste);
         fetch(config["site"]["backend_site"] + "/users/bookmarks", {
           method: "PUT",
           headers: {
