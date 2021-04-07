@@ -56,6 +56,8 @@ class MystbinApp(FastAPI):
             version="3.0.0",
             description="MystBin backend server",
             loop=loop,
+            redoc_url="/docs",
+            docs_url=None
         )
         self.state.limiter = ratelimits.global_limiter
         self.add_exception_handler(
