@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     github_id TEXT,
     google_id TEXT,
     admin BOOLEAN DEFAULT false,
-    theme TEXT DEFAULT 'default',
+    theme TEXT DEFAULT 'dark',
     subscriber BOOLEAN DEFAULT false
 );
 
