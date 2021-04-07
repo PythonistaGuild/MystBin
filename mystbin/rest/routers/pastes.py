@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 import pathlib
+import re
 from random import sample
 from typing import Dict, List, Optional, Union
 
@@ -32,6 +33,8 @@ from utils.ratelimits import limit
 _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 word_list = [word.title() for word in _WORDS_LIST if len(word) > 3]
 del _WORDS_LIST
+
+TOKEN_RE = re.compile("[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}")
 
 router = APIRouter()
 auth_model = HTTPBearer()
@@ -80,6 +83,45 @@ def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
     return None
 
 
+async def upload_to_gist(request: Request, tokens: str):
+    headers = {
+        'Accept': 'application/vnd.github.v3+json',
+        "Authorization": f"token {request.app.config['apps']['github_bot_token']}"
+    }
+
+    filename = 'output.txt'
+    data = {
+        'public': True,
+        'files': {
+            filename: {
+                'content': tokens
+            }
+        }
+    }
+
+    async with request.app.state.client.post("https://api.github.com/gists", headers=headers, data=data) as resp:
+        if 300 > resp.status >= 200:
+            return await resp.json()
+        resp.raise_for_status()
+
+
+async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]):
+    if not request.app.config['apps'].get("github_bot_token", None):
+        return None
+
+    tokens = []
+
+    try:
+        for file in pastes.files:
+            v = TOKEN_RE.findall(file.content)
+            if v:
+                tokens += v
+    except AttributeError:
+        return TOKEN_RE.findall(pastes.content)
+
+    return tokens or None
+
+
 @router.post(
     "/paste",
     tags=["pastes"],
@@ -112,7 +154,13 @@ async def post_paste(
     if err := enforce_paste_limit(request.app, payload):
         return err
 
-    paste: Record = await request.app.state.db.put_paste(
+    notice = None
+
+    if tokens := await find_discord_tokens(request, payload):
+        data = await upload_to_gist(request, "\n".join(tokens))
+        notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
+
+    paste = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         content=payload.content,
         filename=payload.filename,
@@ -123,8 +171,9 @@ async def post_paste(
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
         if request.app.config['paste']['log_ip'] else None
     )
+    paste['notice'] = notice
 
-    return UJSONResponse(dict(paste))
+    return UJSONResponse(paste)
 
 
 @router.put(
@@ -158,9 +207,15 @@ async def put_pastes(
     if err := enforce_multipaste_limit(request.app, payload):
         return err
 
+    notice = None
+
+    if tokens := await find_discord_tokens(request, payload):
+        data = await upload_to_gist(request, "\n".join(tokens))
+        notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
+
     author: Optional[int] = author["id"] if author else None
 
-    pastes = await request.app.state.db.put_pastes(
+    paste = await request.app.state.db.put_pastes(
         paste_id=generate_paste_id(),
         pages=payload.files,
         expires=payload.expires,
@@ -170,7 +225,8 @@ async def put_pastes(
         if request.app.config['paste']['log_ip'] else None
     )
 
-    return UJSONResponse(pastes)
+    paste['notice'] = notice
+    return UJSONResponse(paste)
 
 
 @router.get(

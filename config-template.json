@@ -11,7 +11,8 @@
         "github_application_id": "",
         "github_application_secret": "",
         "google_application_id": "",
-        "google_application_secret": ""
+        "google_application_secret": "",
+        "github_bot_token": ""
     },
     "site": {
         "frontend_site": "https://mysite.com",
