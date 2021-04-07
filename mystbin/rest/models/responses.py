@@ -36,7 +36,7 @@ class PastePostResponse(BaseModel):
     created_at: datetime
     expires: Optional[datetime] = None
     files: List[_File]
-
+    notice: Optional[str]
 
 class PastePatchResponse(BaseModel):
     id: str
