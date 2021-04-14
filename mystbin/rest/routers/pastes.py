@@ -34,7 +34,7 @@ _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 word_list = [word.title() for word in _WORDS_LIST if len(word) > 3]
 del _WORDS_LIST
 
-TOKEN_RE = re.compile("[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}")
+TOKEN_RE = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}")
 
 router = APIRouter()
 auth_model = HTTPBearer()
@@ -226,6 +226,8 @@ async def put_pastes(
     )
 
     paste['notice'] = notice
+    paste = payloads.ListedPastePut(**paste)
+    paste = recursive_hook(paste.dict())
     return UJSONResponse(paste)
 
 
