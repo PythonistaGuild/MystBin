@@ -70,9 +70,9 @@ class User(BaseModel):
     id: int
     token: str
     emails: List[str]
-    discord_id: str
-    github_id: str
-    google_id: str
+    discord_id: Optional[str]
+    github_id: Optional[str]
+    google_id: Optional[str]
     admin: bool
     theme: str
     subscriber: bool

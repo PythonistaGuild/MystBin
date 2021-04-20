@@ -265,13 +265,16 @@ export default function Test(props) {
               variant="info"
               className={styles.copyButton}
               onClick={() => {
-                fetch(config["app"]["backend_site"] + "/users/regenerate", {
-                  headers: { Authorization: token },
+                fetch(config["site"]["backend_site"] + "/users/regenerate", {
+                  headers: { "Authorization": `Bearer ${token}` },
+                  method: "POST",
                 }).then((result) => {
                   if (result.status === 200) {
-                    let data = result.json();
-                    setToken(data["token"]);
-                    cookieCutter.set("auth", data["token"]);
+                    result.json().then((data) => {
+                      setToken(data["token"]);
+                      console.log(`Received new token ${data["token"]}/${result}/${data}`)
+                      cookieCutter.set("auth", data["token"]);
+                    })
                   } else {
                     console.error(result.text());
                   }
@@ -373,7 +376,7 @@ export default function Test(props) {
               {!!google_id ? (
                 <BeenhereIcon className={styles.loginConfirmed} />
               ) : (
-                <AddBoxIcon className={styles.loginAddButton} />
+                <AddBoxIcon className={styles.loginAddButton} href={`${config["site"][""]}`}/>
               )}
               {!!google_id ? "Account Linked" : "Link this account"}
             </div>
@@ -611,10 +614,12 @@ export const getServerSideProps = async ({ req, res, query }) => {
     analytics = await analyticsResp.json();
   }
 
+  const _token = token;
+
   return {
     props: {
       admin,
-      token,
+      _token,
       analytics,
       initialAdminPastes,
       subscriber,

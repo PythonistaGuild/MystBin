@@ -627,7 +627,7 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, userid, token, emails, str(discord_id) or None, str(github_id) or None, str(google_id) or None
+            query, userid, token, emails, discord_id and str(discord_id), github_id and str(github_id), google_id and str(google_id) or None
         )
         return data[0]
 
@@ -670,7 +670,7 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, str(discord_id), str(github_id), str(google_id), user_id
+            query, discord_id and str(discord_id), github_id and str(github_id), google_id and str(google_id), user_id
         )
         if not data:
             return None
@@ -818,7 +818,7 @@ class Database:
             if not data:
                 return None
 
-            return token
+            return new_token
 
     @wrapped_hook_callback
     async def get_bookmarks(self, userid: int) -> List[Dict[str, Any]]:
