@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict, Optional, Union
 
+import pydantic.main
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import UJSONResponse, Response
 from fastapi.security import HTTPBearer
@@ -51,7 +52,8 @@ async def get_self(
     if not user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return UJSONResponse(responses.User(**user).dict())
+    data = responses.User(**user).dict()
+    return UJSONResponse(data)
 
 
 @router.post(
@@ -81,7 +83,7 @@ async def regen_token(
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return {"token": token}
+    return UJSONResponse({"token": token})
 
 @router.put(
     "/users/bookmarks",
