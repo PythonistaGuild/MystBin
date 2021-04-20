@@ -568,7 +568,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
   let analytics = {};
   let initialAdminPastes = {};
 
-  const resp = await fetch("http://api:9000/users/me", {
+  const resp = await fetch(`${config["site"]["backend_site"]}/users/me`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
