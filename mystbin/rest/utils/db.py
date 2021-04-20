@@ -75,8 +75,8 @@ class Database:
     timeout = 30
 
     def __init__(self, app):
-        self._pool: asyncpg.pool.Pool = None
-        self._config = app.config["database"]
+        self._pool: asyncpg.Pool = None
+        self._config: Dict[str, Any] = app.config["database"]
         self._db_schema = pathlib.Path(self._config["schema_path"])
         self.ban_cache = None
 
@@ -349,7 +349,7 @@ class Database:
             files_query = """
                           INSERT INTO files (parent_id, content, filename, syntax, loc)
                           VALUES ($1, $2, $3, $4, $5)
-                          RETURNING index, filename, loc, charcount, syntax
+                          RETURNING index, filename, loc, charcount, syntax, content
                           """
             inserted = []
             async with conn.transaction():
@@ -358,6 +358,7 @@ class Database:
                     inserted.append(row)
 
             resp = dict(resp)
+            del resp["origin_ip"]
             resp["files"] = [dict(file) for file in inserted]
 
             return resp

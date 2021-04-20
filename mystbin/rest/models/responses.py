@@ -38,6 +38,7 @@ class PastePostResponse(BaseModel):
     files: List[_File]
     notice: Optional[str]
 
+
 class PastePatchResponse(BaseModel):
     id: str
     expires: Optional[datetime] = None
@@ -93,11 +94,13 @@ class UserList(BaseModel):
     page: int
     page_count: int
 
+
 class Bookmark(BaseModel):
     id: str
     created_at: datetime
     expires: datetime
     views: int
+
 
 class Bookmarks(BaseModel):
     bookmarks: List[Bookmark]
