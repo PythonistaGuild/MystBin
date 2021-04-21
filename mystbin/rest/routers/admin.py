@@ -23,13 +23,11 @@ import psutil
 from asyncpg import Record
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response, UJSONResponse
-from fastapi.security import HTTPBearer
 from models import errors, responses
 from utils.ratelimits import limit
 from utils.db import _recursive_hook as recursive_hook
 
 router = APIRouter()
-auth_model = HTTPBearer()
 
 
 # Statistic consts
@@ -50,7 +48,7 @@ START_TIME = datetime.datetime.utcnow()
 )
 @limit("admin")
 async def get_any_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
+    request: Request, user_id: int
 ) -> Union[UJSONResponse, Dict[str, str]]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
@@ -77,7 +75,6 @@ async def ban_user(
     user_id: int,
     ip: str = None,
     reason: str = None,
-    authorization: str = Depends(auth_model),
 ) -> UJSONResponse:
     """
     Bans a user from the service
@@ -100,7 +97,6 @@ async def unban_user(
     request: Request,
     user_id: int,
     ip: str = None,
-    authorization: str = Depends(auth_model),
 ) -> UJSONResponse:
     """
     Unbans a user from the service
@@ -119,9 +115,7 @@ async def unban_user(
     #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def subscribe_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
-) -> UJSONResponse:
+async def subscribe_user(request: Request, user_id: int) -> UJSONResponse:
     """
     Gives a user subscriber access
     * Requires admin authentication
@@ -139,9 +133,7 @@ async def subscribe_user(
     #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def unsubscribe_user(
-    request: Request, user_id: int, authorization: str = Depends(auth_model)
-) -> UJSONResponse:
+async def unsubscribe_user(request: Request, user_id: int) -> UJSONResponse:
     """
     Revokes a users subscriber access
     * Requires admin authentication
@@ -161,9 +153,7 @@ async def unsubscribe_user(
     #    include_in_schema=False,
 )
 @limit("admin", "admin")
-async def get_admin_userlist(
-    request: Request, page: int = 1, authorization: str = Depends(auth_model)
-):
+async def get_admin_userlist(request: Request, page: int = 1):
     """
     Returns a list of smaller user objects
     * Requires admin authentication.
@@ -230,6 +220,7 @@ async def remove_ban(request: Request, ip: str = None, userid: int = None):
 
     return Response(status_code=400)
 
+
 @router.get(
     "/admin/stats",
     tags=["admin"],
@@ -262,7 +253,7 @@ async def get_server_stats(request: Request):
         401: {"model": errors.Unauthorized},
         404: {"model": errors.NotFound},
     },
-    name="Retrieve paste file(s)"
+    name="Retrieve paste file(s)",
 )
 @limit("admin", "admin")
 async def get_paste(
@@ -278,6 +269,7 @@ async def get_paste(
 
     resp = responses.PasteGetResponse(**paste)
     return UJSONResponse(recursive_hook(resp.dict()))
+
 
 @router.get(
     "/admin/pastes",
@@ -296,4 +288,10 @@ async def get_all_pastes(
     elif count < 1:
         return UJSONResponse({"error": "Count must be greater than 1"}, status_code=421)
 
-    return UJSONResponse({"pastes": await request.app.state.db.get_all_pastes(page, count, reverse=oldest_first)})
+    return UJSONResponse(
+        {
+            "pastes": await request.app.state.db.get_all_pastes(
+                page, count, reverse=oldest_first
+            )
+        }
+    )

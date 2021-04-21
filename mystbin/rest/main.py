@@ -35,7 +35,9 @@ from utils import ratelimits
 from utils.db import Database
 
 try:
-    from blackfire import probe # blackfire is used for debugging the memory heap. https://blackfire.io
+    from blackfire import (
+        probe,
+    )  # blackfire is used for debugging the memory heap. https://blackfire.io
 
     probe.initialize()
     probe.enable()
@@ -46,7 +48,9 @@ except ModuleNotFoundError:
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
-    def __init__(self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path=None):
+    def __init__(
+        self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path = None
+    ):
         loop = loop or asyncio.get_event_loop()
         with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
@@ -57,7 +61,7 @@ class MystbinApp(FastAPI):
             description="MystBin backend server",
             loop=loop,
             redoc_url="/docs",
-            docs_url=None
+            docs_url=None,
         )
         self.state.limiter = ratelimits.global_limiter
         self.add_exception_handler(
@@ -87,7 +91,9 @@ async def app_startup():
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
 
+
 if probe is not None:
+
     @app.on_event("shutdown")
     async def app_shutdown():
         probe.end()

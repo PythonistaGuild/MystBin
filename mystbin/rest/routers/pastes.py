@@ -25,7 +25,6 @@ from typing import Dict, List, Optional, Union
 from asyncpg import Record
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import UJSONResponse
-from fastapi.security import HTTPBearer
 from models import errors, payloads, responses
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
@@ -37,8 +36,6 @@ del _WORDS_LIST
 TOKEN_RE = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}")
 
 router = APIRouter()
-auth_model = HTTPBearer()
-optional_auth_model = HTTPBearer(auto_error=False)
 
 
 def generate_paste_id():
@@ -85,28 +82,25 @@ def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
 
 async def upload_to_gist(request: Request, tokens: str):
     headers = {
-        'Accept': 'application/vnd.github.v3+json',
-        "Authorization": f"token {request.app.config['apps']['github_bot_token']}"
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {request.app.config['apps']['github_bot_token']}",
     }
 
-    filename = 'output.txt'
-    data = {
-        'public': True,
-        'files': {
-            filename: {
-                'content': tokens
-            }
-        }
-    }
+    filename = "output.txt"
+    data = {"public": True, "files": {filename: {"content": tokens}}}
 
-    async with request.app.state.client.post("https://api.github.com/gists", headers=headers, data=data) as resp:
+    async with request.app.state.client.post(
+        "https://api.github.com/gists", headers=headers, data=data
+    ) as resp:
         if 300 > resp.status >= 200:
             return await resp.json()
         resp.raise_for_status()
 
 
-async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]):
-    if not request.app.config['apps'].get("github_bot_token", None):
+async def find_discord_tokens(
+    request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]
+):
+    if not request.app.config["apps"].get("github_bot_token", None):
         return None
 
     tokens = []
@@ -143,7 +137,6 @@ async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPas
 async def post_paste(
     request: Request,
     payload: payloads.PastePost,
-    authorization: Optional[str] = Security(optional_auth_model),
 ) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     """Post a paste to MystBin.
     This endpoint accepts a single file."""
@@ -169,9 +162,10 @@ async def post_paste(
         expires=payload.expires,
         password=payload.password,
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config['paste']['log_ip'] else None
+        if request.app.config["paste"]["log_ip"]
+        else None,
     )
-    paste['notice'] = notice
+    paste["notice"] = notice
 
     return UJSONResponse(paste)
 
@@ -197,7 +191,6 @@ async def post_paste(
 async def put_pastes(
     request: Request,
     payload: payloads.ListedPastePut,
-    authorization: Optional[str] = Security(optional_auth_model),
 ) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
@@ -222,10 +215,11 @@ async def put_pastes(
         author=author,
         password=payload.password,
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config['paste']['log_ip'] else None
+        if request.app.config["paste"]["log_ip"]
+        else None,
     )
 
-    paste['notice'] = notice
+    paste["notice"] = notice
     paste = payloads.ListedPastePut(**paste)
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste)
@@ -272,7 +266,6 @@ async def get_paste(
 async def get_all_pastes(
     request: Request,
     limit: Optional[int] = None,
-    authorization: str = Security(auth_model),
 ) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
     """Get all pastes for a specified author.
     * Requires authentication.
@@ -316,7 +309,6 @@ async def edit_paste(
     request: Request,
     paste_id: str,
     payload: payloads.PastePatch,
-    authorization: str = Security(auth_model),
 ) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     """Edit a paste on MystBin.
     * Requires authentication.
@@ -354,7 +346,7 @@ async def edit_paste(
 )
 @limit("deletepaste", "zones.pastes.delete")
 async def delete_paste(
-    request: Request, paste_id: str = None, authorization: str = Security(auth_model)
+    request: Request, paste_id: str = None
 ) -> Union[UJSONResponse, Dict[str, str]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
@@ -363,7 +355,7 @@ async def delete_paste(
     if not user:
         return UJSONResponse({"error": "Forbidden"}, status_code=403)
 
-    if not user['admin']:
+    if not user["admin"]:
         is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
         if not is_owner:
             return UJSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -399,7 +391,6 @@ async def delete_paste(
 async def delete_pastes(
     request: Request,
     payload: payloads.PasteDelete,
-    authorization: str = Security(auth_model),
 ) -> Union[UJSONResponse, Dict[str, List[str]]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
@@ -423,13 +414,11 @@ async def delete_pastes(
     return UJSONResponse(response, status_code=200)
 
 
-## backwards compat with hastebin
-
 @router.post(
     "/documents",
-    tags=['pastes'],
+    tags=["pastes"],
     deprecated=True,
-    response_description='{"key": "string"}'
+    response_description='{"key": "string"}',
 )
 @limit("postpastes", "zones.pastes.post")
 async def compat_create_paste(request: Request):
@@ -442,6 +431,7 @@ async def compat_create_paste(request: Request):
         paste_id=generate_paste_id(),
         content=content,
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config['paste']['log_ip'] else None
+        if request.app.config["paste"]["log_ip"]
+        else None,
     )
-    return UJSONResponse({"key": paste['id']})
+    return UJSONResponse({"key": paste["id"]})
