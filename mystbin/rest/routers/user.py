@@ -18,15 +18,12 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict, Optional, Union
 
-import pydantic.main
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import UJSONResponse, Response
-from fastapi.security import HTTPBearer
 from models import errors, responses, payloads
 from utils.ratelimits import limit
 
 router = APIRouter()
-auth_model = HTTPBearer()
 
 
 @router.get(
@@ -42,7 +39,7 @@ auth_model = HTTPBearer()
 )
 @limit("self")
 async def get_self(
-    request: Request, authorization: str = Depends(auth_model)
+    request: Request,
 ) -> Union[UJSONResponse, Dict[str, Union[str, int, bool]]]:
     """Gets the User object of the currently logged in user.
     * Requires authentication.
@@ -68,9 +65,7 @@ async def get_self(
     name="Regenerate your token",
 )
 @limit("tokengen")
-async def regen_token(
-    request: Request, authorization: str = Depends(auth_model)
-) -> Union[UJSONResponse, Dict[str, str]]:
+async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
     """Regens the user's token.
     * Requires authentication.
     """
@@ -85,6 +80,7 @@ async def regen_token(
 
     return UJSONResponse({"token": token})
 
+
 @router.put(
     "/users/bookmarks",
     tags=["users"],
@@ -93,10 +89,12 @@ async def regen_token(
         400: {"model": errors.BadRequest},
         401: {"model": errors.Unauthorized},
         403: {"model": errors.Forbidden},
-    }
+    },
 )
 @limit("bookmarks", "users.bookmarks")
-async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete, authorization: str = Depends(auth_model)) -> Response:
+async def create_bookmark(
+    request: Request, bookmark: payloads.BookmarkPutDelete
+) -> Response:
     """Creates a bookmark on the authorized user's account
     * Requires authentication.
     """
@@ -104,7 +102,9 @@ async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        await request.app.state.db.create_bookmark(request.state.user['id'], bookmark.paste_id)
+        await request.app.state.db.create_bookmark(
+            request.state.user["id"], bookmark.paste_id
+        )
         return Response(status_code=201)
     except ValueError as e:
         return UJSONResponse({"error": e.args[0]}, status_code=400)
@@ -118,20 +118,25 @@ async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
         400: {"model": errors.BadRequest},
         401: {"model": errors.Unauthorized},
         403: {"model": errors.Forbidden},
-    }
+    },
 )
 @limit("bookmarks", "users.bookmarks")
-async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete, authorization: str = Depends(auth_model)) -> Response:
+async def delete_bookmark(
+    request: Request, bookmark: payloads.BookmarkPutDelete
+) -> Response:
     """Deletes a bookmark on the authorized user's account
     * Requires authentication.
     """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    if not await request.app.state.db.delete_bookmark(request.state.user['id'], bookmark.paste_id):
+    if not await request.app.state.db.delete_bookmark(
+        request.state.user["id"], bookmark.paste_id
+    ):
         return UJSONResponse({"error": "Bookmark does not exist"}, status_code=400)
     else:
         return Response(status_code=204)
+
 
 @router.get(
     "/users/bookmarks",
@@ -142,15 +147,15 @@ async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
         400: {"model": errors.BadRequest},
         401: {"model": errors.Unauthorized},
         403: {"model": errors.Forbidden},
-    }
+    },
 )
 @limit("bookmarks", "users.bookmarks")
-async def get_bookmarks(request: Request, authorization: str = Depends(auth_model)):
+async def get_bookmarks(request: Request):
     """Fetches all of the authorized users bookmarks
     * Requires authentication
     """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data = await request.app.state.db.get_bookmark(request.state.user['id'])
+    data = await request.app.state.db.get_bookmark(request.state.user["id"])
     return UJSONResponse({"bookmarks": data})

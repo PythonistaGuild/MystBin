@@ -238,9 +238,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         return UJSONResponse({"token": data["token"]})
 
 
-@router.delete(
-    "/users/connect/{app}"
-)
+@router.delete("/users/connect/{app}")
 @limit("apps", "zones.apps")
 async def disconnect_app(request: Request, app: str):
     if app not in ("github", "discord", "google"):
@@ -249,10 +247,11 @@ async def disconnect_app(request: Request, app: str):
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    if not await request.app.state.db.unlink_account(request.state.user['id'], app):
+    if not await request.app.state.db.unlink_account(request.state.user["id"], app):
         return UJSONResponse({"error": "Account not linked"}, status_code=400)
 
     return Response(status_code=204)
+
 
 @router.post("/callbacks/sentry", include_in_schema=False)
 @limit("sentry")
