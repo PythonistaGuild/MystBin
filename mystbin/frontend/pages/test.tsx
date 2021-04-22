@@ -26,7 +26,7 @@ import Cookies from "cookies";
 import PrettySeconds from "../components/PrettySeconds";
 import cookieCutter from "cookie-cutter";
 import config from "../config.json";
-import {useRouter} from "next/router";
+import { useRouter } from "next/router";
 import Popout from "react-popout";
 
 export default function Test(props) {
@@ -364,11 +364,15 @@ export default function Test(props) {
               {!!discord_id ? (
                 <BeenhereIcon className={styles.loginConfirmed} />
               ) : (
-                <div onClick={() => {
-                    setWindow(`https://discord.com/api/oauth2/authorize?client_id=${config["apps"]["discord_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/discord_auth&response_type=code&scope=identify%20email`)
-                  }}>
-                    <AddBoxIcon className={styles.loginAddButton} />
-                  </div>
+                <div
+                  onClick={() => {
+                    setWindow(
+                      `https://discord.com/api/oauth2/authorize?client_id=${config["apps"]["discord_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/discord_auth&response_type=code&scope=identify%20email`
+                    );
+                  }}
+                >
+                  <AddBoxIcon className={styles.loginAddButton} />
+                </div>
               )}
               {!!discord_id ? "Account Linked" : "Link this account"}
             </div>
@@ -381,11 +385,15 @@ export default function Test(props) {
               {!!github_id ? (
                 <BeenhereIcon className={styles.loginConfirmed} />
               ) : (
-                  <div onClick={() => {
-                    setWindow(`https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=user`)
-                  }}>
-                    <AddBoxIcon className={styles.loginAddButton} />
-                  </div>
+                <div
+                  onClick={() => {
+                    setWindow(
+                      `https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=user`
+                    );
+                  }}
+                >
+                  <AddBoxIcon className={styles.loginAddButton} />
+                </div>
               )}
               {!!github_id ? "Account Linked" : "Link this account"}
             </div>
@@ -398,11 +406,15 @@ export default function Test(props) {
               {!!google_id ? (
                 <BeenhereIcon className={styles.loginConfirmed} />
               ) : (
-                <div onClick={() => {
-                    setWindow(`https://accounts.google.com/o/oauth2/v2/auth?client_id=${config["apps"]["google_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`)
-                  }}>
-                    <AddBoxIcon className={styles.loginAddButton} />
-                  </div>
+                <div
+                  onClick={() => {
+                    setWindow(
+                      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config["apps"]["google_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/google_auth&response_type=code&scope=https://www.googleapis.com/auth/userinfo.email`
+                    );
+                  }}
+                >
+                  <AddBoxIcon className={styles.loginAddButton} />
+                </div>
               )}
               {!!google_id ? "Account Linked" : "Link this account"}
             </div>
