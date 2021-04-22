@@ -939,13 +939,8 @@ class Database:
         """
         async with self._pool.acquire() as conn:
             users = await self._do_query(query, page - 1, conn=conn)
-            pageinfo = math.ceil(
-                (
-                    await self._do_query(
-                        "SELECT COUNT(*) AS count FROM users", conn=conn
-                    )
-                )[0]["count"]
-            )
+            pageinfo = (await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn))[0]["count"]
+
 
         users = [
             {
@@ -967,7 +962,12 @@ class Database:
             }
             for x in users
         ]
-        return {"users": users, "page_count": pageinfo, "page": page}
+        return {"users": users, "user_count": pageinfo, "page": page}
+
+    async def get_admin_usercount(self) -> int:
+        query = "SELECT COUNT(id) AS count FROM users"
+        data = await self._do_query(query)
+        return data[0]["count"]
 
     @wrapped_hook_callback
     async def search_bans(
