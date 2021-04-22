@@ -167,6 +167,23 @@ async def get_admin_userlist(request: Request, page: int = 1):
     data = await request.app.state.db.get_admin_userlist(page)
     return UJSONResponse(data)
 
+@router.get(
+    "/admin/users/count",
+    tags=["admin"],
+    response_model=responses.UserCount,
+    responses={200: {"model": responses.UserCount}, 401: {"model": errors.Unauthorized}},
+)
+async def get_admin_userlist(request: Request):
+    """
+    Returns a count of how many users there are
+    * Requires admin authentication.
+    """
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    count = await request.app.state.db.get_admin_usercount()
+    return UJSONResponse({"count": count})
+
 
 @router.get(
     "/admin/bans",

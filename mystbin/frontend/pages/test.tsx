@@ -41,6 +41,7 @@ export default function Test(props) {
     discord_id,
     github_id,
     google_id,
+    users
   } = props;
 
   const [token, setToken] = useState(_token);
@@ -51,8 +52,12 @@ export default function Test(props) {
   const [adminPasteRows, setAdminPasteRows] = useState(
     initialAdminPastes["pastes"]
   );
-  const [adminPasteLoading, setAdminPasteLoading] = useState(false);
+  const [adminUsersRows, setAdminUsersRows] = useState(
+    users["users"]
+  );
+  const [pageLoading, setPageLoading] = useState(false);
   const [window, setWindow] = useState(null);
+  const adminTotalUsers = users["user_count"];
   const adminTotalPastes = analytics["total_pastes"];
 
   const standardPasteColumns: ColDef[] = [
@@ -108,6 +113,27 @@ export default function Test(props) {
         <h5>
           <Badge className={styles.tableRowDelete} variant={"danger"}>
             Delete Paste
+          </Badge>
+        </h5>
+      ),
+    },
+  ];
+  const userColumns: ColDef[] = [
+    { field: "id", headerName: "ID" },
+    { field: "admin", headerName: "Is Admin" },
+    { field: "theme", headerName: "Theme" },
+    { field: "subscriber", headerName: "Subscriber" },
+    { field: "paste_count", headerName: "Paste Count" },
+    { field: "last_seen", headerName: "Last Seen" },
+    { field: "authorizations", headerName: "Authorized Platforms" },
+    {
+      field: "ban",
+      headerName: "Ban",
+      width: 125,
+      renderCell: (params: CellParams) => (
+        <h5>
+          <Badge className={styles.tableRowDelete} variant={"danger"}>
+            Ban User
           </Badge>
         </h5>
       ),
@@ -454,11 +480,54 @@ export default function Test(props) {
               style={selectedTab === 3 ? null : { display: "none" }}
             >
               <XGrid
-                checkboxSelection={false}
-                columns={standardPasteColumns}
-                rows={standardPasteRows}
+                checkboxSelection
+                columns={userColumns}
+                rows={adminUsersRows}
                 pagination={true}
-                rowsPerPageOptions={[50, 100, 250, 500, 1000]}
+                rowsPerPageOptions={[25, 50, 100]}
+                pageSize={100}
+                rowCount={adminTotalUsers}
+                paginationMode={"server"}
+                filterMode={"server"}
+                loading={pageLoading}
+                onFilterModelChange={(param) => {
+                  setPageLoading(true);
+
+                  fetch(
+                    `${config["site"]["backend_site"]}/admin/users?page=1`,
+                    {
+                      method: "GET",
+                      headers: { Authorization: `Bearer ${token}` },
+                    }
+                  )
+                    .then((r) => r.json())
+                    .then((d) => {
+                      const newRows = d.pastes.filter(
+                        (p) =>
+                          !!p.id
+                            .toLowerCase()
+                            .includes(param.filterModel.items[0].value)
+                      );
+                      setAdminUsersRows(newRows);
+                      setPageLoading(false);
+                    });
+                }}
+                onPageChange={(param) => {
+                  setPageLoading(true);
+
+                  fetch(
+                    `${config["site"]["backend_site"]}/admin/users?page=${param.page+1}`,
+                    {
+                      method: "GET",
+                      headers: { Authorization: `Bearer ${token}` },
+                    }
+                  )
+                    .then((r) => r.json())
+                    .then((d) => {
+                      setAdminUsersRows(d["users"]);
+                      setPageLoading(false);
+                    });
+                }}
               />
             </div>
             <div
@@ -475,9 +544,9 @@ export default function Test(props) {
                 rowCount={adminTotalPastes}
                 paginationMode={"server"}
                 filterMode={"server"}
-                loading={adminPasteLoading}
+                loading={pageLoading}
                 onFilterModelChange={(param) => {
-                  setAdminPasteLoading(true);
+                  setPageLoading(true);
 
                   fetch(
                     `${config["site"]["backend_site"]}/admin/pastes?page=0&count=999999999`,
@@ -495,11 +564,11 @@ export default function Test(props) {
                             .includes(param.filterModel.items[0].value)
                       );
                       setAdminPasteRows(newRows);
-                      setAdminPasteLoading(false);
+                      setPageLoading(false);
                     });
                 }}
                 onPageChange={(param) => {
-                  setAdminPasteLoading(true);
+                  setPageLoading(true);
 
                   fetch(
                     `${config["site"]["backend_site"]}/admin/pastes?count=100&page=${param.page}`,
@@ -511,7 +580,7 @@ export default function Test(props) {
                     .then((r) => r.json())
                     .then((d) => {
                       setAdminPasteRows(d["pastes"]);
-                      setAdminPasteLoading(false);
+                      setPageLoading(false);
                     });
                 }}
               />
@@ -605,6 +674,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
 
   let analytics = {};
   let initialAdminPastes = {};
+  let users = {};
 
   const resp = await fetch(`${config["site"]["backend_site"]}/users/me`, {
     method: "GET",
@@ -635,18 +705,27 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const google_id = data["google_id"];
 
   if (!!admin) {
-    const analyticsResp = await fetch("http://api:9000/admin/stats", {
+    const analyticsResp = await fetch(`${config["site"]["backend_site"]}/admin/stats`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const initialPastes = await fetch(
-      "http://api:9000/admin/pastes?count=100&page=0",
+      `${config["site"]["backend_site"]}/admin/pastes?count=100&page=0`,
       {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       }
     );
+
+    const initialUsers = await fetch(
+        `${config["site"]["backend_site"]}/admin/users?page=1`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    users = await initialUsers.json();
 
     initialAdminPastes = await initialPastes.json();
     analytics = await analyticsResp.json();
@@ -666,6 +745,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
       discord_id,
       github_id,
       google_id,
+      users
     },
   };
 };

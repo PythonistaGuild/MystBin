@@ -88,6 +88,8 @@ class SmallUser(BaseModel):
     last_seen: Optional[str]
     paste_count: int
 
+class UserCount(BaseModel):
+    count: int
 
 class UserList(BaseModel):
     users: List[SmallUser]
