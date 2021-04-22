@@ -271,7 +271,7 @@ class Database:
             filename,
             syntax,
             loc,
-            origin_ip
+            origin_ip,
         )
 
         # we need to generate our own response here, as we cant get the full response from the single query
@@ -513,7 +513,7 @@ class Database:
         """
         query = """SELECT count(*) FROM pastes"""
 
-        return (await self._do_query(query))[0]['count']
+        return (await self._do_query(query))[0]["count"]
 
     @wrapped_hook_callback
     async def delete_paste(
@@ -627,7 +627,13 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, userid, token, emails, discord_id and str(discord_id), github_id and str(github_id), google_id and str(google_id) or None
+            query,
+            userid,
+            token,
+            emails,
+            discord_id and str(discord_id),
+            github_id and str(github_id),
+            google_id and str(google_id) or None,
         )
         return data[0]
 
@@ -670,7 +676,11 @@ class Database:
                 """
 
         data = await self._do_query(
-            query, discord_id and str(discord_id), github_id and str(github_id), google_id and str(google_id), user_id
+            query,
+            discord_id and str(discord_id),
+            github_id and str(github_id),
+            google_id and str(google_id),
+            user_id,
         )
         if not data:
             return None
@@ -685,7 +695,6 @@ class Database:
         new_emails = list(new_emails)
         if new_emails == emails:
             return token
-
 
         query = """
                 UPDATE users SET emails = $1 WHERE id = $2
@@ -703,7 +712,9 @@ class Database:
         elif account == "discord":
             query = "UPDATE users SET discord_id = null WHERE id = $1 AND discord_id is not null RETURNING id"
         else:
-            raise ValueError(f"Expected account to be one of google, github, or discord. Not '{account}'")
+            raise ValueError(
+                f"Expected account to be one of google, github, or discord. Not '{account}'"
+            )
 
         return bool(await self._do_query(query, user_id))
 
@@ -837,7 +848,9 @@ class Database:
         data = await self._do_query(query, userid)
         return [dict(x) for x in data]
 
-    async def create_bookmark(self, userid: int, paste_id: str): # doesnt return anything, no need for a hook
+    async def create_bookmark(
+        self, userid: int, paste_id: str
+    ):  # doesnt return anything, no need for a hook
         """creates a bookmark for a user"""
         query = """
                 INSERT INTO bookmarks (userid, paste) VALUES ($1, $2)
@@ -848,7 +861,9 @@ class Database:
         except asyncpg.UniqueViolationError:
             raise ValueError("This paste is already bookmarked")
         except asyncpg.ForeignKeyViolationError:
-            raise ValueError("This paste does not exist") # its an auth'ed endpoint, so the user has to exist
+            raise ValueError(
+                "This paste does not exist"
+            )  # its an auth'ed endpoint, so the user has to exist
 
     async def delete_bookmark(self, userid: int, paste_id: str) -> bool:
         """deletes a users bookmark"""
@@ -1020,6 +1035,5 @@ class Database:
             if matcher.quick_ratio() > 0.7:
                 close.append(dict(ban))
                 continue
-
 
         return close
