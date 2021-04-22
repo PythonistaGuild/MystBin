@@ -1,5 +1,3 @@
-
-
 # requires:
 # pytest
 # pytest-asyncio
@@ -7,10 +5,12 @@
 
 
 import pytest
+
 try:
     from common import client
 except ModuleNotFoundError:
     from utils.common import client
+
 
 @pytest.mark.asyncio
 async def test_root():
