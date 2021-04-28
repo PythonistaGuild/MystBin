@@ -42,7 +42,7 @@ export default function Dashboard(props) {
     github_id,
     google_id,
     bookmarks,
-    users
+    users,
   } = props;
 
   const [token, setToken] = useState(_token);
@@ -53,9 +53,7 @@ export default function Dashboard(props) {
   const [adminPasteRows, setAdminPasteRows] = useState(
     initialAdminPastes["pastes"]
   );
-  const [adminUsersRows, setAdminUsersRows] = useState(
-    users["users"]
-  );
+  const [adminUsersRows, setAdminUsersRows] = useState(users["users"]);
   const [pageLoading, setPageLoading] = useState(false);
   const [window, setWindow] = useState(null);
   const adminTotalUsers = users["user_count"];
@@ -141,10 +139,10 @@ export default function Dashboard(props) {
     },
   ];
   const bookmarkColumns: ColDef[] = [
-    { field: "id", headerName: "ID"},
+    { field: "id", headerName: "ID" },
     { field: "created_at", headerName: "Created At" },
     { field: "expires", headerName: "Expires" },
-    { field: "views", headerName: "Views" }
+    { field: "views", headerName: "Views" },
   ];
 
   const standardPasteRows: RowsProp = [
@@ -523,7 +521,9 @@ export default function Dashboard(props) {
                   setPageLoading(true);
 
                   fetch(
-                    `${config["site"]["backend_site"]}/admin/users?page=${param.page+1}`,
+                    `${config["site"]["backend_site"]}/admin/users?page=${
+                      param.page + 1
+                    }`,
                     {
                       method: "GET",
                       headers: { Authorization: `Bearer ${token}` },
@@ -710,16 +710,19 @@ export const getServerSideProps = async ({ req, res, query }) => {
 
   resp = await fetch(`${config["site"]["backend_site"]}/users/bookmarks`, {
     method: "GET",
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
   data = await resp.json();
   const bookmarks = data["bookmarks"];
 
   if (!!admin) {
-    const analyticsResp = await fetch(`${config["site"]["backend_site"]}/admin/stats`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const analyticsResp = await fetch(
+      `${config["site"]["backend_site"]}/admin/stats`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     const initialPastes = await fetch(
       `${config["site"]["backend_site"]}/admin/pastes?count=100&page=0`,
@@ -730,7 +733,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
     );
 
     const initialUsers = await fetch(
-        `${config["site"]["backend_site"]}/admin/users?page=1`,
+      `${config["site"]["backend_site"]}/admin/users?page=1`,
       {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
@@ -757,7 +760,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
       github_id,
       google_id,
       bookmarks,
-      users
+      users,
     },
   };
 };
