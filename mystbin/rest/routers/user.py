@@ -157,5 +157,5 @@ async def get_bookmarks(request: Request):
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data = await request.app.state.db.get_bookmark(request.state.user["id"])
+    data = await request.app.state.db.get_bookmarks(request.state.user["id"])
     return UJSONResponse({"bookmarks": data})
