@@ -179,7 +179,7 @@ export default function EditorTabs({
       >
         <Toast.Header className={styles.maxCountToastHeader}>
           <strong className="mr-auto">Max Character Count</strong>
-          <small>Max count: {{maxCharCount}}</small>
+          <small>Max count: {{ maxCharCount }}</small>
         </Toast.Header>
         <Toast.Body>
           You've reached the max character count for this file.
