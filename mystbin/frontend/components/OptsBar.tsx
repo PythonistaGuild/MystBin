@@ -153,14 +153,14 @@ export default function OptsBar() {
           .then((d) => {
             if (d && d.id) {
               let path = `/${d.id}`;
-              navigator.clipboard.writeText(
-                window.location.origin + path
-              ).then(() => {
-                router.push(path).then(() => {
-                  setSaveSuccessToast(d.id);
-                  setSaving(false);
-                  })
-                })
+              navigator.clipboard
+                .writeText(window.location.origin + path)
+                .then(() => {
+                  router.push(path).then(() => {
+                    setSaveSuccessToast(d.id);
+                    setSaving(false);
+                  });
+                });
             }
           });
       },
@@ -174,7 +174,7 @@ export default function OptsBar() {
         console.log(JSON.stringify(paste));
         if (router.route == "/") {
           setCopyBadPasteToast(true);
-          return
+          return;
         }
         sessionStorage.setItem("pasteCopy", JSON.stringify(paste));
         router.push("/").then(() => {
@@ -291,9 +291,7 @@ export default function OptsBar() {
         <Toast.Header className={styles.saveBlankToastHeader}>
           <strong className="mr-auto">Copy Error!</strong>
         </Toast.Header>
-        <Toast.Body>
-          Cannot copy a paste that is not already saved
-        </Toast.Body>
+        <Toast.Body>Cannot copy a paste that is not already saved</Toast.Body>
       </Toast>
       <Spinner
         animation="border"
