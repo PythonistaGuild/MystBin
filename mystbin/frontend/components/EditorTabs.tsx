@@ -32,17 +32,22 @@ export default function EditorTabs({
   const id = pid;
   const [initialState, setInitialState] = useState(false);
 
-  pasteDispatcher.dispatch({ paste: value });
+  //pasteDispatcher.dispatch({ paste: value });
+  const maxCharCount = config["paste"]["character_limit"];
 
   if (!!id && !initialState) {
     setValue(initialData);
     setInitialState(true);
+  } else if (!!sessionStorage.getItem("pasteCopy")) {
+    const pasteCopy = JSON.parse(sessionStorage.getItem("pasteCopy"));
+    setValue(pasteCopy);
+    pasteDispatcher.dispatch({ paste: pasteCopy });
+    sessionStorage.removeItem("pasteCopy");
   }
 
   useEffect(() => {
     if (!value[currTab]) {
       let tabNumber = currTab.valueOf();
-      console.log(tabNumber);
       if (currTab > 1) {
         tabNumber = currTab - 1;
       } else {
@@ -58,7 +63,6 @@ export default function EditorTabs({
     value.map(function (v) {
       let filetype = v["title"].split(".").pop();
       let val = getLanguage(filetype);
-      console.log(val, filetype);
       initialLangs.push(val);
       setLang(initialLangs);
     });
@@ -110,7 +114,7 @@ export default function EditorTabs({
             <Tab
               key={i}
               current={currTab === i}
-              editable={!initialData}
+              editable={!pid}
               deletable={value.length > 1 && !initialData}
               filename={v.title}
               onFocus={() => setCurrTab(i)}
@@ -133,7 +137,7 @@ export default function EditorTabs({
               setValue(newValue);
               setCurrTab(value.length);
             }}
-            enabled={value.length <= 4 && !initialData}
+            enabled={value.length <= 4 && !id}
           />
         </div>
 
@@ -149,9 +153,9 @@ export default function EditorTabs({
             <MonacoEditor
               language={lang[i]}
               onChange={(_, newVal) => {
-                if (newVal.length > 300000) {
+                if (newVal.length > maxCharCount) {
                   setCharCountToast(true);
-                  newVal = newVal.slice(0, 300000);
+                  newVal = newVal.slice(0, maxCharCount);
                 }
                 let newValue = [...value];
                 newValue[i]["content"] = newVal;
@@ -160,7 +164,7 @@ export default function EditorTabs({
               }}
               value={v.content}
               theme={"mystBinDark"}
-              readOnly={!!initialData}
+              readOnly={!!id}
             />
           </div>
         ))}
@@ -175,7 +179,7 @@ export default function EditorTabs({
       >
         <Toast.Header className={styles.maxCountToastHeader}>
           <strong className="mr-auto">Max Character Count</strong>
-          <small>Max count: 300,000</small>
+          <small>Max count: {{maxCharCount}}</small>
         </Toast.Header>
         <Toast.Body>
           You've reached the max character count for this file.

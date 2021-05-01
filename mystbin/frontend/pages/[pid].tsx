@@ -63,9 +63,8 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const API = "http://api:9000";
   const { pid } = query;
-  const response = await fetch(`${API}/paste/${pid}`);
+  const response = await fetch(`${config["site"]["backend_site"]}/paste/${pid}`);
 
   if (response.status === 404) {
     console.log("Invalid Paste");

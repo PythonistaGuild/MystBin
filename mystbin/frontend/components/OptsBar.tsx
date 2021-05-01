@@ -28,6 +28,7 @@ export default function OptsBar() {
   const [paste, setPaste] = useState(pasteStore.getPaste());
   const [saveSuccessToast, setSaveSuccessToast] = useState(null);
   const [saveBlankToast, setSaveBlankToast] = useState(false);
+  const [copyBadPasteToast, setCopyBadPasteToast] = useState(false);
   const [saving, setSaving] = useState(false);
   const [optsVisible, setOptsVisible] = useState(true);
   useEffect(() => {
@@ -149,27 +150,36 @@ export default function OptsBar() {
             setSaving(false);
             console.error(r.status);
           })
-          .then(async (d) => {
+          .then((d) => {
             if (d && d.id) {
               let path = `/${d.id}`;
-              await navigator.clipboard.writeText(
+              navigator.clipboard.writeText(
                 window.location.origin + path
-              );
-              // @ts-ignore
-              router.push(path).then(setSaveSuccessToast(d.id));
-              setSaving(false);
+              ).then(() => {
+                router.push(path).then(() => {
+                  setSaveSuccessToast(d.id);
+                  setSaving(false);
+                  })
+                })
             }
           });
       },
       hotKey: "ctrl+s",
     },
-
     {
       title: "Edit Paste",
       content: "Copy and Edit this paste as a new paste.",
       icon: <EditIcon />,
       callback: () => {
-        alert("test2!");
+        console.log(JSON.stringify(paste));
+        if (router.route == "/") {
+          setCopyBadPasteToast(true);
+          return
+        }
+        sessionStorage.setItem("pasteCopy", JSON.stringify(paste));
+        router.push("/").then(() => {
+          router.reload();
+        });
       },
       hotKey: "ctrl+e",
     },
@@ -269,6 +279,20 @@ export default function OptsBar() {
         </Toast.Header>
         <Toast.Body>
           Your paste is empty, cannot save an empty paste.
+        </Toast.Body>
+      </Toast>
+      <Toast
+        className={styles.saveBlankToast}
+        onClose={() => setCopyBadPasteToast(false)}
+        show={copyBadPasteToast}
+        delay={5000}
+        autohide
+      >
+        <Toast.Header className={styles.saveBlankToastHeader}>
+          <strong className="mr-auto">Copy Error!</strong>
+        </Toast.Header>
+        <Toast.Body>
+          Cannot copy a paste that is not already saved
         </Toast.Body>
       </Toast>
       <Spinner
