@@ -138,9 +138,15 @@ export default function OptsBar() {
           files.push({ filename: file["title"], content: file["content"] });
         }
 
+        const headers = {
+          "Content-Type": "application/json"
+        }
+        if (!!cookieCutter.get("auth")) {
+          headers["Authorization"] = cookieCutter.get("auth")
+        }
         fetch(config["site"]["backend_site"] + "/paste", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({ files: files }),
         })
           .then((r) => {
