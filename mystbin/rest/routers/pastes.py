@@ -220,7 +220,7 @@ async def put_pastes(
     )
 
     paste["notice"] = notice
-    paste = payloads.ListedPastePut(**paste)
+    paste = responses.PastePostResponse(**paste)
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste)
 
