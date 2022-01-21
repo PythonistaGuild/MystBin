@@ -16,7 +16,9 @@
     },
     "site": {
         "frontend_site": "https://mysite.com",
-        "backend_site": "https://api.mysite.com"
+        "backend_site": "https://api.mysite.com",
+        "frontend_port": 4340,
+        "backend_port": 4341
     },
     "paste": {
         "character_limit": 300000,
