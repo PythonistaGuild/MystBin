@@ -132,10 +132,10 @@ export default function OptsBar() {
         }
 
         const headers = {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        };
         if (!!cookieCutter.get("auth")) {
-          headers["Authorization"] = cookieCutter.get("auth")
+          headers["Authorization"] = cookieCutter.get("auth");
         }
         fetch(config["site"]["backend_site"] + "/paste", {
           method: "PUT",
