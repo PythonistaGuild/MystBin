@@ -3,7 +3,6 @@
         "user": "prod-username",
         "password": "prod-password",
         "dsn": "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>",
-        "schema_path": "database/schema.sql"
     },
     "apps": {
         "discord_application_id": "",
