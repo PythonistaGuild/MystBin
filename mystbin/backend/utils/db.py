@@ -20,7 +20,7 @@ import asyncio
 import datetime
 import difflib
 import functools
-import math
+import os
 import pathlib
 from typing import Any, Dict, List, Optional, Union
 
@@ -77,7 +77,11 @@ class Database:
     def __init__(self, app):
         self._pool: asyncpg.Pool = None
         self._config: Dict[str, Any] = app.config["database"]
-        self._db_schema = pathlib.Path(self._config["schema_path"])
+        if "ISDOCKER" in os.environ:
+            self._db_schema = pathlib.Path("/etc/schema.sql")
+        else:
+            self._db_schema = pathlib.Path("../database/schema.sql")
+
         self.ban_cache = None
 
     @property
