@@ -32,7 +32,7 @@ export default function EditorTabs({
   const id = pid;
   const [initialState, setInitialState] = useState(false);
 
-  //pasteDispatcher.dispatch({ paste: value });
+  pasteDispatcher.dispatch({ paste: value });
   const maxCharCount = config["paste"]["character_limit"];
 
   if (!!id && !initialState) {
