@@ -35,7 +35,7 @@ from limits import RateLimitItem, parse_many  # type: ignore
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import StrOrCallableStr
 from starlette.requests import Request
-from starlette.responses import Response, UJSONResponse
+from starlette.responses import Response, JSONResponse
 
 from . import tokens
 
@@ -360,7 +360,7 @@ class Limiter(slowapi.Limiter):
                         try:
                             await self._check_request_limit(request, func, False)
                         except IPBanned:
-                            return UJSONResponse(
+                            return JSONResponse(
                                 {"error": "You have been banned from the service."},
                                 status_code=403,
                             )

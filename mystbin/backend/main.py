@@ -25,6 +25,7 @@ import aiohttp
 import sentry_sdk
 import slowapi
 import ujson
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -130,3 +131,6 @@ else:
 
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics/", metrics)
+
+
+uvicorn.run(app, port=app.config["site"]["backend_port"]) # type: ignore
