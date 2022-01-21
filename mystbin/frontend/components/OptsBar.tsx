@@ -25,19 +25,11 @@ export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
   const [expiryValue, setExpiryValue] = useState([-1, -1, -1]);
   const router = useRouter();
-  const [paste, setPaste] = useState(pasteStore.getPaste());
   const [saveSuccessToast, setSaveSuccessToast] = useState(null);
   const [saveBlankToast, setSaveBlankToast] = useState(false);
   const [copyBadPasteToast, setCopyBadPasteToast] = useState(false);
   const [saving, setSaving] = useState(false);
   const [optsVisible, setOptsVisible] = useState(true);
-  useEffect(() => {
-    pasteStore.addChangeListener(onChange);
-    return () => pasteStore.removeChangeListener(onChange);
-  }, []);
-  function onChange() {
-    setPaste(pasteStore.getPaste());
-  }
 
   const personal = [
     {
@@ -119,6 +111,7 @@ export default function OptsBar() {
       content: "Save this paste and all its files.",
       icon: <SaveIcon />,
       callback: () => {
+        let paste = pasteStore.getPaste();
         if (window.location.pathname !== "/") {
           return;
         }
@@ -163,8 +156,8 @@ export default function OptsBar() {
                 .writeText(window.location.origin + path)
                 .then(() => {
                   router.push(path).then(() => {
-                    setSaveSuccessToast(d.id);
                     setSaving(false);
+                    setSaveSuccessToast(d.id);
                   });
                 });
             }
@@ -177,6 +170,7 @@ export default function OptsBar() {
       content: "Copy and Edit this paste as a new paste.",
       icon: <EditIcon />,
       callback: () => {
+        let paste = pasteStore.getPaste();
         console.log(JSON.stringify(paste));
         if (router.route == "/") {
           setCopyBadPasteToast(true);

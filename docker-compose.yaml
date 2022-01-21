@@ -48,41 +48,9 @@ services:
       main:
         ipv4_address: 172.25.0.13
 
-  grafana:
-    build:
-      context: ./mystbin/grafana
-    container_name: grafana
-    ports:
-      - 127.0.0.1:6000:3001
-    volumes:
-      - grafana-data:/var/lib/grafana
-
-    networks:
-      main:
-        ipv4_address: 172.25.0.14
-
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    ports:
-      - 127.0.0.1:6001:9090
-    volumes:
-      - ./mystbin/prometheus:/etc/prometheus
-      - prometheus-data:/prometheus
-    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
-
-    networks:
-      main:
-        ipv4_address: 172.25.0.15
-
-    depends_on:
-      - api
-
 volumes:
   postgresdata:
   node_modules:
-  grafana-data:
-  prometheus-data:
 
 
 networks:
