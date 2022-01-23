@@ -147,9 +147,6 @@ body .monaco-aria-container {
 }
 
 /* OPTS POPOVERS */
-.popover[x-placement^="right"] .arrow::after {
-  border-right-color: rgba(255, 255, 255, 0.8);
-}
 
 input[type=radio] {
   visibility: hidden;
@@ -192,4 +189,8 @@ input[type=radio] {
 /* Handle */
 .MuiDataGrid-window::-webkit-scrollbar-thumb {
   background: #6b6b6b;
+}
+
+.MuiSvgIcon-root {
+  font-size: 1.25rem!important;
 }
