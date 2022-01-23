@@ -20,25 +20,47 @@
   max-width: 100%;
 }
 
-.Base > footer {
-  grid-area: f;
-  background-color: #1b1b1b;
-  color: white;
+.footerContainer {
   display: flex;
-  justify-content: space-between;
-  max-width: 100%;
+  flex-direction: row;
+  justify-content: space-evenly;
+  color: #e3e3e3;
+  width: 100vw;
+}
+
+.footerFlexCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footerTermsContainer {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.footerTerms {
+  padding: 1rem;
+  font-size: .8em;
+  color: #e3e3e3;
+}
+
+.footerTerms:hover {
+  cursor: pointer;
 }
 
 .logo {
-  width: 7rem;
-  display: flex;
-  align-items: center;
+  margin-top: .5rem;
+  width: 5rem;
 }
 
 .socialIconsContainer {
+  height: 100%;
   display: flex;
+  flex-direction: row;
+  justify-content: center;
   align-items: center;
-  margin-right: 4rem;
 }
 
 .socialIcon {
@@ -51,8 +73,15 @@
 }
 
 .footerLeft {
+  margin-bottom: .5rem;
   font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  margin-left: 4rem;
+  color: #e3e3e3;
+}
+
+.footerLeft > a {
+  color: #3180bd;
+}
+
+.footerLeft > a:hover {
+  cursor: pointer;
 }

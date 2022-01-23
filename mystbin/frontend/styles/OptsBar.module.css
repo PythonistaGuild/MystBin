@@ -1,5 +1,5 @@
 .popoverHeader {
-  background-color: #4C709E;
+  background-color: #3C94DF;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -10,14 +10,13 @@
 .optsNavContainer {
   right: 0;
   top: 0;
-  position: fixed;
+  position: absolute;
   z-index: 3;
-  flex-direction: column !important;
-  height: 90%;
+  flex-direction: row !important;
   display: flex;
-  justify-content: space-around;
   background-color: #1b1b1b;
-  margin-top: 2.6rem;
+  padding: .2rem;
+
 }
 .optsNavContainerCollapsed {
   right: 0;
@@ -26,14 +25,14 @@
   z-index: 3;
   max-height: 2rem;
   background-color: #1b1b1b;
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 .optsIconContainer {
   color: rgba(255, 255, 255, 0.7);
   display: flex;
   align-self: flex-end;
-  padding: 1rem;
+  padding: .5rem;
 }
 
 .optsIconContainer:hover {
@@ -43,6 +42,7 @@
 }
 
 .navGap {
+  display: none;
   margin-top: 3rem;
   margin-bottom: 3rem;
   border-top: 2px solid rgba(230, 230, 255, 0.2);

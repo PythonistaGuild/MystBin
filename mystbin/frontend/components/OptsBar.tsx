@@ -1,5 +1,5 @@
 import { OverlayTrigger, Popover, Spinner, Toast } from "react-bootstrap";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveIcon from "@material-ui/icons/Save";
@@ -20,6 +20,7 @@ import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
 import { LensTwoTone } from "@material-ui/icons";
 import config from "../config.json";
+import {clearTimeout} from "timers";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -137,31 +138,31 @@ export default function OptsBar() {
         if (!!cookieCutter.get("auth")) {
           headers["Authorization"] = cookieCutter.get("auth");
         }
-        fetch(config["site"]["backend_site"] + "/paste", {
-          method: "PUT",
-          headers: headers,
-          body: JSON.stringify({ files: files }),
-        })
-          .then((r) => {
-            if (r.status === 200) {
-              return r.json();
-            }
-            setSaving(false);
-            console.error(r.status);
+          fetch(config["site"]["backend_site"] + "/paste", {
+            method: "PUT",
+            headers: headers,
+            body: JSON.stringify({files: files}),
           })
-          .then((d) => {
-            if (d && d.id) {
-              let path = `/${d.id}`;
-              navigator.clipboard
-                .writeText(window.location.origin + path)
-                .then(() => {
-                  router.push(path).then(() => {
-                    setSaving(false);
-                    setSaveSuccessToast(d.id);
-                  });
-                });
-            }
-          });
+              .then((r) => {
+                if (r.status === 200) {
+                  return r.json();
+                }
+                setSaving(false);
+                console.error(r.status);
+              })
+              .then((d) => {
+                if (d && d.id) {
+                  let path = `/${d.id}`;
+                  let full = window.location.origin + path;
+                  navigator.clipboard
+                      .writeText(full)
+                      .then(() => {
+                        setSaving(false)
+                        setSaveSuccessToast(d.id)
+                        setTimeout(() => {router.push(path)}, 3000)
+                      });
+                }
+              });
       },
       hotKey: "ctrl+s",
     },
@@ -254,11 +255,11 @@ export default function OptsBar() {
       </div>
 
       <Toast
-        className={styles.saveSuccessToast}
-        onClose={() => setSaveSuccessToast(null)}
-        show={saveSuccessToast}
-        delay={5000}
-        autohide
+          className={styles.saveSuccessToast}
+          onClose={() => setSaveSuccessToast(null)}
+          show={saveSuccessToast}
+          delay={5000}
+          autohide
       >
         <Toast.Header className={styles.saveSuccessToastHeader}>
           <strong className="mr-auto">Save Successful!</strong>
@@ -316,7 +317,10 @@ function OptsButton(obj: {
       key={`opt-${obj.title}`}
       placement={"left"}
       overlay={
-        <Popover id={`opt-${obj.title}`} className={styles.popoverBody}>
+        <Popover
+            id={`opt-${obj.title}`}
+            className={styles.popoverBody}
+        >
           <Popover.Title className={styles.popoverHeader} as="h3">
             {obj.title}
             {obj.hotKey && (
