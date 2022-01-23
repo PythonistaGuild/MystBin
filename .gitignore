@@ -1,7 +1,10 @@
 __pycache__/
 .vscode/
+.idea/
+node_modules/
 config.toml
 config.json
 .env
 .venv
+venv
 .pytest_cache/
