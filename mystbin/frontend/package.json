@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 4340",
+    "dev": "NODE_OPTIONS=--openssl-legacy-provider next dev --port 4340",
     "build": "next build",
     "start": "next start",
     "launch": "next build && next start"
