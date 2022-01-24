@@ -7,4 +7,5 @@ config.json
 .env
 .venv
 venv
+.next/
 .pytest_cache/
