@@ -133,4 +133,5 @@ app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics/", metrics)
 
 
-uvicorn.run(app, port=app.config["site"]["backend_port"]) # type: ignore
+if __name__ == "__main__":
+    uvicorn.run(app, port=app.config["site"]["backend_port"]) # type: ignore
