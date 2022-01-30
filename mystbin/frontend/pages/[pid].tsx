@@ -69,7 +69,9 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   );
 
   if (response.status === 404) {
-    console.log("Invalid Paste");
+    return {
+      notFound: true
+    }
   }
 
   let paste = await response.json();
