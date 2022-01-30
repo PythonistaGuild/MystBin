@@ -485,8 +485,13 @@ class Database:
         UPDATE pastes
         SET password = $2
         WHERE id = $1
+        RETURNING *
         """
-        return await self._do_query(query, paste_id, password)
+        resp = await self._do_query(query, paste_id, password)
+        if resp:
+            return resp[0]
+        
+        return None
 
     @wrapped_hook_callback
     async def get_all_user_pastes(self, author_id: Optional[int], limit: Optional[int] = None) -> List[asyncpg.Record]:

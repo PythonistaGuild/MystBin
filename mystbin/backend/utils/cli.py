@@ -137,7 +137,7 @@ class CLIHandler:
             if resp:
                 print(f"Updated password for paste '{pid}'")
             else:
-                print(f"paste '{pid}' not found")
+                print(f"Paste '{pid}' not found")
 
         elif namespace.remove_password:
             if bad_args := find_disallowed_args(namespace, ["set_password", "list", "delete"]):
@@ -148,9 +148,9 @@ class CLIHandler:
 
             resp = await self.db.set_paste_password(namespace.remove_password, None)
             if resp:
-                print(f"Updated password for paste '{namespace.remove_password}'")
+                print(f"Removed password for paste '{namespace.remove_password}'")
             else:
-                print(f"paste '{namespace.remove_password}' not found")
+                print(f"Paste '{namespace.remove_password}' not found")
 
         else:
             print("Paste: one argument must be passed")
