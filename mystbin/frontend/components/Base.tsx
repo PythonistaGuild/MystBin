@@ -19,6 +19,8 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
           <a className={styles.footerTerms}>Terms and Conditions</a>
           <span className={styles.footerTerms}>/</span>
           <a className={styles.footerTerms}>Privacy Policy</a>
+          <span className={styles.footerTerms}>/</span>
+          <a className={styles.footerTerms}>Contact Us</a>
         </span>
 
         <div className={styles.footerFlexCol}>

@@ -11,17 +11,28 @@ export default function GoogleAuth(props) {
 }
 
 export const getServerSideProps = async ({ req, res, query }) => {
+  const cookies = new Cookies(req, res);
+  let headers;
+
+  if (cookies.get("auth")) {
+    headers = {
+      "Content-Type": "application/json",
+      Authorization: cookies.get("auth"),
+    };
+  } else {
+    headers = { "Content-Type": "application/json" };
+  }
+
   let response = await fetch(
     `${config["site"]["backend_site"]}/users/connect/github/`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: headers,
       body: JSON.stringify(query),
     }
   );
 
   const token = await response.json();
-  const cookies = new Cookies(req, res);
   cookies.set("auth", token["token"], { httpOnly: false });
 
   return { props: { token } };
