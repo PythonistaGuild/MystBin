@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
 import datetime
+import os
 import pathlib
 from typing import Any, Dict
 
@@ -146,6 +147,10 @@ class UvicornServer(uvicorn.Server):
 
 
 if __name__ == "__main__":
-    config = uvicorn.Config(app, port=app.config["site"]["backend_port"])
+    if os.environ.get("ISDOCKER") is not None:
+            config = uvicorn.Config(app, port=app.config["site"]["backend_port"], host="0.0.0.0")
+    else:
+        config = uvicorn.Config(app, port=app.config["site"]["backend_port"], host="127.0.0.1")
+    
     server = UvicornServer(config)
     server.run()
