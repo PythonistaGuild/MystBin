@@ -412,7 +412,7 @@ export default function Dashboard(props) {
           <div className={styles.embededDataLogin}>
             <div className={styles.innerLoginEmbed}>
               <h5>GitHub</h5>
-              <GitHubIcon style={{ fontSize: "5.25rem" }} />
+              <GitHubIcon style={{ fontSize: "5.25rem!important" }} />
               {!!github_id ? (
                 <BeenhereIcon className={styles.loginConfirmed} />
               ) : (
