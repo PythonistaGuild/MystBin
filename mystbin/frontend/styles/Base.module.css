@@ -32,16 +32,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .footerTermsContainer {
   height: 100%;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .footerTerms {
-  padding: 1rem;
+  padding: .5rem;
   font-size: .8em;
   color: #e3e3e3;
 }
@@ -52,6 +54,7 @@
 
 .logo {
   margin-top: .5rem;
+  margin-bottom: .5rem;
   width: 5rem;
 }
 
