@@ -475,6 +475,32 @@ class Database:
             resp["pages"] = [{a: str(b) for a, b in x.items()} for x in data]
 
             return resp
+    
+    @wrapped_hook_callback
+    async def set_paste_password(
+        self, paste_id: str, password: str | None
+    ) -> Optional[asyncpg.Record]:
+        """Sets a password for the specified paste.
+        This is for use by the cli module.
+
+        Parameters
+        ------------
+        paste_id: :class:`str`
+            The id of the paste to update the password for
+        password: :class:`str`
+            The password to use
+        
+        Returns
+        ---------
+        Optional[:class:`asyncpg.Record`]
+            The updated paste
+        """
+        query = """
+        UPDATE pastes
+        SET password = $2
+        WHERE id = $1
+        """
+        return await self._do_query(query, paste_id, password)
 
     @wrapped_hook_callback
     async def get_all_user_pastes(
