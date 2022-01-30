@@ -15,7 +15,7 @@
   flex-direction: row !important;
   display: flex;
   background-color: #1b1b1b;
-  padding: .2rem;
+  padding: .2rem .2rem 0 .2rem;
 
 }
 .optsNavContainerCollapsed {
