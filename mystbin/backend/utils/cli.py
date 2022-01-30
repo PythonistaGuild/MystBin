@@ -119,9 +119,7 @@ class CLIHandler:
 
             resp = await self.db.delete_paste(namespace.delete, admin=True)
             if resp:
-                author = f"by user {resp['author_id']} " if resp["author_id"] else ""
-                password = f"and password '{resp['password']}'" if resp["password"] else ""
-                print(f"Deleted paste '{namespace.delete}' {author}with {resp['views']} views {password}")
+                print(f"Deleted paste '{namespace.delete}'")
             else:
                 print("Failed to delete paste (paste not found)")
 
