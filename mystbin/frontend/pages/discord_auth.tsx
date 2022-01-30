@@ -15,10 +15,12 @@ export const getServerSideProps = async ({ req, res, query }) => {
   let headers;
 
   if (cookies.get("auth")) {
-    headers = { "Content-Type": "application/json", "Authorization": cookies.get("auth") }
-  }
-  else {
-    headers = { "Content-Type": "application/json" }
+    headers = {
+      "Content-Type": "application/json",
+      Authorization: cookies.get("auth"),
+    };
+  } else {
+    headers = { "Content-Type": "application/json" };
   }
 
   let response = await fetch(
