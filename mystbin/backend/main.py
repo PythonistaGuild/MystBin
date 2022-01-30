@@ -136,6 +136,8 @@ app.add_route("/metrics/", metrics)
 
 
 class UvicornServer(uvicorn.Server):
+    # this is already a part of uvicorn, however we need to be able to close the app ourselves via the cli
+    # so this is subclassed to insert `or self.config.app.should_close`
     async def main_loop(self) -> None:
         counter = 0
         should_exit = await self.on_tick(counter)
@@ -148,7 +150,8 @@ class UvicornServer(uvicorn.Server):
 
 if __name__ == "__main__":
     if os.environ.get("ISDOCKER") is not None:
-            config = uvicorn.Config(app, port=app.config["site"]["backend_port"], host="0.0.0.0")
+        config = uvicorn.Config(app, port=app.config["site"]["backend_port"], host="0.0.0.0")
+        # allow from all hosts when in a docker container, so that requests can be proxied in
     else:
         config = uvicorn.Config(app, port=app.config["site"]["backend_port"], host="127.0.0.1")
     
