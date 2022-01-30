@@ -72,9 +72,7 @@ async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    token: Optional[str] = await request.app.state.db.regen_token(
-        userid=request.state.user["id"]
-    )
+    token: Optional[str] = await request.app.state.db.regen_token(userid=request.state.user["id"])
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -92,9 +90,7 @@ async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
     },
 )
 @limit("bookmarks", "users.bookmarks")
-async def create_bookmark(
-    request: Request, bookmark: payloads.BookmarkPutDelete
-) -> Response:
+async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Creates a bookmark on the authorized user's account
     * Requires authentication.
     """
@@ -102,9 +98,7 @@ async def create_bookmark(
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        await request.app.state.db.create_bookmark(
-            request.state.user["id"], bookmark.paste_id
-        )
+        await request.app.state.db.create_bookmark(request.state.user["id"], bookmark.paste_id)
         return Response(status_code=201)
     except ValueError as e:
         return UJSONResponse({"error": e.args[0]}, status_code=400)
@@ -121,18 +115,14 @@ async def create_bookmark(
     },
 )
 @limit("bookmarks", "users.bookmarks")
-async def delete_bookmark(
-    request: Request, bookmark: payloads.BookmarkPutDelete
-) -> Response:
+async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Deletes a bookmark on the authorized user's account
     * Requires authentication.
     """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    if not await request.app.state.db.delete_bookmark(
-        request.state.user["id"], bookmark.paste_id
-    ):
+    if not await request.app.state.db.delete_bookmark(request.state.user["id"], bookmark.paste_id):
         return UJSONResponse({"error": "Bookmark does not exist"}, status_code=400)
     else:
         return Response(status_code=204)

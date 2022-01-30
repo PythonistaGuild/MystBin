@@ -47,18 +47,14 @@ START_TIME = datetime.datetime.utcnow()
     #    include_in_schema=False,
 )
 @limit("admin")
-async def get_any_user(
-    request: Request, user_id: int
-) -> Union[UJSONResponse, Dict[str, str]]:
+async def get_any_user(request: Request, user_id: int) -> Union[UJSONResponse, Dict[str, str]]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(
-        user_id=user_id
-    )
+    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id=user_id)
     if data:
         return UJSONResponse(dict(data))
     return UJSONResponse({"error": "The given user was not found"}, status_code=400)
@@ -167,6 +163,7 @@ async def get_admin_userlist(request: Request, page: int = 1):
     data = await request.app.state.db.get_admin_userlist(page)
     return UJSONResponse(data)
 
+
 @router.get(
     "/admin/users/count",
     tags=["admin"],
@@ -249,7 +246,7 @@ async def get_server_stats(request: Request):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     data = {
-        "memory": PROC.memory_full_info().uss / 1024 ** 2,
+        "memory": PROC.memory_full_info().uss / 1024**2,
         "memory_percent": PROC.memory_percent(memtype="uss"),
         "cpu_percent": PROC.cpu_percent(),
         "uptime": (datetime.datetime.utcnow() - START_TIME).total_seconds(),
@@ -273,9 +270,7 @@ async def get_server_stats(request: Request):
     name="Retrieve paste file(s)",
 )
 @limit("admin", "admin")
-async def get_paste(
-    request: Request, paste_id: str, password: Optional[str] = None
-) -> Response:
+async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Response:
     """Get a paste from MystBin."""
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -294,9 +289,7 @@ async def get_paste(
     #    include_in_schema=False
 )
 @limit("admin", "admin")
-async def get_all_pastes(
-    request: Request, count: int, page: Optional[int] = 0, oldest_first: bool = False
-):
+async def get_all_pastes(request: Request, count: int, page: Optional[int] = 0, oldest_first: bool = False):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -305,10 +298,4 @@ async def get_all_pastes(
     elif count < 1:
         return UJSONResponse({"error": "Count must be greater than 1"}, status_code=421)
 
-    return UJSONResponse(
-        {
-            "pastes": await request.app.state.db.get_all_pastes(
-                page, count, reverse=oldest_first
-            )
-        }
-    )
+    return UJSONResponse({"pastes": await request.app.state.db.get_all_pastes(page, count, reverse=oldest_first)})

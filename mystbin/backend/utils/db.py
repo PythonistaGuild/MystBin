@@ -91,16 +91,12 @@ class Database:
 
     async def __ainit__(self):
         await asyncio.sleep(5)
-        self._pool = await asyncpg.create_pool(
-            self._config["dsn"], max_inactive_connection_lifetime=0
-        )
+        self._pool = await asyncpg.create_pool(self._config["dsn"], max_inactive_connection_lifetime=0)
         with open(self._db_schema) as schema:
             await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(
-        self, query, *args, conn: asyncpg.Connection = None
-    ) -> Optional[List[asyncpg.Record]]:
+    async def _do_query(self, query, *args, conn: asyncpg.Connection = None) -> Optional[List[asyncpg.Record]]:
         if self._pool is None:
             await self.__ainit__()
 
@@ -116,9 +112,7 @@ class Database:
             return response
 
     @wrapped_hook_callback
-    async def get_all_pastes(
-        self, page: int, count: int, reverse=False
-    ) -> List[Dict[str, Any]]:
+    async def get_all_pastes(self, page: int, count: int, reverse=False) -> List[Dict[str, Any]]:
         """
         Gets the most recent pastes (20) of them, or oldest if reverse is True
 
@@ -143,9 +137,7 @@ class Database:
     # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
     # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the
     # process twice
-    async def get_paste(
-        self, paste_id: str, password: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    async def get_paste(self, paste_id: str, password: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Get the specified paste.
         Parameters
         ------------
@@ -333,9 +325,7 @@ class Database:
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
-            resp = await self._do_query(
-                query, paste_id, author, expires, password, origin_ip, conn=conn
-            )
+            resp = await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn)
 
             resp = resp[0]
             to_insert = []
@@ -405,9 +395,7 @@ class Database:
                 RETURNING *;
                 """
 
-        response = await self._do_query(
-            query, new_content, new_content.count("\n"), new_nick, paste_id, author_id
-        )
+        response = await self._do_query(query, new_content, new_content.count("\n"), new_nick, paste_id, author_id)
 
         return response[0] if response else None
 
@@ -475,11 +463,9 @@ class Database:
             resp["pages"] = [{a: str(b) for a, b in x.items()} for x in data]
 
             return resp
-    
+
     @wrapped_hook_callback
-    async def set_paste_password(
-        self, paste_id: str, password: str | None
-    ) -> Optional[asyncpg.Record]:
+    async def set_paste_password(self, paste_id: str, password: str | None) -> Optional[asyncpg.Record]:
         """Sets a password for the specified paste.
         This is for use by the cli module.
 
@@ -489,7 +475,7 @@ class Database:
             The id of the paste to update the password for
         password: :class:`str`
             The password to use
-        
+
         Returns
         ---------
         Optional[:class:`asyncpg.Record`]
@@ -503,9 +489,7 @@ class Database:
         return await self._do_query(query, paste_id, password)
 
     @wrapped_hook_callback
-    async def get_all_user_pastes(
-        self, author_id: Optional[int], limit: Optional[int] = None
-    ) -> List[asyncpg.Record]:
+    async def get_all_user_pastes(self, author_id: Optional[int], limit: Optional[int] = None) -> List[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
@@ -577,9 +561,7 @@ class Database:
         return response[0] if response else None
 
     @wrapped_hook_callback
-    async def get_user(
-        self, *, user_id: int = None, token: str = None
-    ) -> Optional[Union[asyncpg.Record, int]]:
+    async def get_user(self, *, user_id: int = None, token: str = None) -> Optional[Union[asyncpg.Record, int]]:
         """Returns a User on successful query.
 
         Parameters
@@ -742,9 +724,7 @@ class Database:
         elif account == "discord":
             query = "UPDATE users SET discord_id = null WHERE id = $1 AND discord_id is not null RETURNING id"
         else:
-            raise ValueError(
-                f"Expected account to be one of google, github, or discord. Not '{account}'"
-            )
+            raise ValueError(f"Expected account to be one of google, github, or discord. Not '{account}'")
 
         return bool(await self._do_query(query, user_id))
 
@@ -828,9 +808,7 @@ class Database:
         return len(val) > 0
 
     @wrapped_hook_callback
-    async def regen_token(
-        self, *, userid: int = None, token: str = None
-    ) -> Optional[str]:
+    async def regen_token(self, *, userid: int = None, token: str = None) -> Optional[str]:
         """Generates a new token for the given user id or token.
         Returns the new token, or None if the user does not exist.
         """
@@ -878,9 +856,7 @@ class Database:
         data = await self._do_query(query, userid)
         return [dict(x) for x in data]
 
-    async def create_bookmark(
-        self, userid: int, paste_id: str
-    ):  # doesnt return anything, no need for a hook
+    async def create_bookmark(self, userid: int, paste_id: str):  # doesnt return anything, no need for a hook
         """creates a bookmark for a user"""
         query = """
                 INSERT INTO bookmarks (userid, paste) VALUES ($1, $2)
@@ -891,9 +867,7 @@ class Database:
         except asyncpg.UniqueViolationError:
             raise ValueError("This paste is already bookmarked")
         except asyncpg.ForeignKeyViolationError:
-            raise ValueError(
-                "This paste does not exist"
-            )  # its an auth'ed endpoint, so the user has to exist
+            raise ValueError("This paste does not exist")  # its an auth'ed endpoint, so the user has to exist
 
     async def delete_bookmark(self, userid: int, paste_id: str) -> bool:
         """deletes a users bookmark"""
@@ -952,9 +926,7 @@ class Database:
         return False
 
     @wrapped_hook_callback
-    async def get_admin_userlist(
-        self, page: int
-    ) -> Dict[str, Union[List[Dict[str, Union[int, bool, None]]], int]]:
+    async def get_admin_userlist(self, page: int) -> Dict[str, Union[List[Dict[str, Union[int, bool, None]]], int]]:
         query = """
                 SELECT
                     id,
@@ -970,7 +942,6 @@ class Database:
         async with self._pool.acquire() as conn:
             users = await self._do_query(query, page - 1, conn=conn)
             pageinfo = (await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn))[0]["count"]
-
 
         users = [
             {
@@ -1000,15 +971,11 @@ class Database:
         return data[0]["count"]
 
     @wrapped_hook_callback
-    async def search_bans(
-        self, *, ip=None, userid=None, search=None
-    ) -> Union[Optional[str], List[Dict[str, Any]]]:
+    async def search_bans(self, *, ip=None, userid=None, search=None) -> Union[Optional[str], List[Dict[str, Any]]]:
         assert any((ip, userid, search))
         if not self.ban_cache:
             if ip and userid:
-                r = await self._do_query(
-                    "SELECT reason FROM bans WHERE ip = $1 OR userid = $2", ip, userid
-                )
+                r = await self._do_query("SELECT reason FROM bans WHERE ip = $1 OR userid = $2", ip, userid)
                 return r[0]["reason"] if r else None
 
             if ip:  # quick path: select directly from the db
@@ -1040,9 +1007,7 @@ class Database:
         matcher.set_seq1(search)
         close = []
 
-        if (
-            "." in search
-        ):  # a really stupid way to detect a possible ip, but hey, it works
+        if "." in search:  # a really stupid way to detect a possible ip, but hey, it works
             for ban in self.ban_cache:
                 if not ban["ip"]:
                     continue

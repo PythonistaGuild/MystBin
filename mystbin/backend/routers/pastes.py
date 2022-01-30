@@ -61,9 +61,7 @@ def enforce_paste_limit(app, paste: payloads.PastePost, n=1):
 def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
     filelim = app.config["paste"]["character_limit"]
     if len(pastes.files) < 1:
-        return UJSONResponse(
-            {"error": "files.length: you have not provided any files"}, status_code=400
-        )
+        return UJSONResponse({"error": "files.length: you have not provided any files"}, status_code=400)
     if len(pastes.files) > filelim:
         return UJSONResponse(
             {
@@ -89,17 +87,13 @@ async def upload_to_gist(request: Request, tokens: str):
     filename = "output.txt"
     data = {"public": True, "files": {filename: {"content": tokens}}}
 
-    async with request.app.state.client.post(
-        "https://api.github.com/gists", headers=headers, data=data
-    ) as resp:
+    async with request.app.state.client.post("https://api.github.com/gists", headers=headers, data=data) as resp:
         if 300 > resp.status >= 200:
             return await resp.json()
         resp.raise_for_status()
 
 
-async def find_discord_tokens(
-    request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]
-):
+async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]):
     if not request.app.config["apps"].get("github_bot_token", None):
         return None
 
@@ -122,13 +116,7 @@ async def find_discord_tokens(
     response_model=responses.PastePostResponse,
     responses={
         201: {"model": responses.PastePostResponse},
-        400: {
-            "content": {
-                "application/json": {
-                    "example": {"error": "files.length: You have provided a bad paste"}
-                }
-            }
-        },
+        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided a bad paste"}}}},
     },
     status_code=201,
     name="Create a paste with a single file.",
@@ -176,13 +164,7 @@ async def post_paste(
     response_model=responses.PastePostResponse,
     responses={
         201: {"model": responses.PastePostResponse},
-        400: {
-            "content": {
-                "application/json": {
-                    "example": {"error": "files.length: You have provided a bad paste"}
-                }
-            }
-        },
+        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided a bad paste"}}}},
     },
     status_code=201,
     name="Create a paste with multiple files.",
@@ -237,9 +219,7 @@ async def put_pastes(
     name="Retrieve paste file(s)",
 )
 @limit("getpaste", "zones.pastes.get")
-async def get_paste(
-    request: Request, paste_id: str, password: Optional[str] = None
-) -> UJSONResponse:
+async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> UJSONResponse:
     """Get a paste from MystBin."""
     paste = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
@@ -345,9 +325,7 @@ async def edit_paste(
     name="Delete paste",
 )
 @limit("deletepaste", "zones.pastes.delete")
-async def delete_paste(
-    request: Request, paste_id: str = None
-) -> Union[UJSONResponse, Dict[str, str]]:
+async def delete_paste(request: Request, paste_id: str = None) -> Union[UJSONResponse, Dict[str, str]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
     """
@@ -360,9 +338,7 @@ async def delete_paste(
         if not is_owner:
             return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    deleted: Record = await request.app.state.db.delete_paste(
-        paste_id, user["id"], admin=False
-    )
+    deleted: Record = await request.app.state.db.delete_paste(paste_id, user["id"], admin=False)
 
     return UJSONResponse({"deleted": deleted["id"]}, status_code=200)
 

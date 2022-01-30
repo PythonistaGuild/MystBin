@@ -74,9 +74,7 @@ class Limit(object):
         Check if the limit is exempt.
         Return True to exempt the route from the limit.
         """
-        return (
-            await self.exempt_when(request) if self.exempt_when is not None else False
-        )
+        return await self.exempt_when(request) if self.exempt_when is not None else False
 
     @property
     def scope(self) -> str:
@@ -85,11 +83,7 @@ class Limit(object):
         if self.__scope is None:
             return ""
         else:
-            return (
-                self.__scope(request.endpoint)  # noqa
-                if callable(self.__scope)
-                else self.__scope
-            )
+            return self.__scope(request.endpoint) if callable(self.__scope) else self.__scope  # noqa
 
 
 class LimitGroup(object):
@@ -140,9 +134,7 @@ class LimitGroup(object):
 
 
 class Limiter(slowapi.Limiter):
-    async def __evaluate_limits(
-        self, request: Request, endpoint: str, limits: List[Limit]
-    ) -> None:
+    async def __evaluate_limits(self, request: Request, endpoint: str, limits: List[Limit]) -> None:
         failed_limit = None
         limit_for_header = None
         for lim in limits:
@@ -177,9 +169,7 @@ class Limiter(slowapi.Limiter):
                     limit_for_header = (lim.limit, args)
                     break
             else:
-                self.logger.error(
-                    "Skipping limit: %s. Empty value found in parameters.", lim.limit
-                )
+                self.logger.error("Skipping limit: %s. Empty value found in parameters.", lim.limit)
                 continue
         # keep track of which limit was hit, to be picked up for the response header
         request.state.view_rate_limit = limit_for_header
@@ -245,20 +235,10 @@ class Limiter(slowapi.Limiter):
                         all_limits = list(itertools.chain(*self._in_memory_fallback))
             if not all_limits:
                 route_limits: List[Limit] = limits + dynamic_limits
-                all_limits = (
-                    list(itertools.chain(*self._application_limits))
-                    if in_middleware
-                    else []
-                )
+                all_limits = list(itertools.chain(*self._application_limits)) if in_middleware else []
                 all_limits += route_limits
-                combined_defaults = all(
-                    not limit.override_defaults for limit in route_limits
-                )
-                if (
-                    not route_limits
-                    and not (in_middleware and name in self.__marked_for_limiting)
-                    or combined_defaults
-                ):
+                combined_defaults = all(not limit.override_defaults for limit in route_limits)
+                if not route_limits and not (in_middleware and name in self.__marked_for_limiting) or combined_defaults:
                     all_limits += list(itertools.chain(*self._default_limits))
             # actually check the limits, so far we've only computed the list of limits to check
             await self.__evaluate_limits(request, endpoint, all_limits)
@@ -266,10 +246,7 @@ class Limiter(slowapi.Limiter):
             if isinstance(e, RateLimitExceeded):
                 raise
             if self._in_memory_fallback_enabled and not self._storage_dead:
-                self.logger.warn(
-                    "Rate limit storage unreachable - falling back to"
-                    " in-memory storage"
-                )
+                self.logger.warn("Rate limit storage unreachable - falling back to" " in-memory storage")
                 self._storage_dead = True
                 await self._check_request_limit(request, endpoint_func, in_middleware)
             else:
@@ -341,9 +318,7 @@ class Limiter(slowapi.Limiter):
                     _ = parameter.name
                     break
             else:
-                raise Exception(
-                    f'No "request" or "websocket" argument on function "{func}"'
-                )
+                raise Exception(f'No "request" or "websocket" argument on function "{func}"')
 
             if asyncio.iscoroutinefunction(func):
                 # Handle async request/response functions.
@@ -352,9 +327,7 @@ class Limiter(slowapi.Limiter):
                     # get the request object from the decorated endpoint function
                     request = kwargs.get("request", args[idx] if args else None)
                     if not isinstance(request, Request):
-                        raise Exception(
-                            "parameter `request` must be an instance of starlette.requests.Request"
-                        )
+                        raise Exception("parameter `request` must be an instance of starlette.requests.Request")
 
                     if not getattr(request.state, "_rate_limiting_complete", False):
                         try:
@@ -408,9 +381,7 @@ async def _fetch_user(request: Request):
             WHERE token = $1;
             """
 
-    user = await request.app.state.db._do_query(
-        query, auth.replace("Bearer ", ""), request.client.host
-    )
+    user = await request.app.state.db._do_query(query, auth.replace("Bearer ", ""), request.client.host)
     if not user:
         return
 
@@ -457,11 +428,7 @@ def limit(t, scope=None):
             key_func=ratelimit_key,  # noqa
             exempt_when=_ignores_ratelimits,  # noqa
         )  # noqa
-    return global_limiter.limit(
-        _limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits  # noqa
-    )
+    return global_limiter.limit(_limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits)  # noqa
 
 
-global_limiter = Limiter(
-    ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True  # noqa
-)
+global_limiter = Limiter(ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True)  # noqa

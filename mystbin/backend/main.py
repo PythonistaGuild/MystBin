@@ -49,9 +49,7 @@ except ModuleNotFoundError:
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
-    def __init__(
-        self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path = None
-    ):
+    def __init__(self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path = None):
         loop = loop or asyncio.get_event_loop_policy().get_event_loop()
         with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
@@ -65,9 +63,7 @@ class MystbinApp(FastAPI):
             docs_url=None,
         )
         self.state.limiter = ratelimits.global_limiter
-        self.add_exception_handler(
-            ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler
-        )
+        self.add_exception_handler(ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler)
         self.should_close = False
 
 
@@ -87,17 +83,17 @@ async def request_stats(request: Request, call_next):
 
 @app.on_event("startup")
 async def app_startup():
-    """ Async app startup. """
+    """Async app startup."""
     app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
 
-    if __name__ == "__main__": # for testing
+    if __name__ == "__main__":  # for testing
         from utils.cli import CLIHandler
+
         app.state.cliserver = CLIHandler(app)
         asyncio.get_event_loop().create_task(app.state.cliserver.parse_cli())
-
 
 
 if probe is not None:
@@ -130,14 +126,13 @@ except KeyError:
     pass
 else:
     traces_sample_rate = app.config["sentry"].get("traces_sample_rate", 0.3)
-    sentry_sdk.init(
-        dsn=sentry_dsn, traces_sample_rate=traces_sample_rate, attach_stacktrace=True
-    )
+    sentry_sdk.init(dsn=sentry_dsn, traces_sample_rate=traces_sample_rate, attach_stacktrace=True)
 
     app.add_middleware(SentryAsgiMiddleware)
 
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics/", metrics)
+
 
 class UvicornServer(uvicorn.Server):
     async def main_loop(self) -> None:
@@ -147,7 +142,8 @@ class UvicornServer(uvicorn.Server):
             counter += 1
             counter = counter % 864000
             await asyncio.sleep(0.1)
-            should_exit = await self.on_tick(counter) or self.config.app.should_close # type: ignore
+            should_exit = await self.on_tick(counter) or self.config.app.should_close  # type: ignore
+
 
 if __name__ == "__main__":
     config = uvicorn.Config(app, port=app.config["site"]["backend_port"])

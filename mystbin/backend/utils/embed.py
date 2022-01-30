@@ -31,7 +31,7 @@ class Embed:
         colour: int = 0,
         author: Optional[Dict[str, str]] = None,
         timestamp: Optional[datetime.datetime] = None,
-        footer: Optional[Dict[str, str]] = None
+        footer: Optional[Dict[str, str]] = None,
     ) -> None:
         self.title = title
         self.description = description

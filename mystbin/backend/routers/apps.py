@@ -48,9 +48,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
-    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
-        "/discord_auth"
-    )
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path("/discord_auth")
 
     data = {
         "client_id": client_id,
@@ -78,15 +76,11 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
         email = [data["email"]]
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(
-            request.state.user["id"], discord_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(request.state.user["id"], discord_id=userid, emails=email)
         return {"token": token}
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(
-            _id, discord_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(_id, discord_id=userid, emails=email)
         return UJSONResponse({"token": token})
 
     else:
@@ -113,9 +107,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
-    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
-        "/google_auth"
-    )
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path("/google_auth")
 
     data = {
         "client_id": client_id,
@@ -126,9 +118,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with request.app.state.client.post(
-        "https://oauth2.googleapis.com/token", data=data, headers=headers
-    ) as resp:
+    async with request.app.state.client.post("https://oauth2.googleapis.com/token", data=data, headers=headers) as resp:
         resp.raise_for_status()
         data = await resp.json()
         token = data["access_token"]
@@ -143,15 +133,11 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         userid = data["id"]
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(
-            request.state.user["id"], google_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(request.state.user["id"], google_id=userid, emails=email)
         return UJSONResponse({"token": token})
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(
-            _id, google_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(_id, google_id=userid, emails=email)
         return UJSONResponse({"token": token})
 
     else:
@@ -178,9 +164,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
-    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(
-        "/github_auth"
-    )
+    url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path("/github_auth")
 
     data = {
         "client_id": client_id,
@@ -222,15 +206,11 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
             email.append(entry["email"])
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(
-            request.state.user["id"], github_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(request.state.user["id"], github_id=userid, emails=email)
         return UJSONResponse({"token": token})
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(
-            _id, github_id=userid, emails=email
-        )
+        token = await request.app.state.db.update_user(_id, github_id=userid, emails=email)
         return UJSONResponse({"token": token})
 
     else:
@@ -265,9 +245,7 @@ async def sentry_callback(request: Request):
         f"Times seen: {data['data']['issue']['count']}\n"
         f"Errored at: {data['data']['issue']['culprit']}"
     )
-    timestamp = datetime.datetime.strptime(
-        data["data"]["issue"]["lastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
-    )
+    timestamp = datetime.datetime.strptime(data["data"]["issue"]["lastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ")
     footer = {
         "text": "Last seen at:",
         "icon_url": "https://cdn.discordapp.com/avatars/698366484975714355/9bad78779883b3bd6dfd4022d997e406.png",
@@ -282,8 +260,6 @@ async def sentry_callback(request: Request):
     )
 
     if request.app.state.webhook_url:
-        await request.app.state.client.post(
-            request.app.state.webhook_url, json={"embeds": [embed.to_dict()]}
-        )
+        await request.app.state.client.post(request.app.state.webhook_url, json={"embeds": [embed.to_dict()]})
 
     return Response(status_code=204)
