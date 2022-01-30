@@ -19,7 +19,7 @@ def find_disallowed_args(ns: argparse.Namespace, args: list[str], allowed_values
 class CLIHandler:
     def __init__(self, app: MystbinApp) -> None:
         self.app = app
-        self.db: Database = None  # type: ignore
+        self.db: Database = app.state.db
         self.parser = argparse.ArgumentParser(
             prog="Mystbin",
             description="the Mystbin backend command-line tool",
