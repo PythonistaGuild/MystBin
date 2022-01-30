@@ -117,7 +117,7 @@ class CLIHandler:
                 )
                 return
 
-            resp = await self.db.delete_paste(namespace.delete)
+            resp = await self.db.delete_paste(namespace.delete, admin=True)
             if resp:
                 author = f"by user {resp['author_id']} " if resp["author_id"] else ""
                 password = f"and password '{resp['password']}'" if resp["password"] else ""
