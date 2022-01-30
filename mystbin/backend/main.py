@@ -88,7 +88,7 @@ async def request_stats(request: Request, call_next):
 @app.on_event("startup")
 async def app_startup():
     """ Async app startup. """
-    #app.state.db = await Database(app).__ainit__()
+    app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
