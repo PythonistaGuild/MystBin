@@ -70,8 +70,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 
   if (response.status === 404) {
     return {
-      notFound: true
-    }
+      notFound: true,
+    };
   }
 
   let paste = await response.json();
