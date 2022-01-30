@@ -52,7 +52,7 @@ class MystbinApp(FastAPI):
     def __init__(
         self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path = None
     ):
-        loop = loop or asyncio.get_event_loop()
+        loop = loop or asyncio.get_event_loop_policy().get_event_loop()
         with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
 
@@ -68,6 +68,7 @@ class MystbinApp(FastAPI):
         self.add_exception_handler(
             ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler
         )
+        self.should_close = False
 
 
 app = MystbinApp()
@@ -87,10 +88,16 @@ async def request_stats(request: Request, call_next):
 @app.on_event("startup")
 async def app_startup():
     """ Async app startup. """
-    app.state.db = await Database(app).__ainit__()
+    #app.state.db = await Database(app).__ainit__()
     app.state.client = aiohttp.ClientSession()
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
+
+    if __name__ == "__main__": # for testing
+        from utils.cli import CLIHandler
+        app.state.cliserver = CLIHandler(app)
+        asyncio.get_event_loop().create_task(app.state.cliserver.parse_cli())
+
 
 
 if probe is not None:
@@ -132,6 +139,17 @@ else:
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics/", metrics)
 
+class UvicornServer(uvicorn.Server):
+    async def main_loop(self) -> None:
+        counter = 0
+        should_exit = await self.on_tick(counter)
+        while not should_exit:
+            counter += 1
+            counter = counter % 864000
+            await asyncio.sleep(0.1)
+            should_exit = await self.on_tick(counter) or self.config.app.should_close # type: ignore
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=app.config["site"]["backend_port"]) # type: ignore
+    config = uvicorn.Config(app, port=app.config["site"]["backend_port"])
+    server = UvicornServer(config)
+    server.run()

@@ -13,3 +13,4 @@ typing-extensions==4.0.1
 ujson==5.1.0
 uvicorn[standard]==0.17.0
 yarl
+aioconsole
