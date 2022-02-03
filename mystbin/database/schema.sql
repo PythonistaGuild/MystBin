@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     google_id TEXT,
     admin BOOLEAN DEFAULT false,
     theme TEXT DEFAULT 'dark',
-    subscriber BOOLEAN DEFAULT false
+    subscriber BOOLEAN DEFAULT false,
+    username TEXT
 );
 
 CREATE TABLE IF NOT EXISTS pastes (

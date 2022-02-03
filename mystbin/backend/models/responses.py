@@ -68,6 +68,7 @@ class TokenResponse(BaseModel):
 
 class User(BaseModel):
     id: int
+    username: str
     token: str
     emails: List[str]
     discord_id: Optional[str]
@@ -80,6 +81,7 @@ class User(BaseModel):
 
 class SmallUser(BaseModel):
     id: int
+    username: str
     authorizations: List[str]
     admin: bool
     theme: str

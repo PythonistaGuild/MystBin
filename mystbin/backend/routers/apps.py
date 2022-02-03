@@ -74,6 +74,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
         data = await resp.json()
         userid = data["id"]
         email = [data["email"]]
+        username = f"{data['username']}#{data['discriminator']}"
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(request.state.user["id"], discord_id=userid, emails=email)
@@ -84,7 +85,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
         return UJSONResponse({"token": token})
 
     else:
-        data = await request.app.state.db.new_user(email, userid)
+        data = await request.app.state.db.new_user(email, username, userid)
         return UJSONResponse({"token": data["token"]})
 
 
@@ -131,6 +132,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         data = await resp.json()
         email = [data["email"]]
         userid = data["id"]
+        username = data["username"]
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(request.state.user["id"], google_id=userid, emails=email)
@@ -141,7 +143,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         return UJSONResponse({"token": token})
 
     else:
-        data = await request.app.state.db.new_user(email, google_id=userid)
+        data = await request.app.state.db.new_user(email, username, google_id=userid)
         return UJSONResponse({"token": data["token"]})
 
 
@@ -191,6 +193,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         resp.raise_for_status()
         data = await resp.json()
         userid = data["id"]
+        username = data["name"]
 
     async with request.app.state.client.get(
         "https://api.github.com/user/emails",
@@ -214,7 +217,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         return UJSONResponse({"token": token})
 
     else:
-        data = await request.app.state.db.new_user(email, github_id=userid)
+        data = await request.app.state.db.new_user(email, username, github_id=userid)
         return UJSONResponse({"token": data["token"]})
 
 

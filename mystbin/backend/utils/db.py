@@ -611,6 +611,7 @@ class Database:
     async def new_user(
         self,
         emails: List[str],
+        username: str,
         discord_id: str = None,
         github_id: str = None,
         google_id: str = None,
@@ -639,7 +640,7 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, false, DEFAULT, false)
+                VALUES ($1, $2, $3, $4, $5, $6, false, DEFAULT, false, $7)
                 RETURNING *;
                 """
 
@@ -651,6 +652,7 @@ class Database:
             discord_id and str(discord_id),
             github_id and str(github_id),
             google_id and str(google_id) or None,
+            username
         )
         return data[0]
 
@@ -942,6 +944,7 @@ class Database:
         query = """
                 SELECT
                     id,
+                    username,
                     github_id,
                     discord_id,
                     google_id,
