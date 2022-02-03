@@ -210,7 +210,7 @@ class CLIHandler:
         
         elif namespace.list:
             users = await self.db.list_admin()
-            resp = tabulate.tabulate(users, headers=["User ID", "Discord ID", "Github ID", "Google ID"], tablefmt="psql")
+            resp = tabulate.tabulate([list(x.values()) for x in users], headers=["User ID", "Discord ID", "Github ID", "Google ID"], tablefmt="psql")
             await aioconsole.aprint(resp)
 
     async def command_users(self, namespace: argparse.Namespace) -> None:
