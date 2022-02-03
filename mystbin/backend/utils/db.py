@@ -745,13 +745,20 @@ class Database:
         if data:
             return data[0]["id"]
 
-    async def toggle_admin(self, userid: int, admin: bool) -> None:
+    async def toggle_admin(self, userid: int, admin: bool) -> bool:
         """Quick query to toggle admin privileges."""
         query = """
-                UPDATE users SET admin = $1 WHERE id = $2
+                UPDATE users SET admin = $1 WHERE id = $2 RETURNING id
                 """
 
-        await self._do_query(query, admin, userid)
+        return bool(await self._do_query(query, admin, userid))
+    
+    async def list_admin(self) -> List[asyncpg.Record]:
+        query = """
+        SELECT id, discord_id, github_id, google_id FROM users WHERE admin = true
+        """
+        resp = await self._do_query(query)
+        return resp or []
 
     @wrapped_hook_callback
     async def ban_user(self, userid: int = None, ip: str = None, reason: str = None):

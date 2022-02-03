@@ -6,6 +6,7 @@ import shlex
 from typing import TYPE_CHECKING, Any, Optional
 
 import aioconsole
+import tabulate
 
 if TYPE_CHECKING:
     from main import MystbinApp
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
 def find_disallowed_args(ns: argparse.Namespace, args: list[str], allowed_values: tuple = (None, False)) -> list[str]:
     return [arg for arg in args if getattr(ns, arg) not in allowed_values]
 
+class Interrupt(Exception):
+    pass
 
 class CLIHandler:
     def __init__(self, app: MystbinApp) -> None:
@@ -47,8 +50,8 @@ class CLIHandler:
         self.subparser_paste.add_argument(
             "--list",
             "-l",
-            help="list all pastes in the order they were created (most recent first)",
-            action="store_true",
+            help="list all pastes in the order they were created (most recent first). 50 per page",
+            metavar="PAGE"
         )
 
         self.subparser_admin = self.subparsers.add_parser(
@@ -99,7 +102,10 @@ class CLIHandler:
 
             cb = getattr(self, f"command_{ns.command}", None)
             if cb:
-                await cb(ns)
+                try:
+                    await cb(ns)
+                except Interrupt:
+                    pass
 
     # subcommands
 
@@ -108,7 +114,21 @@ class CLIHandler:
 
     async def command_paste(self, namespace: argparse.Namespace) -> None:
         if namespace.list:
-            ...
+            try:
+                page = max(int(namespace.list) - 1, 0)
+            except:
+                print(f"Paste: Expected a page number, got '{namespace.list}'")
+                return
+            
+            paste_info = await self.db.get_all_pastes(page, 50)
+            if not paste_info:
+                print(f"Paste: Page {page} not found")
+                return
+            
+            tabled = tabulate.tabulate([list(x.values()) for x in paste_info], headers=["id", "author id", "created at", "views", "expires", "origin ip", "has password"], tablefmt="psql")
+            await aioconsole.aprint(tabled)
+            
+            print(f"Paste: Showing {len(paste_info)} pastes (page {page+1})")
 
         elif namespace.delete:
             if bad_args := find_disallowed_args(namespace, ["remove_password", "list", "set_password"]):
@@ -153,11 +173,45 @@ class CLIHandler:
                 print(f"Paste '{namespace.remove_password}' not found")
 
         else:
-            print("Paste: one argument must be passed")
+            print("Paste: One argument must be passed")
             self.subparser_paste.print_help()
 
     async def command_admin(self, namespace: argparse.Namespace) -> None:
-        ...
+        def _try_userid(uid: str) -> int:
+            try:
+                return int(uid)
+            except:
+                print(f"Admin: Expected a user id, got '{uid}'")
+                raise Interrupt
+            
+        if namespace.add:
+            if bad_args := find_disallowed_args(namespace, ["remove", "list"]):
+                print(
+                    f"Admin: The following args cannot be used with the `add` argument: {','.join(bad_args)}"
+                )
+                return
+
+            if await self.db.toggle_admin(_try_userid(namespace.add), True):
+                print(f"{namespace.add} is now an admin")
+            else:
+                print("Admin: User not found")
+        
+        elif namespace.remove:
+            if bad_args := find_disallowed_args(namespace, ["add", "list"]):
+                print(
+                    f"Admin: The following args cannot be used with the `remove` argument: {','.join(bad_args)}"
+                )
+                return
+            
+            if await self.db.toggle_admin(_try_userid(namespace.add), False):
+                print(f"{namespace.add} is now not an admin")
+            else:
+                print("Admin: User not found")
+        
+        elif namespace.list:
+            users = await self.db.list_admin()
+            resp = tabulate.tabulate(users, headers=["User ID", "Discord ID", "Github ID", "Google ID"], tablefmt="psql")
+            await aioconsole.aprint(resp)
 
     async def command_users(self, namespace: argparse.Namespace) -> None:
         ...
