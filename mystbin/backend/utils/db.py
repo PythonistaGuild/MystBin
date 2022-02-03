@@ -757,7 +757,7 @@ class Database:
     
     async def list_admin(self) -> List[asyncpg.Record]:
         query = """
-        SELECT id, discord_id, github_id, google_id FROM users WHERE admin = true
+        SELECT id, username, discord_id, github_id, google_id FROM users WHERE admin = true
         """
         resp = await self._do_query(query)
         return resp or []
