@@ -68,13 +68,7 @@ class CLIHandler:
         self.subparser_users = self.subparsers.add_parser(
             "users", help="subcommand to manage user accounts. use 'users -h' to see more info"
         )
-        self.subparser_users.add_argument("--list", "-l", help="list all users", action="store_true")
-        self.subparser_users.add_argument(
-            "--remove",
-            "-r",
-            help="remove the target user's account. this will delete all pastes linked to the account.",
-            metavar="USERID",
-        )
+        self.subparser_users.add_argument("--list", "-l", help="list all users. 50 per page", metavar="PAGE")
 
     async def parse_cli(self) -> None:
         await asyncio.sleep(1)  # wait until app startup and until the prints are done
@@ -214,7 +208,24 @@ class CLIHandler:
             await aioconsole.aprint(resp)
 
     async def command_users(self, namespace: argparse.Namespace) -> None:
-        ...
+        if namespace.list:
+            try:
+                page = int(namespace.list)
+            except:
+                print(f"Users: expected an int, got {namespace.list!r}")
+                return
+            
+            users: dict = (await self.db.get_admin_userlist(page))['users'] # type: ignore
+            if not users:
+                print("Users: No users found")
+                return
+            
+            for user in users:
+                user['authorizations'] = ", ".join(user['authorizations'])
+            
+            fmt = tabulate.tabulate([list(x.values()) for x in users], headers=list(users[0].keys()), tablefmt="psql")
+            await aioconsole.aprint(fmt)
+        
 
     async def command_exit(self, _) -> None:
         self.app.should_close = True
