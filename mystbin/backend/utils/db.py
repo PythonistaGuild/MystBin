@@ -961,6 +961,7 @@ class Database:
         users = [
             {
                 "id": x["id"],
+                "username": x["username"],
                 "admin": x["admin"],
                 "theme": x["theme"],
                 "subscriber": x["subscriber"],
