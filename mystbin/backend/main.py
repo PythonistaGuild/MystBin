@@ -20,7 +20,7 @@ import asyncio
 import datetime
 import os
 import pathlib
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiohttp
 import sentry_sdk
@@ -36,21 +36,11 @@ from routers import admin, apps, pastes, user
 from utils import ratelimits
 from utils.db import Database
 
-try:
-    from blackfire import (
-        probe,
-    )  # blackfire is used for debugging the memory heap. https://blackfire.io
-
-    probe.initialize()
-    probe.enable()
-except ModuleNotFoundError:
-    probe = None
-
 
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
-    def __init__(self, *, loop: asyncio.AbstractEventLoop = None, config: pathlib.Path = None):
+    def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
         loop = loop or asyncio.get_event_loop_policy().get_event_loop()
         with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
@@ -95,13 +85,6 @@ async def app_startup():
 
         app.state.cliserver = CLIHandler(app)
         asyncio.get_event_loop().create_task(app.state.cliserver.parse_cli())
-
-
-if probe is not None:
-
-    @app.on_event("shutdown")
-    async def app_shutdown():
-        probe.end()
 
 
 app.include_router(admin.router)
