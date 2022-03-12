@@ -9,3 +9,4 @@ config.json
 venv
 .next/
 .pytest_cache/
+notes.txt

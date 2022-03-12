@@ -28,13 +28,12 @@ from utils.ratelimits import limit
 
 router = APIRouter()
 
-
+@limit("apps")
 @router.post(
     "/users/connect/discord",
     response_model=responses.TokenResponse,
     include_in_schema=False,
 )
-@limit("apps", "zones.apps")
 async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
     try:
@@ -94,7 +93,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
     response_model=responses.TokenResponse,
     include_in_schema=False,
 )
-@limit("apps", "zones.apps")
+@limit("apps")
 async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
     try:
@@ -152,7 +151,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
     response_model=responses.TokenResponse,
     include_in_schema=False,
 )
-@limit("apps", "zones.apps")
+@limit("apps")
 async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
     try:
@@ -222,7 +221,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
 
 
 @router.delete("/users/connect/{app}")
-@limit("apps", "zones.apps")
+@limit("apps")
 async def disconnect_app(request: Request, app: str):
     if app not in ("github", "discord", "google"):
         return Response(status_code=404)

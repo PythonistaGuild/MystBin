@@ -23,8 +23,8 @@ import pathlib
 from typing import Any, Dict, Optional
 
 import aiohttp
+import aioredis
 import sentry_sdk
-import slowapi
 import ujson
 import uvicorn
 from fastapi import FastAPI, Request
@@ -40,8 +40,11 @@ from utils.db import Database
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
+    redis: Optional[aioredis.Redis]
+
     def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
-        loop = loop or asyncio.get_event_loop_policy().get_event_loop()
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
+
         with open(config or pathlib.Path("config.json")) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
 
@@ -49,12 +52,10 @@ class MystbinApp(FastAPI):
             title="MystBin",
             version="3.0.0",
             description="MystBin backend server",
-            loop=loop,
+            loop=self.loop,
             redoc_url="/docs",
             docs_url=None,
         )
-        self.state.limiter = ratelimits.global_limiter
-        self.add_exception_handler(ratelimits.RateLimitExceeded, slowapi._rate_limit_exceeded_handler)
         self.should_close = False
 
 
@@ -80,6 +81,18 @@ async def app_startup():
     app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
     app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
 
+    if app.config["redis"]["use-redis"]:
+        app.redis = aioredis.Redis(
+            host=app.config["redis"]["host"],
+            port=app.config["redis"]["port"],
+            username=app.config["redis"]["user"],
+            password=app.config["redis"]["password"],
+            db=app.config["redis"]["db"]
+        )
+    
+    ratelimits.limiter.startup(app)
+    app.middleware("http")(ratelimits.limiter.middleware)
+    
     if __name__ == "__main__":  # for testing
         from utils.cli import CLIHandler
 

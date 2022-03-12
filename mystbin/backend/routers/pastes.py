@@ -121,7 +121,7 @@ async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPas
     status_code=201,
     name="Create a paste with a single file.",
 )
-@limit("postpastes", "zones.pastes.post")
+@limit("postpastes")
 async def post_paste(
     request: Request,
     payload: payloads.PastePost,
@@ -169,7 +169,7 @@ async def post_paste(
     status_code=201,
     name="Create a paste with multiple files.",
 )
-@limit("postpastes", "zones.pastes.post")
+@limit("postpastes")
 async def put_pastes(
     request: Request,
     payload: payloads.ListedPastePut,
@@ -218,7 +218,7 @@ async def put_pastes(
     },
     name="Retrieve paste file(s)",
 )
-@limit("getpaste", "zones.pastes.get")
+@limit("getpaste")
 async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> UJSONResponse:
     """Get a paste from MystBin."""
     paste = await request.app.state.db.get_paste(paste_id, password)
@@ -242,7 +242,7 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
     },
     name="Get multiple pastes",
 )
-@limit("getpaste", "zones.pastes.get")
+@limit("getpaste")
 async def get_all_pastes(
     request: Request,
     limit: Optional[int] = None,
@@ -284,7 +284,7 @@ async def get_all_pastes(
     },
     name="Edit paste",
 )
-@limit("postpastes", "zones.pastes.post")
+@limit("postpastes")
 async def edit_paste(
     request: Request,
     paste_id: str,
@@ -324,7 +324,7 @@ async def edit_paste(
     status_code=200,
     name="Delete paste",
 )
-@limit("deletepaste", "zones.pastes.delete")
+@limit("deletepaste")
 async def delete_paste(request: Request, paste_id: str = None) -> Union[UJSONResponse, Dict[str, str]]:
     """Deletes pastes on MystBin.
     * Requires authentication.
@@ -363,7 +363,7 @@ async def delete_paste(request: Request, paste_id: str = None) -> Union[UJSONRes
     status_code=200,
     name="Delete pastes",
 )
-@limit("deletepaste", "zones.pastes.delete")
+@limit("deletepaste")
 async def delete_pastes(
     request: Request,
     payload: payloads.PasteDelete,
@@ -396,7 +396,7 @@ async def delete_pastes(
     deprecated=True,
     response_description='{"key": "string"}',
 )
-@limit("postpastes", "zones.pastes.post")
+@limit("postpastes")
 async def compat_create_paste(request: Request):
     """
     A compatibility endpoint to maintain hastbin compat. Depreciated in favour of /paste

@@ -65,7 +65,7 @@ async def get_any_user(request: Request, user_id: int) -> Union[UJSONResponse, D
     tags=["admin"],
     #             include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def ban_user(
     request: Request,
     user_id: int,
@@ -88,7 +88,7 @@ async def ban_user(
     tags=["admin"],
     #             include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def unban_user(
     request: Request,
     user_id: int,
@@ -110,7 +110,7 @@ async def unban_user(
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def subscribe_user(request: Request, user_id: int) -> UJSONResponse:
     """
     Gives a user subscriber access
@@ -128,7 +128,7 @@ async def subscribe_user(request: Request, user_id: int) -> UJSONResponse:
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def unsubscribe_user(request: Request, user_id: int) -> UJSONResponse:
     """
     Revokes a users subscriber access
@@ -148,7 +148,7 @@ async def unsubscribe_user(request: Request, user_id: int) -> UJSONResponse:
     responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
     #    include_in_schema=False,
 )
-@limit("admin", "admin")
+@limit("admin")
 async def get_admin_userlist(request: Request, page: int = 1):
     """
     Returns a list of smaller user objects
@@ -170,6 +170,7 @@ async def get_admin_userlist(request: Request, page: int = 1):
     response_model=responses.UserCount,
     responses={200: {"model": responses.UserCount}, 401: {"model": errors.Unauthorized}},
 )
+@limit("admin")
 async def get_admin_userlist(request: Request):
     """
     Returns a count of how many users there are
@@ -187,7 +188,7 @@ async def get_admin_userlist(request: Request):
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def search_bans(request: Request, search: str = None, page: int = 1):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -207,7 +208,7 @@ async def search_bans(request: Request, search: str = None, page: int = 1):
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def post_ban(request: Request, reason: str, ip: str = None, userid: int = None):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -221,7 +222,7 @@ async def post_ban(request: Request, reason: str, ip: str = None, userid: int = 
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def remove_ban(request: Request, ip: str = None, userid: int = None):
     if not ip and not userid:
         return UJSONResponse({"error": "Bad Request"}, status_code=400)
@@ -240,7 +241,7 @@ async def remove_ban(request: Request, ip: str = None, userid: int = None):
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def get_server_stats(request: Request):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -269,7 +270,7 @@ async def get_server_stats(request: Request):
     },
     name="Retrieve paste file(s)",
 )
-@limit("admin", "admin")
+@limit("admin")
 async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Response:
     """Get a paste from MystBin."""
     if not request.state.user or not request.state.user["admin"]:
@@ -288,7 +289,7 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
     tags=["admin"],
     #    include_in_schema=False
 )
-@limit("admin", "admin")
+@limit("admin")
 async def get_all_pastes(request: Request, count: int, page: Optional[int] = 0, oldest_first: bool = False):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)

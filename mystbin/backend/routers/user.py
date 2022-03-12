@@ -89,7 +89,7 @@ async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
         403: {"model": errors.Forbidden},
     },
 )
-@limit("bookmarks", "users.bookmarks")
+@limit("bookmarks")
 async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Creates a bookmark on the authorized user's account
     * Requires authentication.
@@ -114,7 +114,7 @@ async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
         403: {"model": errors.Forbidden},
     },
 )
-@limit("bookmarks", "users.bookmarks")
+@limit("bookmarks")
 async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Deletes a bookmark on the authorized user's account
     * Requires authentication.
@@ -139,7 +139,7 @@ async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
         403: {"model": errors.Forbidden},
     },
 )
-@limit("bookmarks", "users.bookmarks")
+@limit("bookmarks")
 async def get_bookmarks(request: Request):
     """Fetches all of the authorized users bookmarks
     * Requires authentication

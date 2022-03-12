@@ -1,373 +1,239 @@
-"""
-MIT License
-
-Copyright (c) 2020 Laurent Savaete
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-This simply makes the keyfunc and is_exempt func async functions
-"""
-
+from __future__ import annotations
 import asyncio
 import functools
-import inspect
-import itertools
-from typing import Any, Callable, Coroutine, Iterator, List, Optional, Union
+from itertools import count
+import time
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterator, List, Optional, Union, cast
 
-import slowapi
-from limits import RateLimitItem, parse_many  # type: ignore
-from slowapi.errors import RateLimitExceeded
-from slowapi.extension import StrOrCallableStr
+import aioredis
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
+from starlette.routing import Match
 
 from . import tokens
 
+if TYPE_CHECKING:
+    from main import MystbinApp
 
 class IPBanned(Exception):
     pass
 
+class NoRedisConnection(Exception):
+    pass
 
-class Limit(object):
-    """
-    simple wrapper to encapsulate limits and their context
-    """
+time_units = {
+    "second": 1,
+    "minute": 60,
+    "hour": 60 * 60,
+    "day": 60 * 60 * 24,
+    "week": 60 * 60 * 24 * 7,
+    "month": 60 * 60 * 24 * 30,
+    "year": 60 * 60 * 24 * 365
+}
 
-    def __init__(
-        self,
-        limit: RateLimitItem,
-        key_func: Callable[..., str],
-        scope: Optional[Union[str, Callable[..., str]]],
-        per_method: bool,
-        methods: Optional[List[str]],
-        error_message: Optional[Union[str, Callable[..., str]]],
-        exempt_when: Optional[Callable[..., Coroutine]],
-        override_defaults: bool,
-    ) -> None:
-        self.limit = limit
-        self.key_func = key_func
-        self.__scope = scope
-        self.per_method = per_method
-        self.methods = methods
-        self.error_message = error_message
-        self.exempt_when = exempt_when
-        self.override_defaults = override_defaults
-
-    async def is_exempt(self, request) -> bool:
-        """
-        Check if the limit is exempt.
-        Return True to exempt the route from the limit.
-        """
-        return await self.exempt_when(request) if self.exempt_when is not None else False
-
+class BaseLimitBucket:
+    def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
+        self.count = count
+        self.per = per
+    
+    async def _clear_dead_keys(self) -> None:
+        raise NotImplementedError
+    
+    async def hit(self) -> tuple[bool, int]:
+        raise NotImplementedError
+    
+    async def is_limited(self) -> bool:
+        raise NotImplementedError
+    
     @property
-    def scope(self) -> str:
-        # flack.request.endpoint is the name of the function for the endpoint
-        # FIXME: how to get the request here?
-        if self.__scope is None:
-            return ""
+    def reset_at(self):
+        raise NotImplementedError
+
+class InMemoryLimitBucket(BaseLimitBucket):
+    """
+    The in-memory bucket uses the "leaky bucket" method.
+    As such, there is no reset time.
+    """
+
+    __slots__ = ("count", "per", "hits")
+
+    def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
+        self.count = count
+        self.per = per
+        self.hits: list[int | float] = []
+    
+    async def _clear_dead_keys(self) -> None:
+        dead_t = time.time() - self.per
+        for key in self.hits:
+            if key <= dead_t:
+                self.hits.remove(key)
+
+    async def hit(self) -> tuple[bool, int]:
+        await self._clear_dead_keys()
+        self.hits.append(time.time())
+        return len(self.hits) >= self.count, len(self.hits)
+    
+    async def is_limited(self) -> bool:
+        return len(self.hits) >= self.count
+    
+    @property
+    def reset_at(self):
+        return 0
+
+class RedisLimitBucket(BaseLimitBucket):
+    """
+    The redis bucket uses the "window" method.
+    """
+
+    __slots__ = ("key", "count", "per", "app", "reset")
+
+    def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
+        self.app = app
+        self.key = key
+        self.count = count
+        self.per = per
+        self.reset: Optional[int] = None
+    
+    async def _clear_dead_keys(self) -> None:
+        pass # we don't actually need this, keys will be deleted on their own by redis
+
+    async def hit(self) -> tuple[bool, int]:
+        if not self.app.redis:
+            raise NoRedisConnection()
+        
+        value: Optional[int] = await self.app.redis.get(self.key)        
+
+        if value is None:
+            val = await self.app.redis.incr(self.key)
+            await self.app.redis.expire(self.key, self.per)
+            self.reset = round(time.time()) + self.per
+        
         else:
-            return self.__scope(request.endpoint) if callable(self.__scope) else self.__scope  # noqa
+            val = await self.app.redis.incr(self.key)
+                
+        return val >= self.count, val
+    
+    async def is_limited(self) -> bool:
+        if not self.app.redis:
+            raise NoRedisConnection()
+        
+        t = await self.app.redis.get(self.key)
+        return t >= self.count if t is not None else False
+    
+    @property
+    def reset_at(self):
+        return self.reset
+
+_CT = Callable[..., Coroutine[Any, Any, Response]]
+
+class Limiter:        
+    def startup(self, app: MystbinApp) -> None:
+        self.app = app
+        self._keys: dict[str, BaseLimitBucket] = {}
+        self._zone_cache: dict[str, tuple[int, int]] = {}
+        self._endpoints: dict[str, Optional[str]] = {}
+
+        stragegy = app.config["redis"]["use-redis"]
+        if not stragegy:
+            self.bucket_cls = InMemoryLimitBucket
+        else:
+            self.bucket_cls = RedisLimitBucket
+    
+    async def get_key(self, zone: str, request: Request) -> str:
+        zone = await ratelimit_zone_key(zone, request)
+        key = ratelimit_id_key(request)
+        return f"{zone}%{key}"
+    
+    async def get_bucket(self, zone: str, key: str, request: Request) -> BaseLimitBucket:
+        if key in self._keys:
+            return self._keys[key]
+        
+        lims = self._zone_cache.get(zone)
+        if not lims:
+            lims = parse_ratelimit(await get_zone(zone, request))
+
+        bucket = self.bucket_cls(self.app, key, lims[0], lims[1])
+        self._keys[key] = bucket
+
+        return bucket
+    
+    async def middleware(self, request: Request, call_next: _CT) -> Response:
+        zone: Optional[str] = None
+
+        for route in self.app.routes:
+            match, _ = route.matches(request.scope)
+            if match == Match.FULL and hasattr(route, "endpoint"):
+                handler = route.endpoint # type: ignore
+                zone = getattr(handler, "__zone__", None)
+
+        if not await _ignores_ratelimits(request):
+            key = await self.get_key("global", request)
+            bucket = await self.get_bucket("global", key, request)
+
+            is_limited, keys_used = await bucket.hit()
+            headers = {
+                "X-Global-Ratelimit-Used": str(keys_used),
+                "X-Global-Ratelimit-Reset": str(bucket.reset_at),
+                "X-Global-Ratelimit-Max": str(bucket.count),
+                "X-Global-Ratelimit-Available": str(bucket.count - keys_used),
+                "X-Ratelimit-Used": "0",
+                "X-Ratelimit-Reset": "0",
+                "X-Ratelimit-Max": "1",
+                "X-Ratelimit-Available": "1"
+            }
+
+            if is_limited:
+                return Response(status_code=429, headers=headers)
+            
+            if zone is not None:
+                key = await self.get_key(zone, request)
+                bucket = await self.get_bucket(zone, key, request)
+
+                is_limited, keys_used = await bucket.hit()
+                headers.update({
+                    "X-Ratelimit-Used": str(keys_used),
+                    "X-Ratelimit-Reset": str(bucket.reset_at),
+                    "X-Ratelimit-Max": str(bucket.count),
+                    "X-Ratelimit-Available": str(bucket.count - keys_used)
+                })
+
+                if is_limited:
+                    return Response(status_code=429, headers=headers)
+            
+            resp = await call_next(request)
+            resp.headers.update(headers)
+            return resp
+        
+        else:
+            headers = {
+                "X-Global-Ratelimit-Used": "0",
+                "X-Global-Ratelimit-Reset": "0",
+                "X-Global-Ratelimit-Max": "1",
+                "X-Global-Ratelimit-Available": "1",
+                "X-Ratelimit-Used": "0",
+                "X-Ratelimit-Reset": "0",
+                "X-Ratelimit-Max": "1",
+                "X-Ratelimit-Available": "1"
+            }
+            resp = await call_next(request)
+            resp.headers.update(headers)
+            return resp
 
 
-class LimitGroup(object):
-    """
-    represents a group of related limits either from a string or a callable that returns one
-    """
-
-    def __init__(
-        self,
-        limit_provider: Union[str, Callable[..., str]],
-        key_function: Callable[..., str],
-        scope: Optional[Union[str, Callable[..., str]]],
-        per_method: bool,
-        methods: Optional[List[str]],
-        error_message: Optional[Union[str, Callable[..., str]]],
-        exempt_when: Optional[Callable[..., bool]],
-        override_defaults: bool,
-    ):
-        self.__limit_provider = limit_provider
-        self.__scope = scope
-        self.key_function = key_function
-        self.per_method = per_method
-        self.methods = methods and [m.lower() for m in methods] or methods
-        self.error_message = error_message
-        self.exempt_when = exempt_when
-        self.override_defaults = override_defaults
-
-    async def iterate(self, request: Request) -> Iterator[Limit]:
-        limit_items: List[RateLimitItem] = parse_many(
-            await self.__limit_provider(request)  # noqa
-            if inspect.iscoroutinefunction(self.__limit_provider)
-            else self.__limit_provider
-        )
-        for lmt in limit_items:
-            yield Limit(
-                lmt,
-                self.key_function,
-                self.__scope,
-                self.per_method,
-                self.methods,
-                self.error_message,
-                self.exempt_when,
-                self.override_defaults,
-            )
-
-    def __iter__(self):
-        raise ValueError("aaaaaa")
-
-
-class Limiter(slowapi.Limiter):
-    async def __evaluate_limits(self, request: Request, endpoint: str, limits: List[Limit]) -> None:
-        failed_limit = None
-        limit_for_header = None
-        for lim in limits:
-            limit_scope = lim.scope or endpoint
-            if lim.methods is not None and request.method.lower() not in lim.methods:
-                continue
-            if lim.per_method:
-                limit_scope += ":%s" % request.method
-
-            if "request" in inspect.signature(lim.key_func).parameters.keys():
-                limit_key = await lim.key_func(request)  # noqa
-            else:
-                limit_key = await lim.key_func()  # noqa
-
-            args = [limit_key, limit_scope]
-            if all(args):
-                if self._key_prefix:
-                    args = [self._key_prefix] + args
-                if not limit_for_header or lim.limit < limit_for_header[0]:
-                    limit_for_header = (lim.limit, args)
-                if await lim.is_exempt(request):
-                    continue
-
-                if not self.limiter.hit(lim.limit, *args):
-                    self.logger.warning(
-                        "ratelimit %s (%s) exceeded at endpoint: %s",
-                        lim.limit,
-                        limit_key,
-                        limit_scope,
-                    )
-                    failed_limit = lim
-                    limit_for_header = (lim.limit, args)
-                    break
-            else:
-                self.logger.error("Skipping limit: %s. Empty value found in parameters.", lim.limit)
-                continue
-        # keep track of which limit was hit, to be picked up for the response header
-        request.state.view_rate_limit = limit_for_header
-
-        if failed_limit:
-            raise RateLimitExceeded(failed_limit)
-
-    async def _check_request_limit(
-        self,
-        request: Request,
-        endpoint_func: Callable[..., Any],
-        in_middleware: bool = True,
-    ) -> None:
-        """
-        Determine if the request is within limits
-        """
-        endpoint = request["path"] or ""
-        # view_func = current_app.view_functions.get(endpoint, None)
-        view_func = endpoint_func
-
-        name = "%s.%s" % (view_func.__module__, view_func.__name__) if view_func else ""
-        # cases where we don't need to check the limits
-        if (
-            not endpoint
-            or not self.enabled
-            # or we are sending a static file
-            # or view_func == current_app.send_static_file
-            or name in self._exempt_routes
-            or any(fn() for fn in self._request_filters)
-        ):
-            return
-        limits: List[Limit] = []
-        dynamic_limits: List[Limit] = []
-
-        if not in_middleware:
-            limits = self._route_limits[name] if name in self._route_limits else []
-            dynamic_limits = []
-            if name in self._dynamic_route_limits:
-                for lim in self._dynamic_route_limits[name]:
-                    try:
-                        ret = []
-                        async for x in lim.iterate(request):  # noqa
-                            ret.append(x)
-                        dynamic_limits.extend(ret)
-                    except ValueError as e:
-                        self.logger.error(
-                            "failed to load ratelimit for view function %s (%s)",
-                            name,
-                            e,
-                        )
-
-        try:
-            all_limits: List[Limit] = []
-            if self._storage_dead and self._fallback_limiter:
-                if in_middleware and name in self.__marked_for_limiting:
-                    pass
-                else:
-                    if self.__should_check_backend() and self._storage.check():
-                        self.logger.info("Rate limit storage recovered")
-                        self._storage_dead = False
-                        self.__check_backend_count = 0
-                    else:
-                        all_limits = list(itertools.chain(*self._in_memory_fallback))
-            if not all_limits:
-                route_limits: List[Limit] = limits + dynamic_limits
-                all_limits = list(itertools.chain(*self._application_limits)) if in_middleware else []
-                all_limits += route_limits
-                combined_defaults = all(not limit.override_defaults for limit in route_limits)
-                if not route_limits and not (in_middleware and name in self.__marked_for_limiting) or combined_defaults:
-                    all_limits += list(itertools.chain(*self._default_limits))
-            # actually check the limits, so far we've only computed the list of limits to check
-            await self.__evaluate_limits(request, endpoint, all_limits)
-        except Exception as e:  # no qa
-            if isinstance(e, RateLimitExceeded):
-                raise
-            if self._in_memory_fallback_enabled and not self._storage_dead:
-                self.logger.warn("Rate limit storage unreachable - falling back to" " in-memory storage")
-                self._storage_dead = True
-                await self._check_request_limit(request, endpoint_func, in_middleware)
-            else:
-                if self._swallow_errors:
-                    self.logger.exception("Failed to rate limit. Swallowing error")
-                else:
-                    raise
-
-    def __limit_decorator(
-        self,
-        limit_value: StrOrCallableStr,
-        key_func: Optional[Callable[..., str]] = None,
-        shared: bool = False,
-        scope: Optional[StrOrCallableStr] = None,
-        per_method: bool = False,
-        methods: Optional[List[str]] = None,
-        error_message: Optional[str] = None,
-        exempt_when: Optional[Callable[..., bool]] = None,
-        override_defaults: bool = True,
-    ) -> Callable[..., Any]:
-
-        _scope = scope if shared else None
-
-        def decorator(func: Callable[..., Response]) -> Callable[..., Response]:
-            keyfunc = key_func or self._key_func
-            name = f"{func.__module__}.{func.__name__}"
-            dynamic_limit = None
-            static_limits: List[Limit] = []
-            if callable(limit_value):
-                dynamic_limit = LimitGroup(
-                    limit_value,
-                    keyfunc,
-                    _scope,
-                    per_method,
-                    methods,
-                    error_message,
-                    exempt_when,
-                    override_defaults,
-                )
-            else:
-                try:
-                    static_limits = list(
-                        LimitGroup(
-                            limit_value,
-                            keyfunc,
-                            _scope,
-                            per_method,
-                            methods,
-                            error_message,
-                            exempt_when,
-                            override_defaults,
-                        )
-                    )
-                except ValueError as e:
-                    self.logger.error(
-                        "Failed to configure throttling for %s (%s)",
-                        name,
-                        e,
-                    )
-            self.__marked_for_limiting.setdefault(name, []).append(func)
-            if dynamic_limit:
-                self._dynamic_route_limits.setdefault(name, []).append(dynamic_limit)
-            else:
-                self._route_limits.setdefault(name, []).extend(static_limits)
-
-            sig = inspect.signature(func)
-            for idx, parameter in enumerate(sig.parameters.values()):
-                if parameter.name == "request" or parameter.name == "websocket":
-                    _ = parameter.name
-                    break
-            else:
-                raise Exception(f'No "request" or "websocket" argument on function "{func}"')
-
-            if asyncio.iscoroutinefunction(func):
-                # Handle async request/response functions.
-                @functools.wraps(func)
-                async def async_wrapper(*args: Any, **kwargs: Any) -> Response:
-                    # get the request object from the decorated endpoint function
-                    request = kwargs.get("request", args[idx] if args else None)
-                    if not isinstance(request, Request):
-                        raise Exception("parameter `request` must be an instance of starlette.requests.Request")
-
-                    if not getattr(request.state, "_rate_limiting_complete", False):
-                        try:
-                            await self._check_request_limit(request, func, False)
-                        except IPBanned:
-                            return JSONResponse(
-                                {"error": "You have been banned from the service."},
-                                status_code=403,
-                            )
-                        request.state._rate_limiting_complete = True
-                    response = await func(*args, **kwargs)  # noqa
-                    assert isinstance(response, Response)
-                    self._inject_headers(response, request.state.view_rate_limit)
-                    return response
-
-                return async_wrapper  # noqa
-
-            else:
-                raise ValueError("Don't make sync callbacks")
-
-        return decorator
-
-
-async def ratelimit_key(request: Request) -> str:
-    auth = request.headers.get("Authorization", None)
-    if not auth:
-        return request.headers.get("X-Forwarded-For", None) or request.client.host
-
-    userid = tokens.get_user_id(auth.replace("Bearer ", ""))
-    if not userid:  # must be a fake token, so just ignore it and go by ip
-        return request.headers.get("X-Forwarded-For", None) or request.client.host
-
-    return str(userid)
-
+def parse_ratelimit(limit: str) -> tuple[int, int]:
+    _per, units = limit.split("/", 1)
+    
+    per: int = int(_per)
+    transformed_units: int = time_units[units]
+    return per, transformed_units
 
 async def _fetch_user(request: Request):
+    host = request.headers.get("X-Forwarded-For") or request.client.host
+
     auth = request.headers.get("Authorization", None)
     if not auth:
         query = "SELECT * FROM bans WHERE ip = $1"
-        bans = await request.app.state.db._do_query(query, request.client.host)
+        bans = await request.app.state.db._do_query(query, host)
         if bans:
             raise IPBanned
         return
@@ -381,7 +247,7 @@ async def _fetch_user(request: Request):
             WHERE token = $1;
             """
 
-    user = await request.app.state.db._do_query(query, auth.replace("Bearer ", ""), request.client.host)
+    user = await request.app.state.db._do_query(query, auth.replace("Bearer ", ""), host)
     if not user:
         return
 
@@ -402,33 +268,40 @@ async def _ignores_ratelimits(request: Request):
 
     return False
 
+async def ratelimit_zone_key(zone: str, request: Request) -> str:
+    _zone = zone
 
-def limit(t, scope=None):
-    async def _limit_key(request: Request) -> str:
-        _t = t
+    if not hasattr(request.state, "user"):
+        request.state.user = None
+        await _fetch_user(request)
 
-        if not hasattr(request.state, "user"):
-            request.state.user = None
-            await _fetch_user(request)
+    user = request.state.user
 
-        user = request.state.user
+    if user:
+        _zone = ("authed_" if not user["subscriber"] else "premium_") + zone
 
-        if user:
-            _t = ("authed_" if not user["subscriber"] else "subscriber_") + _t
+    return _zone
 
-        try:
-            return request.app.config["ratelimits"][_t]
-        except KeyError:
-            return request.app.config["ratelimits"][t]
+async def get_zone(zone: str, request: Request) -> str:
+    zone = await ratelimit_zone_key(zone, request)
+    return request.app.config["ratelimits"][zone]
 
-    if scope:
-        return global_limiter.shared_limit(
-            _limit_key,  # noqa
-            scope=scope,
-            key_func=ratelimit_key,  # noqa
-            exempt_when=_ignores_ratelimits,  # noqa
-        )  # noqa
-    return global_limiter.limit(_limit_key, key_func=ratelimit_key, exempt_when=_ignores_ratelimits)  # noqa
+def ratelimit_id_key(request: Request) -> str:
+    auth = request.headers.get("Authorization", None)
+    if not auth:
+        return request.headers.get("X-Forwarded-For", None) or request.client.host
 
+    userid = tokens.get_user_id(auth.replace("Bearer ", ""))
+    if not userid:  # must be a fake token, so just ignore it and go by ip
+        return request.headers.get("X-Forwarded-For", None) or request.client.host
 
-global_limiter = Limiter(ratelimit_key, headers_enabled=True, in_memory_fallback_enabled=True)  # noqa
+    return str(userid)
+
+def limit(zone: Optional[str] = None):
+    def wrapped(cb):
+        cb.__zone__ = zone
+        return cb
+    
+    return wrapped
+
+limiter = Limiter()

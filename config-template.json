@@ -1,8 +1,15 @@
 {
     "database": {
-        "user": "prod-username",
-        "password": "prod-password",
-        "dsn": "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>",
+        "dsn": "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
+    },
+    "redis": {
+        "_comment": "redis is used for ratelimits. To disable this behaviour, and use in-memory ratelimits, set use-redis to false. Workers will be disabled if this is false.",
+        "use-redis": true,
+        "host": "127.0.0.1",
+        "port": 6379,
+        "user": null,
+        "password": null,
+        "db": 0
     },
     "apps": {
         "discord_application_id": "",
@@ -38,9 +45,9 @@
     },
     "ratelimits": {
         "_comment": "Ratelimit values. Written in the format of `time/unit` (60/minute)",
-        "global_limit": "60/minute",
-        "authed_global_limit": "120/minute",
-        "premium_global_limit": "360/minute",
+        "global": "60/minute",
+        "authed_global": "120/minute",
+        "premium_global": "360/minute",
         "postpastes": "5/minute",
         "authed_postpages": "10/minute",
         "premium_postpastes": "20/minute",
