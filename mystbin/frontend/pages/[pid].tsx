@@ -37,7 +37,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
         />
         <meta
           property="og:description"
-          content={`This paste has (${paste["pastes"].length}) attached file(s) and expires in 2 hours.`}
+          content={`This paste has (${paste["pastes"].length}) attached file(s)`}
           key="pasteDesc"
         />
         <meta
