@@ -3,6 +3,8 @@
     <p>Easily share your code or text with syntax highlighting and themes for readability.</p>
     <p><b>NOTE:</b> This software is under heavy development and subject to change. At this time it is currently not supported.</p>
     <br>
+    <p>A hosted version of this can be found at <a href="https://beta.mystb.in">beta.mystb.in</a></p>
+    <br>
     <a href="https://www.python.org">
         <img src="https://img.shields.io/badge/Python-3.8%20%7C%203.9-blue.svg" />
     </a>
