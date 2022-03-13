@@ -707,6 +707,9 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const github_id = data["github_id"];
   const discord_id = data["discord_id"];
   const google_id = data["google_id"];
+  const name = data["username"];
+
+  cookies.set("username", name);
 
   resp = await fetch(`${config["site"]["backend_site"]}/users/bookmarks`, {
     method: "GET",

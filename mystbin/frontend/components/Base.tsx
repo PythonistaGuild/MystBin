@@ -4,7 +4,6 @@ import styles from "../styles/Base.module.css";
 import LogoMain from "../public/LogoMain";
 import GitHubIcon from "@material-ui/icons/GitHub";
 import DiscordColorIcon from "../icons/DiscordColour";
-import PatreonFireyIcon from "../icons/PatreonFirey";
 
 export default function Base(props: PropsWithChildren<{ className: string }>) {
   const { children, className } = props;
