@@ -284,7 +284,10 @@ async def ratelimit_zone_key(zone: str, request: Request) -> str:
 
 async def get_zone(zone: str, request: Request) -> str:
     zone = await ratelimit_zone_key(zone, request)
-    return request.app.config["ratelimits"][zone]
+    try:
+        return request.app.config["ratelimits"][zone]
+    except:
+        return request.app.config["ratelimits"][zone.replace("authed_", "").replace("premium_", "")]
 
 def ratelimit_id_key(request: Request) -> str:
     auth = request.headers.get("Authorization", None)

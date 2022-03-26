@@ -9,7 +9,7 @@ import aioconsole
 import tabulate
 
 if TYPE_CHECKING:
-    from main import MystbinApp
+    from app import MystbinApp
     from utils.db import Database
 
 
@@ -20,9 +20,8 @@ class Interrupt(Exception):
     pass
 
 class CLIHandler:
-    def __init__(self, app: MystbinApp) -> None:
-        self.app = app
-        self.db: Database = app.state.db
+    def __init__(self, db: Database) -> None:
+        self.db: Database = db
         self.parser = argparse.ArgumentParser(
             prog="Mystbin",
             description="the Mystbin backend command-line tool",
@@ -34,12 +33,10 @@ class CLIHandler:
 
         self.subparsers = self.parser.add_subparsers(dest="command")
         self.subparsers.add_parser("help", help="send this menu")
-        self.subparsers.add_parser("exit", help="shuts down the mystbin backend server")
 
         self.subparser_paste = self.subparsers.add_parser(
             "paste", help="subcommand to manage pastes. use 'paste -h' to see more info"
         )
-        # self.subparser_paste.add_argument("paste", help="the ID of the paste to manage", metavar="PASTE_ID", required=False)
         self.subparser_paste.add_argument("--delete", "-d", help="delete the paste", metavar="PASTE_ID")
         self.subparser_paste.add_argument(
             "--set-password", "-sp", help="set the password for this paste", metavar=("PASTE_ID", "PASSWORD"), nargs=2
@@ -225,11 +222,6 @@ class CLIHandler:
             
             fmt = tabulate.tabulate([list(x.values()) for x in users], headers=list(users[0].keys()), tablefmt="psql")
             await aioconsole.aprint(fmt)
-        
-
-    async def command_exit(self, _) -> None:
-        self.app.should_close = True
-        raise KeyboardInterrupt
 
 
 if __name__ == "__main__":
@@ -240,10 +232,10 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
     async def main():
-        from main import MystbinApp
+        from app import MystbinApp
 
         app = MystbinApp()
-        c = CLIHandler(app)
+        c = CLIHandler(app.state.db)
         await c.parse_cli()
 
     try:

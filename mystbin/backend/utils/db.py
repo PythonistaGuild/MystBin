@@ -74,9 +74,9 @@ class Database:
 
     timeout = 30
 
-    def __init__(self, app):
+    def __init__(self, config: dict[str, dict[str, str | int]]):
         self._pool: asyncpg.Pool = None
-        self._config: Dict[str, Any] = app.config["database"]
+        self._config = config["database"]
         if "ISDOCKER" in os.environ:
             self._db_schema = pathlib.Path("/etc/schema.sql")
         else:
@@ -91,9 +91,9 @@ class Database:
 
     async def __ainit__(self):
         await asyncio.sleep(5)
-        self._pool = await asyncpg.create_pool(self._config["dsn"], max_inactive_connection_lifetime=0)
-        with open(self._db_schema) as schema:
-            await self._pool.execute(schema.read())
+        self._pool = await asyncpg.create_pool(self._config["dsn"], max_inactive_connection_lifetime=0, max_size=3, min_size=0)
+        #with open(self._db_schema) as schema:
+        #    await self._pool.execute(schema.read())
         return self
 
     async def _do_query(self, query, *args, conn: asyncpg.Connection = None) -> Optional[List[asyncpg.Record]]:
