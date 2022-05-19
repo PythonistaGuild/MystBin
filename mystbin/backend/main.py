@@ -14,7 +14,7 @@ def get_config() -> dict[str, dict[str, int | str]]:
         pth = pathlib.Path("../../config.json")
     
     if not pth.exists():
-        raise RuntimeError("No config.json was found. Please make sure you've copied the config-template.json into config.json and filled out the appropriate vallues")
+        raise RuntimeError("No config.json was found. Please make sure you've copied the config-template.json into config.json and filled out the appropriate values")
     
     with pth.open() as f:
         data = json.load(f)
