@@ -14,10 +14,11 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
       <main className={className}>{children}</main>
 
       <div className={styles.footerContainer}>
-
         <div className={styles.footerFlexRow}>
           <LogoMain className={styles.logo} />
-          <span className={styles.footerLeft}>Copyright © 2020 PythonistaGuild</span>
+          <span className={styles.footerLeft}>
+            Copyright © 2020 PythonistaGuild
+          </span>
         </div>
 
         <div className={styles.socialIconsContainer}>
@@ -36,7 +37,6 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
           <span className={styles.footerTerms}>/</span>
           <a className={styles.footerTerms}>Contact Us</a>
         </span>
-
       </div>
     </div>
   );

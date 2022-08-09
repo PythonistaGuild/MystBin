@@ -19,7 +19,7 @@ import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
 import config from "../config.json";
-import { useMediaQuery } from 'react-responsive';
+import { useMediaQuery } from "react-responsive";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -29,7 +29,9 @@ export default function OptsBar() {
   const [saveBlankToast, setSaveBlankToast] = useState(false);
   const [copyBadPasteToast, setCopyBadPasteToast] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [optsVisible, setOptsVisible] = useState(!useMediaQuery({ query: `(max-width: 768px)` }));
+  const [optsVisible, setOptsVisible] = useState(
+    !useMediaQuery({ query: `(max-width: 768px)` })
+  );
 
   const personal = [
     {
@@ -104,7 +106,7 @@ export default function OptsBar() {
           router.reload();
         });
 
-        sessionStorage.removeItem("pasteCopy")
+        sessionStorage.removeItem("pasteCopy");
       },
     },
 
@@ -241,11 +243,11 @@ export default function OptsBar() {
         {optsVisible ? (
           <div></div>
         ) : (
-            <div className={"____"}>
-          <div className={styles.optsNavContainerCollapsed}>
-            {collapse.map(OptsButton)}
-          </div>
+          <div className={"____"}>
+            <div className={styles.optsNavContainerCollapsed}>
+              {collapse.map(OptsButton)}
             </div>
+          </div>
         )}
         <Slide direction="down" in={optsVisible}>
           <div className={styles.optsNavContainer}>

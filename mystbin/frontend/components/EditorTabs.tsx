@@ -44,7 +44,7 @@ export default function EditorTabs({
     if (sessionStorage.getItem("pasteCopy") !== null) {
       setValue(JSON.parse(sessionStorage.getItem("pasteCopy")));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (!value[currTab]) {
