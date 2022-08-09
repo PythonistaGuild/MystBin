@@ -203,11 +203,11 @@ export default function OptsBar() {
         }
 
         setCurrentModal(
-            <SetPasswordModal
-                onHide={() => {
-                  setCurrentModal(null);
-                }}
-            />
+          <SetPasswordModal
+            onHide={() => {
+              setCurrentModal(null);
+            }}
+          />
         );
       },
     },
