@@ -32,7 +32,7 @@ router = APIRouter()
 @router.post(
     "/users/connect/discord",
     response_model=responses.TokenResponse,
-    include_in_schema=False,
+    include_in_schema=False
 )
 async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
@@ -91,7 +91,7 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
 @router.post(
     "/users/connect/google",
     response_model=responses.TokenResponse,
-    include_in_schema=False,
+    include_in_schema=False
 )
 @limit("apps")
 async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONResponse]:
@@ -149,7 +149,7 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
 @router.post(
     "/users/connect/github",
     response_model=responses.TokenResponse,
-    include_in_schema=False,
+    include_in_schema=False
 )
 @limit("apps")
 async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
@@ -220,7 +220,10 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         return UJSONResponse({"token": data["token"]})
 
 
-@router.delete("/users/connect/{app}")
+@router.delete(
+    "/users/connect/{app}",
+    include_in_schema=False
+)
 @limit("apps")
 async def disconnect_app(request: Request, app: str):
     if app not in ("github", "discord", "google"):
