@@ -4,6 +4,7 @@ import styles from "../styles/Base.module.css";
 import LogoMain from "../public/LogoMain";
 import GitHubIcon from "@material-ui/icons/GitHub";
 import DiscordColorIcon from "../icons/DiscordColour";
+import TipModal from "./TipModal";
 
 export default function Base(props: PropsWithChildren<{ className: string }>) {
   const { children, className } = props;
@@ -11,6 +12,7 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
   return (
     <div className={styles.Base}>
       <OptsBar />
+      <TipModal />
       <main className={className}>{children}</main>
 
       <div className={styles.footerContainer}>
