@@ -44,7 +44,7 @@ START_TIME = datetime.datetime.utcnow()
         401: {"model": errors.Unauthorized},
         400: {"response": {"example": {"error": "The given user was not found"}}},
     },
-    #    include_in_schema=False,
+    include_in_schema=False
 )
 @limit("admin")
 async def get_any_user(request: Request, user_id: int) -> Union[UJSONResponse, Dict[str, str]]:
@@ -63,7 +63,7 @@ async def get_any_user(request: Request, user_id: int) -> Union[UJSONResponse, D
 @router.post(
     "/admin/users/{user_id}/ban",
     tags=["admin"],
-    #             include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def ban_user(
@@ -86,13 +86,13 @@ async def ban_user(
 @router.post(
     "/admin/users/{user_id}/unban",
     tags=["admin"],
-    #             include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def unban_user(
     request: Request,
     user_id: int,
-    ip: str = None,
+    ip: Optional[str] = None,
 ) -> UJSONResponse:
     """
     Unbans a user from the service
@@ -108,7 +108,7 @@ async def unban_user(
 @router.post(
     "/admin/users/{user_id}/subscribe",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def subscribe_user(request: Request, user_id: int) -> UJSONResponse:
@@ -126,7 +126,7 @@ async def subscribe_user(request: Request, user_id: int) -> UJSONResponse:
 @router.post(
     "/admin/users/{user_id}/unsubscribe",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def unsubscribe_user(request: Request, user_id: int) -> UJSONResponse:
@@ -146,7 +146,7 @@ async def unsubscribe_user(request: Request, user_id: int) -> UJSONResponse:
     tags=["admin"],
     response_model=responses.UserList,
     responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
-    #    include_in_schema=False,
+    include_in_schema=False
 )
 @limit("admin")
 async def get_admin_userlist(request: Request, page: int = 1):
@@ -169,9 +169,10 @@ async def get_admin_userlist(request: Request, page: int = 1):
     tags=["admin"],
     response_model=responses.UserCount,
     responses={200: {"model": responses.UserCount}, 401: {"model": errors.Unauthorized}},
+    include_in_schema=False
 )
 @limit("admin")
-async def get_admin_userlist(request: Request):
+async def get_admin_usercount(request: Request):
     """
     Returns a count of how many users there are
     * Requires admin authentication.
@@ -186,10 +187,10 @@ async def get_admin_userlist(request: Request):
 @router.get(
     "/admin/bans",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
-async def search_bans(request: Request, search: str = None, page: int = 1):
+async def search_bans(request: Request, search: Optional[str] = None, page: int = 1):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -206,10 +207,10 @@ async def search_bans(request: Request, search: str = None, page: int = 1):
 @router.post(
     "/admin/bans",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
-async def post_ban(request: Request, reason: str, ip: str = None, userid: int = None):
+async def post_ban(request: Request, reason: str, ip: Optional[str] = None, userid: int = None):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -220,10 +221,10 @@ async def post_ban(request: Request, reason: str, ip: str = None, userid: int = 
 @router.delete(
     "/admin/bans",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
-async def remove_ban(request: Request, ip: str = None, userid: int = None):
+async def remove_ban(request: Request, ip: Optional[str] = None, userid: Optional[int] = None):
     if not ip and not userid:
         return UJSONResponse({"error": "Bad Request"}, status_code=400)
 
@@ -239,7 +240,7 @@ async def remove_ban(request: Request, ip: str = None, userid: int = None):
 @router.get(
     "/admin/stats",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def get_server_stats(request: Request):
@@ -269,6 +270,7 @@ async def get_server_stats(request: Request):
         404: {"model": errors.NotFound},
     },
     name="Retrieve paste file(s)",
+    include_in_schema=False
 )
 @limit("admin")
 async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> Response:
@@ -287,7 +289,7 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
 @router.get(
     "/admin/pastes",
     tags=["admin"],
-    #    include_in_schema=False
+    include_in_schema=False
 )
 @limit("admin")
 async def get_all_pastes(request: Request, count: int, page: Optional[int] = 0, oldest_first: bool = False):
