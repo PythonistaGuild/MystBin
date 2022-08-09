@@ -13,7 +13,7 @@ from starlette.routing import Match
 from . import tokens
 
 if TYPE_CHECKING:
-    from main import MystbinApp
+    from app import MystbinApp
 
 class IPBanned(Exception):
     pass
