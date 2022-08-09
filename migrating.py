@@ -23,7 +23,7 @@ async def main():
                     
                 #await old.execute(f"DELETE FROM pastes WHERE {' OR '.join([f'id = ${x}' for x in range(1, 201)])}", *[x['id'] for x in bundle])
 
-                await new.executemany("INSERT INTO pastes (id, views, origin_ip) VALUES ($1, $2, '0.0.0.0')", [(x['paste_id'], x['views']) for x in bundle])
+                await new.executemany("INSERT INTO pastes (id, views, origin_ip) VALUES ($1, $2, '0.0.0.0')", [(x['id'], x['views']) for x in bundle])
                 print("inserted pastes, inserting files")
                 await new.executemany(
                     "INSERT INTO files (parent_id, content, filename, loc) VALUES ($1, $2, 'migrated.txt', $3)",
