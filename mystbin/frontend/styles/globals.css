@@ -84,6 +84,7 @@ body {
 #__next {
   height: 100%;
   width: 100%;
+  background-color: #1b1b1b;
 }
 
 a {
@@ -99,11 +100,16 @@ body .monaco-aria-container {
   border-top: 0.75rem solid #2b2b2b;
   padding-left: .5rem;
   background-color: #2b2b2b;
-  height: 90vh!important;
 }
 
 .maxed > section {
   max-height: 87.5vh;
+}
+
+@media only screen and (max-width: 768px) {
+  .maxed > section{
+    max-height: calc(87.5vh - 6rem);
+  }
 }
 
 * {
@@ -193,4 +199,8 @@ input[type=radio] {
 
 .MuiSvgIcon-root {
   font-size: 1.25rem!important;
+}
+
+.popover .arrow::after, .popover .arrow::before {
+  content: none!important;
 }

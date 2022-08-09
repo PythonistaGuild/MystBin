@@ -18,9 +18,9 @@ import cookieCutter from "cookie-cutter";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
-import { LensTwoTone } from "@material-ui/icons";
 import config from "../config.json";
-import { clearTimeout } from "timers";
+import { useMediaQuery } from "react-responsive";
+import SetPasswordModal from "./SetPasswordModal";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -30,7 +30,9 @@ export default function OptsBar() {
   const [saveBlankToast, setSaveBlankToast] = useState(false);
   const [copyBadPasteToast, setCopyBadPasteToast] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [optsVisible, setOptsVisible] = useState(true);
+  const [optsVisible, setOptsVisible] = useState(
+    !useMediaQuery({ query: `(max-width: 768px)` })
+  );
 
   const personal = [
     {
@@ -104,6 +106,8 @@ export default function OptsBar() {
         router.push("/").then(() => {
           router.reload();
         });
+
+        sessionStorage.removeItem("pasteCopy");
       },
     },
 
@@ -141,7 +145,7 @@ export default function OptsBar() {
         fetch(config["site"]["backend_site"] + "/paste", {
           method: "PUT",
           headers: headers,
-          body: JSON.stringify({ files: files }),
+          body: JSON.stringify({ files: files, password: paste.password }),
         })
           .then((r) => {
             if (r.status === 200) {
@@ -172,12 +176,14 @@ export default function OptsBar() {
       icon: <EditIcon />,
       callback: () => {
         let paste = pasteStore.getPaste();
-        console.log(JSON.stringify(paste));
+
         if (router.route == "/") {
           setCopyBadPasteToast(true);
           return;
         }
+
         sessionStorage.setItem("pasteCopy", JSON.stringify(paste));
+
         router.push("/").then(() => {
           router.reload();
         });
@@ -191,7 +197,19 @@ export default function OptsBar() {
       content: "Create a password for this paste and all its files.",
       optional: true,
       icon: <EnhancedEncryptionIcon />,
-      callback: () => alert("test3"),
+      callback: () => {
+        if (window.location.pathname !== "/") {
+          return;
+        }
+
+        setCurrentModal(
+          <SetPasswordModal
+            onHide={() => {
+              setCurrentModal(null);
+            }}
+          />
+        );
+      },
     },
     {
       title: "Create Expiry",
@@ -238,8 +256,10 @@ export default function OptsBar() {
         {optsVisible ? (
           <div></div>
         ) : (
-          <div className={styles.optsNavContainerCollapsed}>
-            {collapse.map(OptsButton)}
+          <div className={"____"}>
+            <div className={styles.optsNavContainerCollapsed}>
+              {collapse.map(OptsButton)}
+            </div>
           </div>
         )}
         <Slide direction="down" in={optsVisible}>
