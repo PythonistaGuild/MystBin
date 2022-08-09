@@ -14,6 +14,21 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
       <main className={className}>{children}</main>
 
       <div className={styles.footerContainer}>
+
+        <div className={styles.footerFlexRow}>
+          <LogoMain className={styles.logo} />
+          <span className={styles.footerLeft}>Copyright © 2020 PythonistaGuild</span>
+        </div>
+
+        <div className={styles.socialIconsContainer}>
+          <a href="https://github.com/PythonistaGuild/MystBin">
+            <GitHubIcon className={styles.socialIconGH} />
+          </a>
+          <a href="https://discord.gg/RAKc3HF">
+            <DiscordColorIcon className={styles.socialIcon} />
+          </a>
+        </div>
+
         <span className={styles.footerTermsContainer}>
           <a className={styles.footerTerms}>Terms and Conditions</a>
           <span className={styles.footerTerms}>/</span>
@@ -22,19 +37,6 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
           <a className={styles.footerTerms}>Contact Us</a>
         </span>
 
-        <div className={styles.footerFlexCol}>
-          <LogoMain className={styles.logo} />
-          <p className={styles.footerLeft}>Copyright © 2020 PythonistaGuild</p>
-        </div>
-
-        <div className={styles.socialIconsContainer}>
-          <a href="https://github.com/PythonistaGuild/MystBin">
-            <GitHubIcon className={styles.socialIcon} />
-          </a>
-          <a href="https://discord.gg/RAKc3HF">
-            <DiscordColorIcon className={styles.socialIcon} />
-          </a>
-        </div>
       </div>
     </div>
   );

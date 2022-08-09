@@ -35,15 +35,16 @@ export default function EditorTabs({
   pasteDispatcher.dispatch({ paste: value });
   const maxCharCount = config["paste"]["character_limit"];
 
-  if (!!id && !initialState) {
+  if (initialData !== null && !initialState) {
     setValue(initialData);
     setInitialState(true);
-  } else if (!!sessionStorage.getItem("pasteCopy")) {
-    const pasteCopy = JSON.parse(sessionStorage.getItem("pasteCopy"));
-    setValue(pasteCopy);
-    pasteDispatcher.dispatch({ paste: pasteCopy });
-    sessionStorage.removeItem("pasteCopy");
   }
+
+  useEffect(() => {
+    if (sessionStorage.getItem("pasteCopy") !== null) {
+      setValue(JSON.parse(sessionStorage.getItem("pasteCopy")));
+    }
+  }, [])
 
   useEffect(() => {
     if (!value[currTab]) {
@@ -108,6 +109,7 @@ export default function EditorTabs({
         loading={loading}
         onAttempt={handlePasswordAttempt}
       />
+
       <div>
         <div className={styles.tabsContainer}>
           {value.map((v, i) => (
@@ -141,7 +143,7 @@ export default function EditorTabs({
           />
         </div>
 
-        {value.map((v, i) => (
+        {value.map((v, i, arr) => (
           <div
             key={i}
             style={{

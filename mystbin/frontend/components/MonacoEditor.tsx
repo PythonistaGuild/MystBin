@@ -91,7 +91,7 @@ export default function MonacoEditor(
       onChange={onChange}
       language={language}
       options={{
-        contextmenu: false,
+        contextmenu: true,
         suggest: false,
         quickSuggestions: false,
         minimap: { enabled: false },

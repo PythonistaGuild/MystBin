@@ -47,6 +47,7 @@ export default function Tab({
         <span
           ref={spanRef}
           contentEditable={current && editable}
+          suppressContentEditableWarning={true}
           className={styles.tabsFilename}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

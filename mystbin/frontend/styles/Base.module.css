@@ -2,6 +2,7 @@
   grid-template-areas:
     "c c c c c c c" /* content */
     "c c c c c c c"
+    "c c c c c c c"
     "f f f f f f f"; /* footer */
   grid-template-rows: min-content min-content auto;
   grid-template-columns: min-content;
@@ -24,13 +25,20 @@
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  color: #e3e3e3;
   width: 100vw;
+  height: 0;
 }
 
 .footerFlexCol {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.footerFlexRow {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 }
@@ -43,7 +51,7 @@
 }
 
 .footerTerms {
-  padding: .5rem;
+  margin-right: 0.5rem;
   font-size: .8em;
   color: #e3e3e3;
 }
@@ -53,9 +61,8 @@
 }
 
 .logo {
-  margin-top: .5rem;
-  margin-bottom: .5rem;
   width: 5rem;
+  margin-right: 0.5rem;
 }
 
 .socialIconsContainer {
@@ -67,8 +74,13 @@
 }
 
 .socialIcon {
-  font-size: 2rem;
-  margin-left: 1rem;
+  font-size: 2.25rem!important;
+}
+
+.socialIconGH {
+  font-size: 1.75rem!important;
+  margin-right: 0.5rem;
+  color: #e3e3e3;
 }
 
 .socialIcon:hover {
@@ -76,15 +88,21 @@
 }
 
 .footerLeft {
-  margin-bottom: .5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #e3e3e3;
 }
 
-.footerLeft > a {
-  color: #3180bd;
-}
+@media only screen and (max-width: 768px) {
+  .footerContainer {
+    flex-direction: column!important;
+    height: 6rem;
+    font-size: 0.8em!important;
+  }
+  .socialIconsContainer {
+    margin-top: 0.5rem;
+  }
 
-.footerLeft > a:hover {
-  cursor: pointer;
+  .footerLeft {
+    font-size: 0.8em!important;
+  }
 }
