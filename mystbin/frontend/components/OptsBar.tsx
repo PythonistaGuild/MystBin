@@ -20,6 +20,7 @@ import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Slide } from "@material-ui/core";
 import config from "../config.json";
 import { useMediaQuery } from "react-responsive";
+import SetPasswordModal from "./SetPasswordModal";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -144,7 +145,7 @@ export default function OptsBar() {
         fetch(config["site"]["backend_site"] + "/paste", {
           method: "PUT",
           headers: headers,
-          body: JSON.stringify({ files: files }),
+          body: JSON.stringify({ files: files, password: paste.password }),
         })
           .then((r) => {
             if (r.status === 200) {
@@ -196,7 +197,19 @@ export default function OptsBar() {
       content: "Create a password for this paste and all its files.",
       optional: true,
       icon: <EnhancedEncryptionIcon />,
-      callback: () => alert("test3"),
+      callback: () => {
+        if (window.location.pathname !== "/") {
+          return;
+        }
+
+        setCurrentModal(
+            <SetPasswordModal
+                onHide={() => {
+                  setCurrentModal(null);
+                }}
+            />
+        );
+      },
     },
     {
       title: "Create Expiry",
