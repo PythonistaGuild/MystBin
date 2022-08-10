@@ -55,7 +55,7 @@ export default function LoginModal({ onHide }: { onHide: () => void }) {
             className={styles.iconsContainer}
             onClick={() => {
               setWindow(
-                `https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=user`
+                `https://github.com/login/oauth/authorize?client_id=${config["apps"]["github_application_id"]}&redirect_uri=${config["site"]["frontend_site"]}/github_auth&scope=read:user%20user:email`
               );
             }}
           >
