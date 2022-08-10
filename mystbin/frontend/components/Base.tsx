@@ -19,7 +19,7 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
         <div className={styles.footerFlexRow}>
           <LogoMain className={styles.logo} />
           <span className={styles.footerLeft}>
-            Copyright © 2020 PythonistaGuild
+            Copyright © 2020-current PythonistaGuild
           </span>
         </div>
 
