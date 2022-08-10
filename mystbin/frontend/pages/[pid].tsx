@@ -69,7 +69,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const { pid } = query;
   const response = await fetch(
-    `${config["site"]["backend_site"]}/paste/${pid}`
+    `${config["site"]["backend_site"]}/paste/${pid.toString().split(".", 1)[0]}`
   );
 
   if (response.status === 404) {
