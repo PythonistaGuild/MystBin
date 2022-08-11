@@ -192,7 +192,7 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         resp.raise_for_status()
         data = await resp.json()
         userid = data["id"]
-        username = data["name"]
+        username = data["name"] or data["login"]
 
     async with request.app.state.client.get(
         "https://api.github.com/user/emails",
