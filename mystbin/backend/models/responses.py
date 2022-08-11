@@ -22,7 +22,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class File(BaseModel):
+class _File(BaseModel):
     filename: str
     content: str
     syntax: Optional[str] = None
@@ -35,7 +35,7 @@ class PastePostResponse(BaseModel):
     author_id: Optional[int] = None
     created_at: datetime
     expires: Optional[datetime] = None
-    files: List[File]
+    files: List[_File]
     notice: Optional[str]
 
 
@@ -50,7 +50,7 @@ class PasteGetResponse(BaseModel):
     expires: Optional[datetime] = None
     last_edited: Optional[datetime] = None
     views: int
-    files: List[File]
+    pastes: List[_File]
 
 
 class PasteGetAllResponse(BaseModel):
