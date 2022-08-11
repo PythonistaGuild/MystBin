@@ -67,7 +67,7 @@ if you wish to use redis for ratelimits, you can leave it enabled in the config.
 If you don't want to use redis, you may set use-redis to `false`, which will use in-memory ratelimits, and disable worker processes (this may degrade performance if at scale).
 
 ### Setting up apps
-To use the dashboard and the API, you'll need to configure at least one oauth provider. You can do so in their developer web panels, like [discord's](https://discord.com/developers), or [github's](https://github.com/settings/developers).
+To use the dashboard and the API, you'll need to configure at least one of the supported oauth provider (discord, github, and google). You can do so in their developer web panels, like [discord's](https://discord.com/developers), or [github's](https://github.com/settings/developers).
 After creating an app, set the callback url to `https://mysite.com/(provider)_callback`, ex `https://mystb.in/github_callback`.
 You'll need to copy the client id and client secret into the config where appropriate.
 
