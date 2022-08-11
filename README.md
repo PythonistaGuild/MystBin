@@ -68,7 +68,7 @@ If you don't want to use redis, you may set use-redis to `false`, which will use
 
 ### Setting up apps
 To use the dashboard and the API, you'll need to configure at least one of the supported oauth provider (discord, github, and google). You can do so in their developer web panels, like [discord's](https://discord.com/developers), or [github's](https://github.com/settings/developers).
-After creating an app, set the callback url to `https://mysite.com/(provider)_callback`, ex `https://mystb.in/github_callback`.
+After creating an app, set the callback url to `https://mysite.com/(provider)_auth`, ex `https://mystb.in/github_auth`.
 You'll need to copy the client id and client secret into the config where appropriate.
 
 You may set up the github bot token with a [github personal access token](https://github.com/settings/tokens) to enable automatic invalidation of discord tokens (via posting them in gists). You'll need the `gist` scope to allow creating gists.
