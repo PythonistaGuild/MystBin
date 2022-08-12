@@ -31,6 +31,16 @@ if __name__ == "__main__":
     cfg = get_config()
     port = cast(int, cfg["site"]["backend_port"])
     use_workers = "--no-workers" not in sys.argv and cfg["redis"]["use-redis"]
+    use_cli = "--no-cli" not in sys.argv
+    _cli_path = pathlib.Path(".nocli")
+
+    if not use_cli:
+        with _cli_path.open("w") as f:
+            f.truncate()
+            f.flush()
+    else:
+        if _cli_path.exists():
+            os.remove(_cli_path)
 
     if os.environ.get("ISDOCKER") is not None:
         config = uvicorn.Config("app:app", port=port, host="0.0.0.0")
@@ -48,4 +58,8 @@ if __name__ == "__main__":
     else:
         runner = server
     
-    runner.run()
+    try:
+        runner.run()
+    finally:
+        if _cli_path.exists():
+            os.remove(_cli_path)

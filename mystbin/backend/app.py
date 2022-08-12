@@ -94,6 +94,10 @@ async def app_startup():
     ratelimits.limiter.startup(app)
     app.middleware("http")(ratelimits.limiter.middleware)
 
+    nocli = pathlib.Path(".nocli")
+    if nocli.exists():
+        return
+    
     print()
 
     app.cli = _cli.CLIHandler(app.state.db)
