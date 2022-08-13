@@ -155,7 +155,7 @@ async def post_paste(
     )
     paste["notice"] = notice
 
-    return UJSONResponse(paste, status_code=201)
+    return UJSONResponse(paste)
 
 
 @router.put(
@@ -177,7 +177,7 @@ async def put_pastes(
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
 
-    author_: Record = request.state.user
+    author: Record = request.state.user
 
     if err := enforce_multipaste_limit(request.app, payload):
         return err
@@ -188,7 +188,7 @@ async def put_pastes(
         data = await upload_to_gist(request, "\n".join(tokens))
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
-    author: Optional[int] = author_["id"] if author else None
+    author: Optional[int] = author["id"] if author else None
 
     paste = await request.app.state.db.put_pastes(
         paste_id=generate_paste_id(),
@@ -204,7 +204,7 @@ async def put_pastes(
     paste["notice"] = notice
     paste = responses.PastePostResponse(**paste)
     paste = recursive_hook(paste.dict())
-    return UJSONResponse(paste, status_code=201)
+    return UJSONResponse(paste)
 
 
 @router.get(
@@ -259,6 +259,19 @@ async def get_all_pastes(
 
     return UJSONResponse({"pastes": pastes})
 
+
+@router.put(
+    "/paste/{paste_id}",
+    tags=["pastes"],
+    response_model=responses.PastePatchResponse,
+    responses={
+        200: {"model": responses.PastePatchResponse},
+        401: {"model": errors.Unauthorized},
+        403: {"model": errors.Forbidden},
+        404: {"model": errors.NotFound},
+    },
+    name="Edit paste",
+)
 @router.patch(
     "/paste/{paste_id}",
     tags=["pastes"],
@@ -288,7 +301,8 @@ async def edit_paste(
         paste_id,
         author["id"],
         payload.new_content,
-        payload.new_expires
+        payload.new_expires,
+        payload.new_nick,
     )
     if not paste or paste == 404:
         return UJSONResponse(
