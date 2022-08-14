@@ -217,7 +217,7 @@ class Limiter:
             }
             resp = await call_next(request)
             resp.headers.update(headers)
-            self.app.loop.create_task(self.app.state.db.put_logs(request, resp))
+            self.app.loop.create_task(self.app.state.db.put_log(request, resp))
             return resp
 
 
