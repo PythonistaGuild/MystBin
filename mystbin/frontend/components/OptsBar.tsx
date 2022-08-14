@@ -217,6 +217,10 @@ export default function OptsBar() {
       optional: true,
       icon: <HourglassFullIcon />,
       callback: () => {
+        if (window.location.pathname !== "/") {
+          return;
+        }
+        
         setCurrentModal(
           <ExpiryModal
             initialValue={expiryValue}
