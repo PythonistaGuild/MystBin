@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS bans (
     reason TEXT
 );
 
+CREATE TABLE IF NOT EXISTS logs (
+    ip VARCHAR(15) NOT NULL,
+    userid BIGINT REFERENCES users(id),
+    accessed TIMESTAMP,
+    cf_ray TEXT,
+    cf_country TEXT,
+    web_route TEXT NOT NULL,
+    body TEXT NOT NULL,
+    response_code INTEGER NOT NULL,
+    response TEXT NOT NULL
+);
+
 CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
 BEGIN
     DELETE FROM pastes CASCADE WHERE expires IS NOT NULL AND expires < now() AT TIME ZONE 'utc';

@@ -22,9 +22,10 @@ import difflib
 import functools
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 import asyncpg
+from fastapi import Request, Response
 
 from . import tokens
 
@@ -75,7 +76,7 @@ class Database:
     timeout = 30
 
     def __init__(self, config: dict[str, dict[str, str | int]]):
-        self._pool: asyncpg.Pool = None
+        self._pool: Optional[asyncpg.Pool] = None
         self._config = config["database"]
         if "ISDOCKER" in os.environ:
             self._db_schema = pathlib.Path("/etc/schema.sql")
@@ -96,18 +97,18 @@ class Database:
         #    await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(self, query, *args, conn: asyncpg.Connection = None) -> Optional[List[asyncpg.Record]]:
+    async def _do_query(self, query: str, *args, conn: Optional[asyncpg.Connection] = None) -> Optional[List[asyncpg.Record]]:
         if self._pool is None:
             await self.__ainit__()
 
-        _conn = conn or await self._pool.acquire()
+        _conn = conn or await cast(asyncpg.Pool, self._pool).acquire()
         try:
             response = await _conn.fetch(query, *args, timeout=self.timeout)
         except asyncio.TimeoutError:
             return None
         else:
             if not conn:
-                await self._pool.release(_conn)
+                await cast(asyncpg.Pool, self._pool).release(_conn)
 
             return response
 
@@ -1048,3 +1049,23 @@ class Database:
                 continue
 
         return close
+    
+    async def put_log(
+        self,
+        request: Request,
+        response: Response
+    ) -> None:
+        query = """
+        INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        """
+        await self._do_query(
+            query,
+            request.headers.get("X-Forwarded-For", request.client.host),
+            datetime.datetime.utcnow(),
+            request.headers.get("CF-RAY"),
+            request.headers.get("CF-IPCOUNTRY"),
+            f"{request.method.upper()} {request.url}",
+            await request.body(),
+            response.status_code,
+            str(response.body)
+        )
