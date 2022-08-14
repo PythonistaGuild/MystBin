@@ -357,51 +357,9 @@ class Database:
             resp["files"] = [dict(file) for file in inserted]
 
             return resp
-
+    
     @wrapped_hook_callback
     async def edit_paste(
-        self,
-        paste_id: str,
-        author_id: int,
-        new_content: str,
-        new_nick: Optional[str] = None,
-    ) -> Optional[asyncpg.Record]:
-        """Edits a live paste
-        Parameters
-        ------------
-        paste_id: :class:`str`
-            The paste ID we intend to edit.
-        author_id: :class:`int`
-            The paste author.
-        new_content: Optional[:class:`str`]
-            The new paste content we are inserting.
-        new_nick: Optional[:class:`str`]
-            The new nickname of the paste.
-
-        Returns
-        ---------
-        :class:`asyncpg.Record`
-            The paste record which was edited.
-        """
-        query = """
-                WITH upd AS (
-                    UPDATE pastes
-                    SET last_edit_time = (now() at time zone 'utc')
-                    WHERE id = $4 AND author_id IS NOT NULL
-                    RETURNING author_id
-                )
-                UPDATE files SET
-                    content = $1, loc = $2, nick = COALESCE($3, nick)
-                WHERE parent_id = $4 AND (select * from upd) = $5
-                RETURNING *;
-                """
-
-        response = await self._do_query(query, new_content, new_content.count("\n"), new_nick, paste_id, author_id)
-
-        return response[0] if response else None
-
-    @wrapped_hook_callback
-    async def edit_pastes(
         self,
         paste_id: str,
         pages: List[Dict[str, str]],
