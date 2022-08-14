@@ -39,7 +39,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
           property="og:description"
           content={
             paste.status !== 401
-              ? `This paste has (${paste["pastes"].length}) attached file(s)`
+              ? `This paste has (${paste["files"].length}) attached file(s)`
               : "This paste is password protected."
           }
           key="pasteDesc"
