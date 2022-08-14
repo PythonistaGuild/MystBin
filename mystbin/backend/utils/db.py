@@ -172,7 +172,7 @@ class Database:
                 """
                 contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
                 resp = dict(resp[0])
-                resp["pastes"] = [{a: str(b) for a, b in x.items()} for x in contents]
+                resp["files"] = [{a: str(b) for a, b in x.items()} for x in contents]
 
                 return resp
             else:

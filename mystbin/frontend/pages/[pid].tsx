@@ -21,7 +21,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
       content: "This is a password protected paste.",
     });
   } else {
-    for (let file of paste["pastes"]) {
+    for (let file of paste["files"]) {
       initialData.push({ title: file["filename"], content: file["content"] });
     }
   }
@@ -67,9 +67,10 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const { pid } = query;
+  const { _pid } = query;
+  let pid = _pid.toString().split(".", 1)[0];
   const response = await fetch(
-    `${config["site"]["backend_site"]}/paste/${pid.toString().split(".", 1)[0]}`
+    `${config["site"]["backend_site"]}/paste/${pid}`
   );
 
   if (response.status === 404) {
