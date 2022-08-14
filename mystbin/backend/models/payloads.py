@@ -22,24 +22,15 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class PastePost(BaseModel):
+class PasteFile(BaseModel):
     content: str
     filename: str
-    syntax: Optional[str] = None
-    password: Optional[str] = None
-    expires: Optional[datetime.datetime] = None
 
 
-class _PastePut(BaseModel):
-    content: str
-    filename: str
-    syntax: Optional[str] = None
-
-
-class ListedPastePut(BaseModel):
+class PastePut(BaseModel):
     expires: Optional[datetime.datetime] = None
     password: Optional[str] = None
-    files: List[_PastePut]
+    files: List[PasteFile]
 
     class Config:
         schema_extra = {
@@ -47,11 +38,13 @@ class ListedPastePut(BaseModel):
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": "string",
                 "files": [
-                    {"content": "string", "filename": "string", "syntax": "string"},
+                    {
+                        "content": "string",
+                        "filename": "string"
+                    },
                     {
                         "content": "another_string",
                         "filename": "another_string",
-                        "syntax": "another_string",
                     },
                 ],
             }

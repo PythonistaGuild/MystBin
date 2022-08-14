@@ -148,7 +148,7 @@ export default function OptsBar() {
           body: JSON.stringify({ files: files, password: paste.password }),
         })
           .then((r) => {
-            if (r.status === 200) {
+            if (r.status === 201) {
               return r.json();
             }
             setSaving(false);

@@ -27,6 +27,8 @@ from typing import Any, Dict, List, Optional, Union, cast
 import asyncpg
 from fastapi import Request, Response
 
+from mystbin.backend.models import payloads
+
 from . import tokens
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
@@ -168,7 +170,7 @@ class Database:
                 query = """
                 SELECT * FROM files WHERE parent_id = $1
                 """
-                contents = await self._do_query(query, paste_id, conn=conn)
+                contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
                 resp = dict(resp[0])
                 resp["pastes"] = [{a: str(b) for a, b in x.items()} for x in contents]
 
@@ -178,7 +180,10 @@ class Database:
 
     @wrapped_hook_callback
     async def get_paste_compat(self, paste_id: str) -> Optional[Dict[str, str]]:
-        async with self._pool.acquire() as conn:
+        if not self._pool:
+            await self.__ainit__()
+        
+        async with cast(asyncpg.Pool, self._pool).acquire() as conn:
             query = """
                     UPDATE pastes SET views = views + 1 WHERE id = $1
                     RETURNING *,
@@ -192,12 +197,11 @@ class Database:
                 query = """
                 SELECT content, syntax FROM files WHERE parent_id = $1 LIMIT 1
                 """
-                contents = await self._do_query(query, paste_id, conn=conn)
+                contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
                 ret = {
                     "key": paste_id,
                     "data": contents[0]["content"],
                     "has_password": resp[0]["has_password"],
-                    "syntax": contents[0]["syntax"],
                 }
 
                 return ret
@@ -209,96 +213,12 @@ class Database:
         self,
         *,
         paste_id: str,
-        content: str,
         origin_ip: str,
-        filename: str = "file.txt",
-        author: Optional[int] = None,
-        syntax: str = "",
-        expires: datetime.datetime = None,
-        password: Optional[str] = None,
-    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
-        """Puts the specified paste.
-        Parameters
-        -----------
-        paste_id: :class:`str:
-            The paste ID we are storing.
-        content: :class:`str`
-            The paste content.
-        origin_ip: :class:`str`
-            The ip the paste originated from
-        filename: :class:`str`
-            The name of the file.
-        author: Optional[:class:`int`]
-            The ID of the author, if present.
-        syntax: Optional[:class:`str`]
-            The paste syntax, if present.
-        expires: Optional[:class:`datetime.datetime`]
-            The expiry time of this paste, if present.
-        password: Optional[:class:`str`]
-            The password used to encrypt the paste, if present.
-
-        Returns
-        ---------
-        :class:`asyncpg.Record`
-            The paste record that was created.
-        """
-        query = """
-                WITH file AS (
-                    INSERT INTO pastes (id, author_id, created_at, expires, password, origin_ip)
-                    VALUES ($1, $2, $3, $4, (SELECT crypt($6, gen_salt('bf')) WHERE $6 is not null), $10)
-                    RETURNING id
-                )
-                INSERT INTO files (parent_id, content, filename, syntax, loc)
-                VALUES ((select id from file), $5, $7, $8, $9)
-                RETURNING index;
-                """
-
-        loc = content.count("\n") + 1
-        chars = len(content)
-        now = datetime.datetime.utcnow()
-
-        await self._do_query(
-            query,
-            paste_id,
-            author,
-            now,
-            expires,
-            content,
-            password,
-            filename,
-            syntax,
-            loc,
-            origin_ip,
-        )
-
-        # we need to generate our own response here, as we cant get the full response from the single query
-        resp = {
-            "id": paste_id,
-            "author_id": author,
-            "created_at": now,
-            "expires": expires,
-            "files": [
-                {
-                    "filename": filename,
-                    "syntax": syntax,
-                    "loc": loc,
-                    "charcount": chars,
-                }
-            ],
-        }
-        return resp
-
-    @wrapped_hook_callback
-    async def put_pastes(
-        self,
-        *,
-        paste_id: str,
-        origin_ip: str,
-        pages: List[Dict[str, str]],
+        pages: List[payloads.PasteFile],
         expires: Optional[datetime.datetime] = None,
         author: Optional[int] = None,
         password: Optional[str] = None,
-    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[Union[str, int]]]]]]:
+    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[str, int]]]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -319,14 +239,17 @@ class Database:
         ---------
         Dict[str, Optional[Union[str, int, datetime.datetime]]]
         """
-        async with self._pool.acquire() as conn:
+        if not self._pool:
+            await self.__ainit__()
+
+        async with cast(asyncpg.Pool, self._pool).acquire() as conn:
             query = """
                     INSERT INTO pastes (id, author_id, expires, password, origin_ip)
                     VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5)
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
-            resp = await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn)
+            resp = cast(List[asyncpg.Record], await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn))
 
             resp = resp[0]
             to_insert = []
@@ -336,15 +259,14 @@ class Database:
                         resp["id"],
                         page.content,
                         page.filename,
-                        page.syntax,
                         page.content.count("\n"),
                     )
                 )
 
             files_query = """
-                          INSERT INTO files (parent_id, content, filename, syntax, loc)
-                          VALUES ($1, $2, $3, $4, $5)
-                          RETURNING index, filename, loc, charcount, syntax, content
+                          INSERT INTO files (parent_id, content, filename, loc)
+                          VALUES ($1, $2, $3, $4)
+                          RETURNING index, filename, loc, charcount, content
                           """
             inserted = []
             async with conn.transaction():
@@ -410,7 +332,7 @@ class Database:
                 )
 
             query = """
-                    UPDATE paste_content
+                    UPDATE files
                     SET content = $1, loc = $2, charcount = $3
                     WHERE parent_id = $4
                     AND index = $5

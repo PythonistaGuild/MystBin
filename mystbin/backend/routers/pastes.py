@@ -44,7 +44,7 @@ def generate_paste_id():
     return "".join(word_samples).replace("\n", "")
 
 
-def enforce_paste_limit(app, paste: payloads.PastePost, n=1):
+def enforce_paste_limit(app, paste: payloads.PasteFile, n=1):
     charlim = app.config["paste"]["character_limit"]
     if len(paste.content) > charlim:
         return UJSONResponse(
@@ -58,7 +58,7 @@ def enforce_paste_limit(app, paste: payloads.PastePost, n=1):
     return None
 
 
-def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
+def enforce_multipaste_limit(app, pastes: payloads.PastePut):
     filelim = app.config["paste"]["character_limit"]
     if len(pastes.files) < 1:
         return UJSONResponse({"error": "files.length: you have not provided any files"}, status_code=400)
@@ -78,7 +78,7 @@ def enforce_multipaste_limit(app, pastes: payloads.ListedPastePut):
     return None
 
 
-async def upload_to_gist(request: Request, tokens: str):
+async def upload_to_gist(request: Request, tokens: str) -> dict:
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {request.app.config['apps']['github_bot_token']}",
@@ -91,72 +91,21 @@ async def upload_to_gist(request: Request, tokens: str):
         if 300 > resp.status >= 200:
             return await resp.json()
         resp.raise_for_status()
+        raise RuntimeError
 
 
-async def find_discord_tokens(request: Request, pastes: Union[payloads.ListedPastePut, payloads.PastePost]):
+async def find_discord_tokens(request: Request, pastes: payloads.PastePut):
     if not request.app.config["apps"].get("github_bot_token", None):
         return None
 
     tokens = []
 
-    try:
-        for file in pastes.files:
-            v = TOKEN_RE.findall(file.content)
-            if v:
-                tokens += v
-    except AttributeError:
-        return TOKEN_RE.findall(pastes.content)
+    for file in pastes.files:
+        v = TOKEN_RE.findall(file.content)
+        if v:
+            tokens += v
 
     return tokens or None
-
-
-@router.post(
-    "/paste",
-    tags=["pastes"],
-    response_model=responses.PastePostResponse,
-    responses={
-        201: {"model": responses.PastePostResponse},
-        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided a bad paste"}}}},
-    },
-    status_code=201,
-    name="Create a paste with a single file.",
-)
-@limit("postpastes")
-async def post_paste(
-    request: Request,
-    payload: payloads.PastePost,
-) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
-    """Post a paste to MystBin.
-    This endpoint accepts a single file."""
-    author: Record = request.state.user
-
-    author: Optional[int] = author["id"] if author else None
-
-    if err := enforce_paste_limit(request.app, payload):
-        return err
-
-    notice = None
-
-    if tokens := await find_discord_tokens(request, payload):
-        data = await upload_to_gist(request, "\n".join(tokens))
-        notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
-
-    paste = await request.app.state.db.put_paste(
-        paste_id=generate_paste_id(),
-        content=payload.content,
-        filename=payload.filename,
-        author=author,
-        syntax=payload.syntax,
-        expires=payload.expires,
-        password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
-    )
-    paste["notice"] = notice
-
-    return UJSONResponse(paste, status_code=201)
-
 
 @router.put(
     "/paste",
@@ -167,17 +116,17 @@ async def post_paste(
         400: {"content": {"application/json": {"example": {"error": "files.length: You have provided a bad paste"}}}},
     },
     status_code=201,
-    name="Create a paste with multiple files.",
+    name="Create a paste.",
 )
 @limit("postpastes")
 async def put_pastes(
     request: Request,
-    payload: payloads.ListedPastePut,
+    payload: payloads.PastePut,
 ) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     """Post a paste to MystBin.
     This endpoint accepts a single or many files."""
 
-    author_: Record = request.state.user
+    author_: Optional[Record] = request.state.user
 
     if err := enforce_multipaste_limit(request.app, payload):
         return err
@@ -188,9 +137,9 @@ async def put_pastes(
         data = await upload_to_gist(request, "\n".join(tokens))
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
-    author: Optional[int] = author_["id"] if author else None
+    author: Optional[int] = author_["id"] if author_ else None
 
-    paste = await request.app.state.db.put_pastes(
+    paste = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         pages=payload.files,
         expires=payload.expires,

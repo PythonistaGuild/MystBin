@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS files (
     parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     filename TEXT,
-    syntax TEXT,
     loc INTEGER NOT NULL,
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
     index SERIAL NOT NULL,
