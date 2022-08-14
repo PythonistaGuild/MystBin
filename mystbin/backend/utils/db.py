@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 import asyncpg
 from fastapi import Request, Response
 
-from mystbin.backend.models import payloads
+from models import payloads
 
 from . import tokens
 
