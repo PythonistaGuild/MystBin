@@ -220,7 +220,7 @@ export default function OptsBar() {
         if (window.location.pathname !== "/") {
           return;
         }
-        
+
         setCurrentModal(
           <ExpiryModal
             initialValue={expiryValue}
