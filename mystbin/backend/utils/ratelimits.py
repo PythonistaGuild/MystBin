@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterator, List, Opti
 
 import aioredis
 from starlette.requests import Request
-from starlette.responses import Response, JSONResponse
+from starlette.responses import Response, JSONResponse, StreamingResponse
 from starlette.routing import Match
 
 from . import tokens
@@ -150,6 +150,23 @@ class Limiter:
         key = ratelimit_id_key(request)
         return f"{zone}%{key}"
     
+    async def _transform_and_log(self, request: Request, response: Response) -> Response:
+        if isinstance(response, StreamingResponse):
+                resp_ = Response(status_code=response.status_code, background=response.background, media_type=cast(str, response.media_type))
+                resp_._headers = response._headers
+                body = b""
+                async for chunk in response.body_iterator:
+                    if not isinstance(chunk, bytes):
+                        chunk = chunk.encode(response.charset)
+                    
+                    body += chunk
+                
+                resp_.body = body
+                response = resp_
+            
+        await self.app.state.db.put_log(request, response)
+        return response
+    
     async def get_bucket(self, zone: str, key: str, request: Request) -> BaseLimitBucket:
         if key in self._keys:
             return self._keys[key]
@@ -209,7 +226,8 @@ class Limiter:
             
             resp = await call_next(request)
             resp.headers.update(headers)
-            return resp
+            return await self._transform_and_log(request, resp)
+
         
         else:
             headers = {
@@ -225,8 +243,7 @@ class Limiter:
             }
             resp = await call_next(request)
             resp.headers.update(headers)
-            self.app.loop.create_task(self.app.state.db.put_log(request, resp))
-            return resp
+            return await self._transform_and_log(request, resp)
 
 
 def parse_ratelimit(limit: str) -> tuple[int, int]:

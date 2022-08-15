@@ -939,9 +939,10 @@ class Database:
         INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         """
         try:
-            body = await request.body()
+            body = request._body
         except:
             body = None
+
         try:
             resp = str(response.body)
         except AttributeError:
@@ -949,6 +950,7 @@ class Database:
         await self._do_query(
             query,
             request.headers.get("X-Forwarded-For", request.client.host),
+            request.state.user and request.state.user.id,
             datetime.datetime.utcnow(),
             request.headers.get("CF-RAY"),
             request.headers.get("CF-IPCOUNTRY"),
