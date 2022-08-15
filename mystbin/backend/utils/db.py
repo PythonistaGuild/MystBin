@@ -942,14 +942,18 @@ class Database:
             body = await request.body()
         except:
             body = None
+        try:
+            resp = str(response.body)
+        except AttributeError:
+            resp = None
         await self._do_query(
             query,
             request.headers.get("X-Forwarded-For", request.client.host),
             datetime.datetime.utcnow(),
             request.headers.get("CF-RAY"),
             request.headers.get("CF-IPCOUNTRY"),
-            f"{request.method.upper()} {request.url}",
+            f"{request.method.upper()} {request.url.include_query_params()}",
             body,
             response.status_code,
-            str(response.body)
+            resp
         )

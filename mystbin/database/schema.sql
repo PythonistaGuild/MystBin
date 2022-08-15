@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS logs (
     web_route TEXT NOT NULL,
     body TEXT,
     response_code INTEGER NOT NULL,
-    response TEXT NOT NULL
+    response TEXT
 );
 
 CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
