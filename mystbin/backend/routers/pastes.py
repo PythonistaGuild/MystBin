@@ -386,7 +386,7 @@ async def compat_create_paste(request: Request):
     content = await request.body()
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
-        pages=[{"filename": "file.txt", "content": content}],
+        pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
         if request.app.config["paste"]["log_ip"]
         else None
