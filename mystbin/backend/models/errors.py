@@ -23,6 +23,15 @@ from pydantic import BaseModel
 
 class Unauthorized(BaseModel):
     error: str = "Unauthorized"
+    notice: str
+
+    class Config:
+        schema_extras = {
+            "example": {
+                "error": "Unauthorized",
+                "notice": "You must be signed in to use this route"
+            }
+        }
 
 
 class Forbidden(BaseModel):

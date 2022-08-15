@@ -49,7 +49,7 @@
         "authed_global": "120/minute",
         "premium_global": "360/minute",
         "postpastes": "5/minute",
-        "authed_postpages": "10/minute",
+        "authed_postpastes": "10/minute",
         "premium_postpastes": "20/minute",
         "getpaste": "20/minute",
         "authed_getpaste": "40/minute",
