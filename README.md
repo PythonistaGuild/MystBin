@@ -34,7 +34,8 @@ To get an API token, log in with any oauth provider and enter the dashboard. Cop
 The way ratelimits work differs based on whether redis is being used or not.
 If redis is in use, the window method is used, where you have X requests available in a certain timeframe.
 If redis is NOT in use, the leaky bucket method is used, where you gain requests after every X seconds.
-The ratelimit headers will differ a slight bit depending on the method in use (ex x-ratelimit-reset is not applicable to the leaky bucket, and will always be 0)
+The ratelimit headers will differ a slight bit depending on the method in use (ex x-ratelimit-reset is not applicable to the leaky bucket, and will always be 0).
+You can always tell what method is being used via the `X-Ratelimit-Strategy` header. If this header returns `ignore`, ratelimits are not applicable to the request (ex if using an admin account).
 
 All API responses have ratelimit information associated with them:
 - `x-ratelimit-available`: How many API calls you have left before being ratelimited.

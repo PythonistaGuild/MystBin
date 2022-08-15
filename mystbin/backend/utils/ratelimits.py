@@ -32,6 +32,8 @@ time_units = {
 }
 
 class BaseLimitBucket:
+    strategy: str
+
     def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
         self.count = count
         self.per = per
@@ -56,6 +58,8 @@ class InMemoryLimitBucket(BaseLimitBucket):
     """
 
     __slots__ = ("count", "per", "hits")
+
+    strategy: str = "leakybucket"
 
     def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
         self.count = count
@@ -86,6 +90,8 @@ class RedisLimitBucket(BaseLimitBucket):
     """
 
     __slots__ = ("key", "count", "per", "app", "reset")
+
+    strategy: str = "window"
 
     def __init__(self, app: MystbinApp, key: str, count: int, per: int) -> None:
         self.app = app
@@ -179,7 +185,8 @@ class Limiter:
                 "X-Ratelimit-Used": "0",
                 "X-Ratelimit-Reset": "0",
                 "X-Ratelimit-Max": "1",
-                "X-Ratelimit-Available": "1"
+                "X-Ratelimit-Available": "1",
+                "X-Ratelimit-Strategy": self.bucket_cls.strategy
             }
 
             if is_limited:
@@ -213,7 +220,8 @@ class Limiter:
                 "X-Ratelimit-Used": "0",
                 "X-Ratelimit-Reset": "0",
                 "X-Ratelimit-Max": "1",
-                "X-Ratelimit-Available": "1"
+                "X-Ratelimit-Available": "1",
+                "X-Ratelimit-Strategy": "ignore"
             }
             resp = await call_next(request)
             resp.headers.update(headers)
