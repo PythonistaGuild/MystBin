@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS logs (
     cf_ray TEXT,
     cf_country TEXT,
     web_route TEXT NOT NULL,
-    body TEXT NOT NULL,
+    body TEXT,
     response_code INTEGER NOT NULL,
     response TEXT NOT NULL
 );

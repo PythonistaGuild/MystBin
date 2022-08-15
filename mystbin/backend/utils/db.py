@@ -938,6 +938,10 @@ class Database:
         query = """
         INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         """
+        try:
+            body = await request.body()
+        except:
+            body = None
         await self._do_query(
             query,
             request.headers.get("X-Forwarded-For", request.client.host),
@@ -945,7 +949,7 @@ class Database:
             request.headers.get("CF-RAY"),
             request.headers.get("CF-IPCOUNTRY"),
             f"{request.method.upper()} {request.url}",
-            await request.body(),
+            body,
             response.status_code,
             str(response.body)
         )
