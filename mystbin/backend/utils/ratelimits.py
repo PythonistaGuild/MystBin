@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import time
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, cast
 
@@ -7,6 +8,7 @@ from starlette.responses import Response, StreamingResponse
 from starlette.routing import Match
 
 from . import tokens
+
 
 if TYPE_CHECKING:
     from app import MystbinApp

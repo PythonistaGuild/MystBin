@@ -24,11 +24,11 @@ from typing import Dict, Optional, Union
 import yarl
 from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
+from fastapi_models import MystbinRequest
 from models import responses
 from utils.embed import Embed
 from utils.ratelimits import limit
 
-from fastapi_models import MystbinRequest
 
 router = APIRouter()
 

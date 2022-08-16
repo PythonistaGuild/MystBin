@@ -1,10 +1,12 @@
-import sys
-import os
 import asyncio
+import os
 import pathlib
+import sys
+
 import toml
 from httpx import AsyncClient
 from main import app
+
 
 with open("tests/config.toml") as f:
     app.config = toml.load(f)

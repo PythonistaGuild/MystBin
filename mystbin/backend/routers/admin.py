@@ -25,10 +25,11 @@ import psutil
 from asyncpg import Record
 from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
-from models import errors, responses
-from utils.ratelimits import limit
-from utils.db import _recursive_hook as recursive_hook
 from fastapi_models import MystbinRequest
+from models import errors, responses
+from utils.db import _recursive_hook as recursive_hook
+from utils.ratelimits import limit
+
 
 router = APIRouter()
 

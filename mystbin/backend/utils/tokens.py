@@ -4,6 +4,7 @@ from typing import Optional
 import jwt
 from Crypto.Random import get_random_bytes
 
+
 JWT_OPTIONS = {"verify_signature": False}
 
 

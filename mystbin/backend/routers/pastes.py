@@ -19,19 +19,20 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
+import json
 import pathlib
 import re
-import json
 from random import sample
 from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
 from fastapi import APIRouter
 from fastapi.responses import UJSONResponse
+from fastapi_models import MystbinRequest
 from models import errors, payloads, responses
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
-from fastapi_models import MystbinRequest
+
 
 _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 word_list = [word.title() for word in _WORDS_LIST if len(word) > 3]

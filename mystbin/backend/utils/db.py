@@ -27,10 +27,10 @@ from typing import Any, Dict, List, Optional, Union, cast
 import asyncpg
 from asyncpg import Record
 from fastapi import Request, Response
-
 from models import payloads
 
 from . import tokens
+
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 

@@ -27,12 +27,12 @@ import sentry_sdk
 import ujson
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from starlette_prometheus import metrics, PrometheusMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from routers import admin, apps, pastes, user
-from utils import ratelimits, cli as _cli
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette_prometheus import PrometheusMiddleware, metrics
+from utils import cli as _cli
+from utils import ratelimits
 from utils.db import Database
 
 from .fastapi_models import MystbinRequest, MystbinState

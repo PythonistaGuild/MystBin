@@ -26,12 +26,7 @@ class Unauthorized(BaseModel):
     notice: str
 
     class Config:
-        schema_extras = {
-            "example": {
-                "error": "Unauthorized",
-                "notice": "You must be signed in to use this route"
-            }
-        }
+        schema_extras = {"example": {"error": "Unauthorized", "notice": "You must be signed in to use this route"}}
 
 
 class Forbidden(BaseModel):

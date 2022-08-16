@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import argparse
+import asyncio
 import shlex
 from typing import TYPE_CHECKING
 
 import aioconsole
 import tabulate
+
 
 if TYPE_CHECKING:
     from utils.db import Database
@@ -231,7 +232,8 @@ class CLIHandler:
 
 if __name__ == "__main__":
     import asyncio
-    import sys, os
+    import os
+    import sys
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
     os.chdir(os.path.dirname(os.path.dirname(__file__)))

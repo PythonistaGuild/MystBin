@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
-from .utils.db import Database
 
-from starlette.datastructures import State
 from fastapi import Request
+from starlette.datastructures import State
+from utils.db import Database
+
 
 if TYPE_CHECKING:
     from app import MystbinApp

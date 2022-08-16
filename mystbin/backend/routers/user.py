@@ -19,10 +19,11 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional, Union
 
 from fastapi import APIRouter
-from fastapi.responses import UJSONResponse, Response
-from models import errors, responses, payloads
-from utils.ratelimits import limit
+from fastapi.responses import Response, UJSONResponse
 from fastapi_models import MystbinRequest
+from models import errors, payloads, responses
+from utils.ratelimits import limit
+
 
 router = APIRouter()
 
