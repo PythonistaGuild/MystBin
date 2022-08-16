@@ -52,9 +52,9 @@ class PastePut(BaseModel):
 
 
 class PastePatch(BaseModel):
-    new_content: Optional[str] = None
-    new_filename: Optional[str] = None
     new_expires: Optional[datetime.datetime] = None
+    new_password: Optional[str] = None
+    new_files: List[PasteFile]
 
 
 class PasteDelete(BaseModel):

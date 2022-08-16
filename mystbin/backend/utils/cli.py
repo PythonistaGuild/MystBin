@@ -3,21 +3,22 @@ from __future__ import annotations
 import asyncio
 import argparse
 import shlex
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING
 
 import aioconsole
 import tabulate
 
 if TYPE_CHECKING:
-    from app import MystbinApp
     from utils.db import Database
 
 
 def find_disallowed_args(ns: argparse.Namespace, args: list[str], allowed_values: tuple = (None, False)) -> list[str]:
     return [arg for arg in args if getattr(ns, arg) not in allowed_values]
 
+
 class Interrupt(Exception):
     pass
+
 
 class CLIHandler:
     def __init__(self, db: Database) -> None:
@@ -48,7 +49,7 @@ class CLIHandler:
             "--list",
             "-l",
             help="list all pastes in the order they were created (most recent first). 50 per page",
-            metavar="PAGE"
+            metavar="PAGE",
         )
 
         self.subparser_admin = self.subparsers.add_parser(
@@ -110,15 +111,19 @@ class CLIHandler:
             except:
                 print(f"Paste: Expected a page number, got '{namespace.list}'")
                 return
-            
+
             paste_info = await self.db.get_all_pastes(page, 50)
             if not paste_info:
                 print(f"Paste: Page {page} not found")
                 return
-            
-            tabled = tabulate.tabulate([list(x.values()) for x in paste_info], headers=["id", "author id", "created at", "views", "expires", "origin ip", "has password"], tablefmt="psql")
+
+            tabled = tabulate.tabulate(
+                [list(x.values()) for x in paste_info],
+                headers=["id", "author id", "created at", "views", "expires", "origin ip", "has password"],
+                tablefmt="psql",
+            )
             await aioconsole.aprint(tabled)
-            
+
             print(f"Paste: Showing {len(paste_info)} pastes (page {page+1})")
 
         elif namespace.delete:
@@ -174,34 +179,34 @@ class CLIHandler:
             except:
                 print(f"Admin: Expected a user id, got '{uid}'")
                 raise Interrupt
-            
+
         if namespace.add:
             if bad_args := find_disallowed_args(namespace, ["remove", "list"]):
-                print(
-                    f"Admin: The following args cannot be used with the `add` argument: {','.join(bad_args)}"
-                )
+                print(f"Admin: The following args cannot be used with the `add` argument: {','.join(bad_args)}")
                 return
 
             if await self.db.toggle_admin(_try_userid(namespace.add), True):
                 print(f"{namespace.add} is now an admin")
             else:
                 print("Admin: User not found")
-        
+
         elif namespace.remove:
             if bad_args := find_disallowed_args(namespace, ["add", "list"]):
-                print(
-                    f"Admin: The following args cannot be used with the `remove` argument: {','.join(bad_args)}"
-                )
+                print(f"Admin: The following args cannot be used with the `remove` argument: {','.join(bad_args)}")
                 return
-            
+
             if await self.db.toggle_admin(_try_userid(namespace.add), False):
                 print(f"{namespace.add} is now not an admin")
             else:
                 print("Admin: User not found")
-        
+
         elif namespace.list:
             users = await self.db.list_admin()
-            resp = tabulate.tabulate([list(x.values()) for x in users], headers=["User ID", "Username", "Discord ID", "Github ID", "Google ID"], tablefmt="psql")
+            resp = tabulate.tabulate(
+                [list(x.values()) for x in users],
+                headers=["User ID", "Username", "Discord ID", "Github ID", "Google ID"],
+                tablefmt="psql",
+            )
             await aioconsole.aprint(resp)
 
     async def command_users(self, namespace: argparse.Namespace) -> None:
@@ -211,15 +216,15 @@ class CLIHandler:
             except:
                 print(f"Users: expected an int, got {namespace.list!r}")
                 return
-            
-            users: dict = (await self.db.get_admin_userlist(page))['users'] # type: ignore
+
+            users: dict = (await self.db.get_admin_userlist(page))["users"]  # type: ignore
             if not users:
                 print("Users: No users found")
                 return
-            
+
             for user in users:
-                user['authorizations'] = ", ".join(user['authorizations'])
-            
+                user["authorizations"] = ", ".join(user["authorizations"])
+
             fmt = tabulate.tabulate([list(x.values()) for x in users], headers=list(users[0].keys()), tablefmt="psql")
             await aioconsole.aprint(fmt)
 

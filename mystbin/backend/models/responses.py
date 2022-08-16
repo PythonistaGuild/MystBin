@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from pydantic import BaseModel
 
@@ -39,8 +39,7 @@ class PastePostResponse(BaseModel):
 
 
 class PastePatchResponse(BaseModel):
-    id: str
-    expires: Optional[datetime] = None
+    result: Literal["ok"]
 
 
 class PasteGetResponse(BaseModel):

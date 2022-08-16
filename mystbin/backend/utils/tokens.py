@@ -7,10 +7,10 @@ from Crypto.Random import get_random_bytes
 JWT_OPTIONS = {"verify_signature": False}
 
 
-def generate(userid: int, key=None) -> str:
+def generate(userid: int) -> str:
     """Generate a token."""
     payload = {"id": userid}
-    key = key or binascii.hexlify(get_random_bytes(64))
+    key = binascii.hexlify(get_random_bytes(64)).decode()
     return jwt.encode(payload, key, algorithm="HS512")
 
 

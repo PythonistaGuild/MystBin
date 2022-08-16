@@ -19,8 +19,6 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
-import os
-import sys
 from typing import Any, Dict, Optional
 
 import aiohttp
@@ -31,10 +29,18 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette_prometheus import metrics, PrometheusMiddleware
+from starlette.datastructures import State
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from routers import admin, apps, pastes, user
 from utils import ratelimits, cli as _cli
 from utils.db import Database
+
+
+class _TypedState(State):
+    """Only for db typing."""
+
+    db: Database
 
 
 class MystbinApp(FastAPI):
@@ -42,15 +48,18 @@ class MystbinApp(FastAPI):
 
     redis: Optional[aioredis.Redis]
     cli: Optional[_cli.CLIHandler] = None
+    state: _TypedState
 
     def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
+        self.add_middleware(BaseHTTPMiddleware, dispatch=request_stats)
+        self.add_event_handler("startup", func=app_startup)
 
         if not config:
             config = pathlib.Path("config.json")
             if not config.exists():
                 config = pathlib.Path("../../config.json")
-            
+
         with open(config) as f:
             self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
 
@@ -65,10 +74,13 @@ class MystbinApp(FastAPI):
         self.should_close = False
 
 
+class MystbinRequest(Request):
+    app: MystbinApp
+
+
 app = MystbinApp()
 
 
-@app.middleware("http")
 async def request_stats(request: Request, call_next):
     request.app.state.request_stats["total"] += 1
 
@@ -79,7 +91,6 @@ async def request_stats(request: Request, call_next):
     return response
 
 
-@app.on_event("startup")
 async def app_startup():
     """Async app startup."""
     app.state.db = await Database(app.config).__ainit__()
@@ -93,16 +104,16 @@ async def app_startup():
             port=app.config["redis"]["port"],
             username=app.config["redis"]["user"],
             password=app.config["redis"]["password"],
-            db=app.config["redis"]["db"]
+            db=app.config["redis"]["db"],
         )
-    
+
     ratelimits.limiter.startup(app)
     app.middleware("http")(ratelimits.limiter.middleware)
 
     nocli = pathlib.Path(".nocli")
     if nocli.exists():
         return
-    
+
     print()
 
     app.cli = _cli.CLIHandler(app.state.db)

@@ -16,19 +16,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import datetime
 import pathlib
 import re
 import json
 from random import sample
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, TYPE_CHECKING
 
 from asyncpg import Record
-from fastapi import APIRouter, Request, Security
+from fastapi import APIRouter
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
+
+if TYPE_CHECKING:
+    from app import MystbinRequest
 
 _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
 word_list = [word.title() for word in _WORDS_LIST if len(word) > 3]
@@ -45,7 +50,8 @@ if not __p.exists():
 with __p.open() as __f:
     __config = json.load(__f)
 
-del __p, __f # micro-opt, don't keep unneeded variables in-ram
+del __p, __f  # micro-opt, don't keep unneeded variables in-ram
+
 
 def generate_paste_id():
     """Generate three random words."""
@@ -87,7 +93,7 @@ def enforce_multipaste_limit(app, pastes: payloads.PastePut):
     return None
 
 
-async def upload_to_gist(request: Request, tokens: str) -> dict:
+async def upload_to_gist(request: MystbinRequest, tokens: str) -> dict:
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {request.app.config['apps']['github_bot_token']}",
@@ -103,7 +109,7 @@ async def upload_to_gist(request: Request, tokens: str) -> dict:
         raise RuntimeError
 
 
-async def find_discord_tokens(request: Request, pastes: payloads.PastePut):
+async def find_discord_tokens(request: MystbinRequest, pastes: payloads.PastePut):
     if not request.app.config["apps"].get("github_bot_token", None):
         return None
 
@@ -116,11 +122,13 @@ async def find_discord_tokens(request: Request, pastes: payloads.PastePut):
 
     return tokens or None
 
+
 desc = f"""Post a paste.
 
 This endpoint falls under the `postpastes` ratelimit bucket.
 The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['postpastes']}, and a ratelimit of {__config['ratelimits']['authed_postpastes']} when signed in
 """
+
 
 @router.put(
     "/paste",
@@ -132,11 +140,11 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     },
     status_code=201,
     name="Create paste",
-    description=desc
+    description=desc,
 )
 @limit("postpastes")
 async def put_pastes(
-    request: Request,
+    request: MystbinRequest,
     payload: payloads.PastePut,
 ) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
     author_: Optional[Record] = request.state.user
@@ -164,15 +172,17 @@ async def put_pastes(
     )
 
     paste["notice"] = notice
-    paste = responses.PastePostResponse(**paste)
+    paste = responses.PastePostResponse(**paste)  # type: ignore # this is a problem for future me #TODO
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste, status_code=201)
+
 
 desc = f"""Get a paste by ID.
 
 This endpoint falls under the `getpaste` ratelimit bucket.
 The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
+
 
 @router.get(
     "/paste/{paste_id}",
@@ -184,10 +194,10 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
         404: {"model": errors.NotFound},
     },
     name="Get paste",
-    description=desc
+    description=desc,
 )
 @limit("getpaste")
-async def get_paste(request: Request, paste_id: str, password: Optional[str] = None) -> UJSONResponse:
+async def get_paste(request: MystbinRequest, paste_id: str, password: Optional[str] = None) -> UJSONResponse:
     paste = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
@@ -198,12 +208,14 @@ async def get_paste(request: Request, paste_id: str, password: Optional[str] = N
     resp = responses.PasteGetResponse(**paste)
     return UJSONResponse(recursive_hook(resp.dict()))
 
+
 desc = f"""Get all pastes for the user you are signed in as via the Authorization header.
 * Requires authentication.
 
 This endpoint falls under the `getpaste` ratelimit bucket.
 The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
+
 
 @router.get(
     "/pastes/@me",
@@ -214,21 +226,24 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
         401: {"model": errors.Unauthorized},
     },
     name="Get user pastes",
-    description=desc
+    description=desc,
 )
 @limit("getpaste")
 async def get_all_pastes(
-    request: Request,
+    request: MystbinRequest,
     limit: Optional[int] = None,
 ) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return UJSONResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
+        )
 
     pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
     pastes = [dict(entry) for entry in pastes]
 
     return UJSONResponse({"pastes": pastes})
+
 
 desc = f"""Edit a paste.
 You must be the author of the paste (IE, the paste must be created under your account).
@@ -238,6 +253,7 @@ You must be the author of the paste (IE, the paste must be created under your ac
 This endpoint falls under the `postpastes` ratelimit bucket.
 The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['postpastes']}, and a ratelimit of {__config['ratelimits']['authed_postpastes']} when signed in
 """
+
 
 @router.patch(
     "/paste/{paste_id}",
@@ -250,31 +266,35 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
         404: {"model": errors.NotFound},
     },
     name="Edit paste",
-    description=desc
+    description=desc,
 )
 @limit("postpastes")
 async def edit_paste(
-    request: Request,
+    request: MystbinRequest,
     paste_id: str,
     payload: payloads.PastePatch,
 ) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     author = request.state.user
     if not author:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return UJSONResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
+        )
 
     paste: Union[Record, int] = await request.app.state.db.edit_paste(
         paste_id,
-        author["id"],
-        payload.new_content,
-        payload.new_expires
+        author=author["id"],
+        new_expires=payload.new_expires,
+        new_password=payload.new_password,
+        files=payload.new_files,
     )
-    if not paste or paste == 404:
+    if not paste or isinstance(paste, int):
         return UJSONResponse(
             {"error": "Paste was not found or you are not it's author."},
             status_code=404,
         )
 
-    return UJSONResponse(dict(paste[0]))
+    return UJSONResponse(content={"result": "ok"}, status_code=200)
+
 
 desc = f"""Deletes pastes on MystBin.
 You must be the author of the paste (IE, the paste must be created under your account).
@@ -285,6 +305,7 @@ This endpoint falls under the `deletepaste` ratelimit bucket.
 The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['deletepaste']}, and a ratelimit of {__config['ratelimits']['authed_deletepaste']} when signed in
 """
 
+
 @router.delete(
     "/paste/{paste_id}",
     tags=["pastes"],
@@ -294,18 +315,22 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     },
     status_code=200,
     name="Delete paste",
-    description=desc
+    description=desc,
 )
 @limit("deletepaste")
-async def delete_paste(request: Request, paste_id: str) -> Union[UJSONResponse, Dict[str, str]]:
+async def delete_paste(request: MystbinRequest, paste_id: str) -> Union[UJSONResponse, Dict[str, str]]:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return UJSONResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
+        )
 
     if not user["admin"]:
         is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
         if not is_owner:
-            return UJSONResponse({"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, status_code=401)
+            return UJSONResponse(
+                {"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, status_code=401
+            )
 
     deleted: Record = await request.app.state.db.delete_paste(paste_id, user["id"], admin=False)
 
@@ -320,6 +345,7 @@ You must be the author of the pastes (IE, the pastes must be created under your 
 This endpoint falls under the `deletepaste` ratelimit bucket.
 The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['deletepaste']}, and a ratelimit of {__config['ratelimits']['authed_deletepaste']} when signed in
 """
+
 
 @router.delete(
     "/paste",
@@ -340,11 +366,11 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     },
     status_code=200,
     name="Delete pastes",
-    description=desc
+    description=desc,
 )
 @limit("deletepaste")
 async def delete_pastes(
-    request: Request,
+    request: MystbinRequest,
     payload: payloads.PasteDelete,
 ) -> Union[UJSONResponse, Dict[str, List[str]]]:
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response
@@ -365,6 +391,7 @@ async def delete_pastes(
 
     return UJSONResponse(response, status_code=200)
 
+
 desc = f"""
 A compatibility endpoint to maintain hastbin compatibility. Depreciated in favour of /paste
 This endpoint does not allow for syntax highlighting, multi-file, password protection, expiry, etc. Use the /paste endpoint for these features
@@ -373,22 +400,23 @@ This endpoint falls under the `postpastes` ratelimit bucket.
 The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['postpastes']}, and a ratelimit of {__config['ratelimits']['authed_postpastes']} when signed in
 """
 
+
 @router.post(
     "/documents",
     tags=["pastes"],
     deprecated=True,
     response_description='{"key": "string"}',
     name="Hastebin create paste",
-    description=desc
+    description=desc,
 )
 @limit("postpastes")
-async def compat_create_paste(request: Request):
+async def compat_create_paste(request: MystbinRequest):
     content = await request.body()
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
         origin_ip=request.headers.get("x-forwarded-for", request.client.host)
         if request.app.config["paste"]["log_ip"]
-        else None
+        else None,
     )
     return UJSONResponse({"key": paste["id"]})

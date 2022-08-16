@@ -16,25 +16,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import datetime
-from typing import Dict, Union
+from typing import Dict, Optional, Union, TYPE_CHECKING
 
 import yarl
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
 from models import responses
 from utils.embed import Embed
 from utils.ratelimits import limit
 
+if TYPE_CHECKING:
+    from app import MystbinRequest
+
 router = APIRouter()
 
+
 @limit("apps")
-@router.post(
-    "/users/connect/discord",
-    response_model=responses.TokenResponse,
-    include_in_schema=False
-)
-async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResponse]:
+@router.post("/users/connect/discord", response_model=responses.TokenResponse, include_in_schema=False)
+async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional[str]], UJSONResponse]:
     """Allows user to authenticate from Discord OAuth."""
     try:
         data = await request.json()
@@ -88,13 +90,9 @@ async def auth_from_discord(request: Request) -> Union[Dict[str, str], UJSONResp
         return UJSONResponse({"token": data["token"]})
 
 
-@router.post(
-    "/users/connect/google",
-    response_model=responses.TokenResponse,
-    include_in_schema=False
-)
+@router.post("/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False)
 @limit("apps")
-async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONResponse]:
+async def auth_from_google(request: MystbinRequest) -> Union[Dict[str, str], UJSONResponse]:
     """Allows user to authenticate from Google OAuth."""
     try:
         data = await request.json()
@@ -146,13 +144,9 @@ async def auth_from_google(request: Request) -> Union[Dict[str, str], UJSONRespo
         return UJSONResponse({"token": data["token"]})
 
 
-@router.post(
-    "/users/connect/github",
-    response_model=responses.TokenResponse,
-    include_in_schema=False
-)
+@router.post("/users/connect/github", response_model=responses.TokenResponse, include_in_schema=False)
 @limit("apps")
-async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
+async def auth_from_github(request: MystbinRequest) -> Union[Response, UJSONResponse]:
     """Allows user to authenticate with GitHub OAuth."""
     try:
         data = await request.json()
@@ -220,12 +214,9 @@ async def auth_from_github(request: Request) -> Union[Response, UJSONResponse]:
         return UJSONResponse({"token": data["token"]})
 
 
-@router.delete(
-    "/users/connect/{app}",
-    include_in_schema=False
-)
+@router.delete("/users/connect/{app}", include_in_schema=False)
 @limit("apps")
-async def disconnect_app(request: Request, app: str):
+async def disconnect_app(request: MystbinRequest, app: str):
     if app not in ("github", "discord", "google"):
         return Response(status_code=404)
 
@@ -240,7 +231,7 @@ async def disconnect_app(request: Request, app: str):
 
 @router.post("/callbacks/sentry", include_in_schema=False)
 @limit("sentry")
-async def sentry_callback(request: Request):
+async def sentry_callback(request: MystbinRequest):
     data = await request.json()
 
     title = data["data"]["issue"]["title"]
