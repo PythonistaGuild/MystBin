@@ -35,7 +35,7 @@ from utils import cli as _cli
 from utils import ratelimits
 from utils.db import Database
 
-from .fastapi_models import MystbinRequest, MystbinState
+from fastapi_models import MystbinRequest, MystbinState
 
 
 class MystbinApp(FastAPI):
