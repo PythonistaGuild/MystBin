@@ -25,22 +25,17 @@ import aiohttp
 import aioredis
 import sentry_sdk
 import ujson
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette_prometheus import metrics, PrometheusMiddleware
-from starlette.datastructures import State
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from routers import admin, apps, pastes, user
 from utils import ratelimits, cli as _cli
 from utils.db import Database
 
-
-class _TypedState(State):
-    """Only for db typing."""
-
-    db: Database
+from .fastapi_models import MystbinRequest, MystbinState
 
 
 class MystbinApp(FastAPI):
@@ -48,7 +43,7 @@ class MystbinApp(FastAPI):
 
     redis: Optional[aioredis.Redis]
     cli: Optional[_cli.CLIHandler] = None
-    state: _TypedState
+    state: MystbinState
 
     def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
@@ -74,14 +69,10 @@ class MystbinApp(FastAPI):
         self.should_close = False
 
 
-class MystbinRequest(Request):
-    app: MystbinApp
-
-
 app = MystbinApp()
 
 
-async def request_stats(request: Request, call_next):
+async def request_stats(request: MystbinRequest, call_next):
     request.app.state.request_stats["total"] += 1
 
     if request.url.path != "/admin/stats":

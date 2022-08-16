@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import Dict, Optional, Union, TYPE_CHECKING
+from typing import Dict, Optional, Union
 
 import psutil
 from asyncpg import Record
@@ -28,9 +28,7 @@ from fastapi.responses import Response, UJSONResponse
 from models import errors, responses
 from utils.ratelimits import limit
 from utils.db import _recursive_hook as recursive_hook
-
-if TYPE_CHECKING:
-    from app import MystbinRequest
+from fastapi_models import MystbinRequest
 
 router = APIRouter()
 

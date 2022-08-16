@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import Dict, Optional, Union, TYPE_CHECKING
+from typing import Dict, Optional, Union
 
 import yarl
 from fastapi import APIRouter
@@ -28,8 +28,7 @@ from models import responses
 from utils.embed import Embed
 from utils.ratelimits import limit
 
-if TYPE_CHECKING:
-    from app import MystbinRequest
+from fastapi_models import MystbinRequest
 
 router = APIRouter()
 
