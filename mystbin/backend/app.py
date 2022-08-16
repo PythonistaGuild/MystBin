@@ -47,8 +47,8 @@ class MystbinApp(FastAPI):
 
     def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
-        self.add_middleware(BaseHTTPMiddleware, dispatch=request_stats)
-        self.add_event_handler("startup", func=app_startup)
+        self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
+        self.add_event_handler("startup", func=self.app_startup)
 
         if not config:
             config = pathlib.Path("config.json")
@@ -68,47 +68,45 @@ class MystbinApp(FastAPI):
         )
         self.should_close = False
 
+    async def request_stats(self, request: MystbinRequest, call_next):
+        request.app.state.request_stats["total"] += 1
+
+        if request.url.path != "/admin/stats":
+            request.app.state.request_stats["latest"] = datetime.datetime.utcnow()
+
+        response = await call_next(request)
+        return response
+
+    async def app_startup(self):
+        """Async app startup."""
+        self.state.db = await Database(self.config).__ainit__()
+        self.state.client = aiohttp.ClientSession()
+        self.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
+        self.state.webhook_url = self.config["sentry"].get("discord_webhook", None)
+
+        if self.config["redis"]["use-redis"]:
+            self.redis = aioredis.Redis(
+                host=self.config["redis"]["host"],
+                port=self.config["redis"]["port"],
+                username=self.config["redis"]["user"],
+                password=self.config["redis"]["password"],
+                db=self.config["redis"]["db"],
+            )
+
+        ratelimits.limiter.startup(self)
+        self.middleware("http")(ratelimits.limiter.middleware)
+
+        nocli = pathlib.Path(".nocli")
+        if nocli.exists():
+            return
+
+        print()
+
+        self.cli = _cli.CLIHandler(self.state.db)
+        self.loop.create_task(self.cli.parse_cli())
+
 
 app = MystbinApp()
-
-
-async def request_stats(request: MystbinRequest, call_next):
-    request.app.state.request_stats["total"] += 1
-
-    if request.url.path != "/admin/stats":
-        request.app.state.request_stats["latest"] = datetime.datetime.utcnow()
-
-    response = await call_next(request)
-    return response
-
-
-async def app_startup():
-    """Async app startup."""
-    app.state.db = await Database(app.config).__ainit__()
-    app.state.client = aiohttp.ClientSession()
-    app.state.request_stats = {"total": 0, "latest": datetime.datetime.utcnow()}
-    app.state.webhook_url = app.config["sentry"].get("discord_webhook", None)
-
-    if app.config["redis"]["use-redis"]:
-        app.redis = aioredis.Redis(
-            host=app.config["redis"]["host"],
-            port=app.config["redis"]["port"],
-            username=app.config["redis"]["user"],
-            password=app.config["redis"]["password"],
-            db=app.config["redis"]["db"],
-        )
-
-    ratelimits.limiter.startup(app)
-    app.middleware("http")(ratelimits.limiter.middleware)
-
-    nocli = pathlib.Path(".nocli")
-    if nocli.exists():
-        return
-
-    print()
-
-    app.cli = _cli.CLIHandler(app.state.db)
-    app.loop.create_task(app.cli.parse_cli())
 
 
 app.include_router(admin.router)
