@@ -47,17 +47,6 @@ class MystbinApp(FastAPI):
 
     def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
-        self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
-        self.add_event_handler("startup", func=self.app_startup)
-
-        if not config:
-            config = pathlib.Path("config.json")
-            if not config.exists():
-                config = pathlib.Path("../../config.json")
-
-        with open(config) as f:
-            self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
-
         super().__init__(
             title="MystBin",
             version="3.0.0",
@@ -66,7 +55,17 @@ class MystbinApp(FastAPI):
             redoc_url="/docs",
             docs_url=None,
         )
+
+        if not config:
+            config = pathlib.Path("config.json")
+            if not config.exists():
+                config = pathlib.Path("../../config.json")
+
+        with open(config) as f:
+            self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
         self.should_close = False
+        self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
+        self.add_event_handler("startup", func=self.app_startup)
 
     async def request_stats(self, request: MystbinRequest, call_next):
         request.app.state.request_stats["total"] += 1
