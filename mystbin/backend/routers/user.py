@@ -18,10 +18,13 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict, Optional, Union
 
-from fastapi import APIRouter, Request
-from fastapi.responses import UJSONResponse, Response
-from models import errors, responses, payloads
+from fastapi import APIRouter
+from fastapi.responses import Response, UJSONResponse
+from models import errors, payloads, responses
+
+from mystbin_models import MystbinRequest
 from utils.ratelimits import limit
+
 
 router = APIRouter()
 
@@ -39,7 +42,7 @@ router = APIRouter()
 )
 @limit("self")
 async def get_self(
-    request: Request,
+    request: MystbinRequest,
 ) -> Union[UJSONResponse, Dict[str, Union[str, int, bool]]]:
     """Gets the User object of the currently logged in user.
     * Requires authentication.
@@ -65,7 +68,7 @@ async def get_self(
     name="Regenerate your token",
 )
 @limit("tokengen")
-async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
+async def regen_token(request: MystbinRequest) -> Union[UJSONResponse, Dict[str, str]]:
     """Regens the user's token.
     * Requires authentication.
     """
@@ -90,7 +93,7 @@ async def regen_token(request: Request) -> Union[UJSONResponse, Dict[str, str]]:
     },
 )
 @limit("bookmarks")
-async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
+async def create_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Creates a bookmark on the authorized user's account
     * Requires authentication.
     """
@@ -115,7 +118,7 @@ async def create_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
     },
 )
 @limit("bookmarks")
-async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete) -> Response:
+async def delete_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPutDelete) -> Response:
     """Deletes a bookmark on the authorized user's account
     * Requires authentication.
     """
@@ -140,7 +143,7 @@ async def delete_bookmark(request: Request, bookmark: payloads.BookmarkPutDelete
     },
 )
 @limit("bookmarks")
-async def get_bookmarks(request: Request):
+async def get_bookmarks(request: MystbinRequest):
     """Fetches all of the authorized users bookmarks
     * Requires authentication
     """

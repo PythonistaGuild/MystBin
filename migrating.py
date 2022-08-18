@@ -1,13 +1,16 @@
-import os
-import asyncpg
 import asyncio
+import os
+
+import asyncpg
+
 
 postgres_user = os.getenv("pg_user")
 postgres_auth = os.getenv("pg_auth")
 
+
 async def main():
-    old: asyncpg.Connection = await asyncpg.connect(f"postgres://{postgres_user}:{postgres_auth}@127.0.0.1:5432/mystbin_old") # type: ignore
-    new: asyncpg.Connection = await asyncpg.connect(f"postgres://{postgres_user}:{postgres_auth}@127.0.0.1:5432/mystbin_prod") # type: ignore
+    old: asyncpg.Connection = await asyncpg.connect(f"postgres://{postgres_user}:{postgres_auth}@127.0.0.1:5432/mystbin_old")  # type: ignore
+    new: asyncpg.Connection = await asyncpg.connect(f"postgres://{postgres_user}:{postgres_auth}@127.0.0.1:5432/mystbin_prod")  # type: ignore
 
     current_idx = 0
     while True:
@@ -20,14 +23,17 @@ async def main():
                     break
 
                 print("fetched, inserting")
-                    
-                #await old.execute(f"DELETE FROM pastes WHERE {' OR '.join([f'id = ${x}' for x in range(1, 201)])}", *[x['id'] for x in bundle])
 
-                await new.executemany("INSERT INTO pastes (id, views, origin_ip) VALUES ($1, $2, '0.0.0.0')", [(x['id'], x['views']) for x in bundle])
+                # await old.execute(f"DELETE FROM pastes WHERE {' OR '.join([f'id = ${x}' for x in range(1, 201)])}", *[x['id'] for x in bundle])
+
+                await new.executemany(
+                    "INSERT INTO pastes (id, views, origin_ip) VALUES ($1, $2, '0.0.0.0')",
+                    [(x["id"], x["views"]) for x in bundle],
+                )
                 print("inserted pastes, inserting files")
                 await new.executemany(
                     "INSERT INTO files (parent_id, content, filename, loc) VALUES ($1, $2, 'migrated.txt', $3)",
-                    [(x['id'], x['data'], x["data"].count("\n")) for x in bundle]
+                    [(x["id"], x["data"], x["data"].count("\n")) for x in bundle],
                 )
                 print("imported files")
                 current_idx += 200

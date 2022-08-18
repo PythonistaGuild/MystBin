@@ -22,14 +22,15 @@ import difflib
 import functools
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import asyncpg
+from asyncpg import Record
 from fastapi import Request, Response
-
 from models import payloads
 
 from . import tokens
+
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
@@ -88,18 +89,24 @@ class Database:
         self.ban_cache = None
 
     @property
-    def pool(self) -> Optional[asyncpg.pool.Pool]:
+    def pool(self) -> asyncpg.Pool:
         """Property for easier access to attr."""
-        return self._pool or None
+        assert self._pool is not None
+
+        return self._pool
 
     async def __ainit__(self):
         await asyncio.sleep(5)
-        self._pool = await asyncpg.create_pool(self._config["dsn"], max_inactive_connection_lifetime=0, max_size=3, min_size=0)
-        #with open(self._db_schema) as schema:
+        self._pool = await asyncpg.create_pool(
+            self._config["dsn"], max_inactive_connection_lifetime=0, max_size=3, min_size=0
+        )
+        # with open(self._db_schema) as schema:
         #    await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(self, query: str, *args, conn: Optional[asyncpg.Connection] = None) -> Optional[List[asyncpg.Record]]:
+    async def _do_query(
+        self, query: str, *args, conn: Optional[asyncpg.Connection] = None
+    ) -> Optional[List[asyncpg.Record]]:
         if self._pool is None:
             await self.__ainit__()
 
@@ -110,7 +117,7 @@ class Database:
             return None
         else:
             if not conn:
-                await cast(asyncpg.Pool, self._pool).release(_conn)
+                await self.pool.release(_conn)
 
             return response
 
@@ -154,7 +161,7 @@ class Database:
         Optional[:class:`asyncpg.Record`]
             The paste that was retrieved.
         """
-        async with self._pool.acquire() as conn:
+        async with self.pool.acquire() as conn:
             query = """
                     UPDATE pastes SET views = views + 1 WHERE id = $1
                     RETURNING *,
@@ -182,8 +189,8 @@ class Database:
     async def get_paste_compat(self, paste_id: str) -> Optional[Dict[str, str]]:
         if not self._pool:
             await self.__ainit__()
-        
-        async with cast(asyncpg.Pool, self._pool).acquire() as conn:
+
+        async with self.pool.acquire() as conn:
             query = """
                     UPDATE pastes SET views = views + 1 WHERE id = $1
                     RETURNING *,
@@ -213,7 +220,7 @@ class Database:
         self,
         *,
         paste_id: str,
-        origin_ip: str,
+        origin_ip: Optional[str],
         pages: List[payloads.PasteFile],
         expires: Optional[datetime.datetime] = None,
         author: Optional[int] = None,
@@ -242,14 +249,17 @@ class Database:
         if not self._pool:
             await self.__ainit__()
 
-        async with cast(asyncpg.Pool, self._pool).acquire() as conn:
+        async with self.pool.acquire() as conn:
             query = """
                     INSERT INTO pastes (id, author_id, expires, password, origin_ip)
                     VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5)
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
-            resp = cast(List[asyncpg.Record], await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn))
+            resp = cast(
+                List[asyncpg.Record],
+                await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn),
+            )
 
             resp = resp[0]
             to_insert = []
@@ -279,15 +289,17 @@ class Database:
             resp["files"] = [dict(file) for file in inserted]
 
             return resp
-    
+
     @wrapped_hook_callback
     async def edit_paste(
         self,
         paste_id: str,
-        pages: List[Dict[str, str]],
+        *,
         author: int,
-        password: Optional[str] = None,
-    ) -> Optional[Dict[str, Union[str, List[Dict[str, str]]]]]:
+        new_expires: Optional[datetime.datetime] = None,
+        new_password: Optional[str] = None,
+        files: Optional[list[payloads.PasteFile]] = None,
+    ) -> Optional[Literal[404]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -305,45 +317,44 @@ class Database:
         :class:`asyncpg.Record`
             The paste record that was created.
         """
-        async with self._pool.acquire() as conn:
+        if not self._pool:
+            await self.__ainit__()
+
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+
             query = """
                     UPDATE pastes
-                    SET last_edited = NOW() AT TIME ZONE 'UTC'
+                    SET last_edited = NOW() AT TIME ZONE 'UTC',
+                    password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null),
+                    expires = $4
                     WHERE id = $1 AND author_id = $2
-                    AND password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null)
                     RETURNING *
                     """
 
-            resp = await self._do_query(query, paste_id, author, password, conn=conn)
+            resp = await self._do_query(query, paste_id, author, new_password, new_expires, conn=conn)
             if not resp:
-                return None
+                return 404
 
-            resp = resp[0]
-            qs = []
-            for page in pages:
-                qs.append(
-                    (
-                        page["content"],
-                        page["content"].count("\n"),
-                        len(page["content"]),
-                        paste_id,
-                        page["index"],
+            if files:
+                qs = []
+                for file in files:
+                    qs.append(
+                        (
+                            file.content,
+                            file.content.count("\n"),
+                            len(file.content),
+                            paste_id,
+                        )
                     )
-                )
 
-            query = """
-                    UPDATE files
-                    SET content = $1, loc = $2, charcount = $3
-                    WHERE parent_id = $4
-                    AND index = $5
-                    RETURNING content, loc, charcount, index
-                    """
-            data = await conn.executemany(query, qs)
-
-            resp = dict(resp)
-            resp["pages"] = [{a: str(b) for a, b in x.items()} for x in data]
-
-            return resp
+                query = """
+                        UPDATE files
+                        SET content = $1, loc = $2, charcount = $3
+                        WHERE parent_id = $4
+                        RETURNING content, loc, charcount
+                        """
+                await conn.executemany(query, qs)
 
     @wrapped_hook_callback
     async def set_paste_password(self, paste_id: str, password: str | None) -> Optional[asyncpg.Record]:
@@ -371,7 +382,7 @@ class Database:
         resp = await self._do_query(query, paste_id, password)
         if resp:
             return resp[0]
-        
+
         return None
 
     @wrapped_hook_callback
@@ -416,9 +427,7 @@ class Database:
         return (await self._do_query(query))[0]["count"]
 
     @wrapped_hook_callback
-    async def delete_paste(
-        self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False
-    ) -> Optional[str]:
+    async def delete_paste(self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False) -> Optional[str]:
         """Delete a paste, with an admin override.
 
         Parameters
@@ -533,7 +542,7 @@ class Database:
             discord_id and str(discord_id),
             github_id and str(github_id),
             google_id and str(google_id) or None,
-            username
+            username,
         )
         return data[0]
 
@@ -635,7 +644,7 @@ class Database:
                 """
 
         return bool(await self._do_query(query, admin, userid))
-    
+
     async def list_admin(self) -> List[asyncpg.Record]:
         query = """
         SELECT id, username, discord_id, github_id, google_id FROM users WHERE admin = true
@@ -644,7 +653,7 @@ class Database:
         return resp or []
 
     @wrapped_hook_callback
-    async def ban_user(self, userid: int = None, ip: str = None, reason: str = None):
+    async def ban_user(self, userid: Optional[int] = None, ip: Optional[str] = None, reason: Optional[str] = None):
         """
         Bans a user.
         Returns False if the user/ip doesnt exist, or is already banned, otherwise returns True
@@ -660,7 +669,7 @@ class Database:
         else:
             return True
 
-    async def unban_user(self, userid: int = None, ip: str = None) -> bool:
+    async def unban_user(self, userid: Optional[int] = None, ip: Optional[str] = None) -> bool:
         """
         Unbans a user.
         Returns True if the user/ip was successfully unbanned, otherwise False
@@ -713,7 +722,7 @@ class Database:
         if not userid and not token:
             raise ValueError("Expected either userid or token argument")
 
-        async with self._pool.acquire() as conn:
+        async with self.pool.acquire() as conn:
             if token:
                 query = """
                         SELECT id from users WHERE token = $1
@@ -821,7 +830,7 @@ class Database:
         return False
 
     @wrapped_hook_callback
-    async def get_admin_userlist(self, page: int) -> Dict[str, Union[List[Dict[str, Union[int, bool, None]]], int]]:
+    async def get_admin_userlist(self, page: int) -> Dict[str, Union[int, Dict[str, Union[int, bool, None]]]]:
         query = """
                 SELECT
                     id,
@@ -835,9 +844,13 @@ class Database:
                     (SELECT COUNT(*) FROM pastes WHERE author_id = users.id) AS paste_count
                 FROM users LIMIT 20 OFFSET $1 * 20;
         """
-        async with self._pool.acquire() as conn:
+        if not self._pool:
+            await self.__ainit__()
+
+        async with self.pool.acquire() as conn:
             users = await self._do_query(query, page - 1, conn=conn)
-            pageinfo = (await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn))[0]["count"]
+            records: List[Record] = await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn)
+            pageinfo: int = records[0]["count"]
 
         users = [
             {
@@ -929,12 +942,8 @@ class Database:
                 continue
 
         return close
-    
-    async def put_log(
-        self,
-        request: Request,
-        response: Response
-    ) -> None:
+
+    async def put_log(self, request: Request, response: Response) -> None:
         query = """
         INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         """
@@ -957,5 +966,5 @@ class Database:
             f"{request.method.upper()} {request.url.include_query_params()}",
             body,
             response.status_code,
-            resp
+            resp,
         )

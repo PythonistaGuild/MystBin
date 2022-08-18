@@ -6,6 +6,7 @@
 
 import pytest
 
+
 try:
     from common import client
 except ModuleNotFoundError:
