@@ -276,14 +276,14 @@ async def edit_paste(
     if not author:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
 
-    paste: Union[Record, int] = await request.app.state.db.edit_paste(
+    paste = await request.app.state.db.edit_paste(
         paste_id,
         author=author["id"],
         new_expires=payload.new_expires,
         new_password=payload.new_password,
         files=payload.new_files,
     )
-    if not paste or isinstance(paste, int):
+    if not paste or paste == 404:
         return UJSONResponse(
             {"error": "Paste was not found or you are not it's author."},
             status_code=404,

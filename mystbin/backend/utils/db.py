@@ -22,7 +22,7 @@ import difflib
 import functools
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import asyncpg
 from asyncpg import Record
@@ -299,7 +299,7 @@ class Database:
         new_expires: Optional[datetime.datetime] = None,
         new_password: Optional[str] = None,
         files: Optional[list[payloads.PasteFile]] = None,
-    ) -> Optional[Dict[str, Union[str, int, datetime.datetime]]]:
+    ) -> Optional[Literal[404]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -334,8 +334,7 @@ class Database:
 
             resp = await self._do_query(query, paste_id, author, new_password, new_expires, conn=conn)
             if not resp:
-                return None
-            resp = dict(resp)
+                return 404
 
             if files:
                 qs = []
