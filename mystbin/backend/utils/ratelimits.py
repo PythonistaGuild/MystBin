@@ -152,17 +152,19 @@ class Limiter:
     
     async def _transform_and_log(self, request: Request, response: Response) -> Response:
         if isinstance(response, StreamingResponse):
-                resp_ = Response(status_code=response.status_code, background=response.background, media_type=cast(str, response.media_type))
-                resp_._headers = response._headers
-                body = b""
-                async for chunk in response.body_iterator:
-                    if not isinstance(chunk, bytes):
-                        chunk = chunk.encode(response.charset)
-                    
-                    body += chunk
+            resp_ = Response(status_code=response.status_code, background=response.background, media_type=cast(str, response.media_type))
+            del response._headers['content-type']
+            del response._headers['content-length']
+            resp_._headers = response._headers
+            body = b""
+            async for chunk in response.body_iterator:
+                if not isinstance(chunk, bytes):
+                    chunk = chunk.encode(response.charset)
                 
-                resp_.body = body
-                response = resp_
+                body += chunk
+            
+            resp_.body = body
+            response = resp_
             
         await self.app.state.db.put_log(request, response)
         return response
@@ -226,7 +228,8 @@ class Limiter:
             
             resp = await call_next(request)
             resp.headers.update(headers)
-            return await self._transform_and_log(request, resp)
+            resp = await self._transform_and_log(request, resp)
+            return resp
 
         
         else:

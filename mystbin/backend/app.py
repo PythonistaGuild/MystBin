@@ -21,14 +21,13 @@ import datetime
 import pathlib
 import os
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Coroutine, Dict, Optional
 
 import aiohttp
 import aioredis
 import sentry_sdk
 import ujson
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Response
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette_prometheus import metrics, PrometheusMiddleware
 
@@ -66,10 +65,20 @@ class MystbinApp(FastAPI):
 
 
 app = MystbinApp()
+METHODS = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
 
 
 @app.middleware("http")
 async def request_stats(request: Request, call_next):
+    if request.method == "OPTIONS":
+        raise RuntimeError("blah")
+        return Response(headers={
+            "Access-Control-Allowed-Headers": request.headers.get("Access-Control-Request-Headers", ""),
+            "Access-Control-Allowed-Method": ", ".join(METHODS),
+            "Access-Control-Allowed-Origin": app.config["site"]["frontend_site"],
+            "Access-Control-Max-Age": "600",
+            "Vary": "Origin",
+        })
     request.app.state.request_stats["total"] += 1
 
     if request.url.path != "/admin/stats":
@@ -77,6 +86,22 @@ async def request_stats(request: Request, call_next):
 
     response = await call_next(request)
     return response
+
+async def cors_middleware(request: Request, call_next: Callable[[Request], Coroutine[Any, Any, Response]]):
+    headers={
+        "Access-Control-Allow-Headers": request.headers.get("Access-Control-Request-Headers", ""),
+        "Access-Control-Allow-Methods": ", ".join(METHODS),
+        "Access-Control-Allow-Origin": app.config["site"]["frontend_site"],
+        "Access-Control-Max-Age": "600",
+        "Vary": "Origin",
+    }
+    
+    if request.method == "OPTIONS":
+        return Response(headers=headers)
+    
+    resp = await call_next(request)
+    resp.headers.update(headers)
+    return resp
 
 
 @app.on_event("startup")
@@ -98,6 +123,7 @@ async def app_startup():
     
     ratelimits.limiter.startup(app)
     app.middleware("http")(ratelimits.limiter.middleware)
+    app.middleware("http")(cors_middleware)
 
     nocli = pathlib.Path(".nocli")
     if nocli.exists():
@@ -114,17 +140,6 @@ app.include_router(apps.router)
 app.include_router(pastes.router)
 app.include_router(user.router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        app.config["site"]["frontend_site"],
-        app.config["site"]["backend_site"],
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 try:
     sentry_dsn = app.config["sentry"]["dsn"]
@@ -136,5 +151,5 @@ else:
 
     app.add_middleware(SentryAsgiMiddleware)
 
-app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics/", metrics)
+#app.add_middleware(PrometheusMiddleware)
+#app.add_route("/metrics/", metrics)
