@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS bans (
 );
 
 CREATE TABLE IF NOT EXISTS logs (
-    ip VARCHAR(15) NOT NULL,
+    ip TEXT NOT NULL,
     userid BIGINT REFERENCES users(id),
     accessed TIMESTAMP,
     cf_ray TEXT,
