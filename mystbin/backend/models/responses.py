@@ -28,6 +28,16 @@ class File(BaseModel):
     loc: int
     charcount: int
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "filename": "foo.py",
+                "content": "import datetime\\nprint(datetime.datetime.utcnow())",
+                "loc": 2,
+                "charcount": 49
+            }
+        }
+
 
 class PastePostResponse(BaseModel):
     id: str
@@ -37,6 +47,25 @@ class PastePostResponse(BaseModel):
     files: List[File]
     notice: Optional[str]
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": "FlyingHighKites",
+                "author_id": None,
+                "created_at": "2020-11-16T13:46:49.215Z",
+                "expires": None,
+                "files": [
+                    {
+                        "filename": "foo.py",
+                        "content": "import datetime\\nprint(datetime.datetime.utcnow())",
+                        "loc": 2,
+                        "charcount": 49
+                    }
+                ],
+                "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated"
+            }
+        }
+
 
 class PastePatchResponse(BaseModel):
     result: Literal["ok"]
@@ -44,11 +73,32 @@ class PastePatchResponse(BaseModel):
 
 class PasteGetResponse(BaseModel):
     id: str
+    author_id: Optional[int]
     created_at: datetime
     expires: Optional[datetime] = None
     last_edited: Optional[datetime] = None
     views: int
     files: List[File]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": "FlyingHighKites",
+                "author_id": None,
+                "created_at": "2020-11-16T13:46:49.215Z",
+                "expires": None,
+                "last_edited": "2020-11-20T0:46:0.215Z",
+                "views": 48,
+                "files": [
+                    {
+                        "filename": "foo.py",
+                        "content": "import datetime\\nprint(datetime.datetime.utcnow())",
+                        "loc": 2,
+                        "charcount": 49
+                    }
+                ]
+            }
+        }
 
 
 class PasteGetAllResponse(BaseModel):

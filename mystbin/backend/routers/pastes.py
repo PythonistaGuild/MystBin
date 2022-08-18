@@ -295,7 +295,7 @@ async def edit_paste(
     return UJSONResponse(content={"result": "ok"}, status_code=200)
 
 
-desc = f"""Deletes pastes on MystBin.
+desc = f"""Deletes a paste.
 You must be the author of the paste (IE, the paste must be created under your account).
 
 * Requires authentication.
@@ -364,8 +364,8 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
         403: {"model": errors.Forbidden},
     },
     status_code=200,
-    name="Delete pastes",
-    description=desc,
+    name="Delete multiple pastes",
+    description=desc
 )
 @limit("deletepaste")
 async def delete_pastes(
