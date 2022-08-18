@@ -19,15 +19,15 @@ __all__ = (
 
 class _StateUser(TypedDict):
     id: int
-    token: Optional[str]
-    emails: Optional[List[str]]
+    token: str
+    emails: List[str]
     discord_id: Optional[str]
     github_id: Optional[str]
     google_id: Optional[str]
     admin: bool
     theme: str
     subscriber: bool
-    username: Optional[str]
+    username: str
     _is_ip_banned: Optional[str]
     _is_user_banned: Optional[int]
 
