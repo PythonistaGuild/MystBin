@@ -357,8 +357,6 @@ class Database:
                         """
                 await conn.executemany(query, qs)
 
-            return resp
-
     @wrapped_hook_callback
     async def set_paste_password(self, paste_id: str, password: str | None) -> Optional[asyncpg.Record]:
         """Sets a password for the specified paste.

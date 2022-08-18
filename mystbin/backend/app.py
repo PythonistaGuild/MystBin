@@ -26,10 +26,11 @@ import aioredis
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
-from fastapi_models import MystbinRequest, MystbinState
-from routers import admin, apps, pastes, user
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from mystbin_models import MystbinRequest, MystbinState
+from routers import admin, apps, pastes, user
 from utils import cli as _cli, ratelimits
 from utils.db import Database
 

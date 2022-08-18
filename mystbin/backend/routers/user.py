@@ -20,8 +20,9 @@ from typing import Dict, Optional, Union
 
 from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
-from fastapi_models import MystbinRequest
 from models import errors, payloads, responses
+
+from mystbin.backend.mystbin_models import MystbinRequest
 from utils.ratelimits import limit
 
 
