@@ -36,7 +36,7 @@ class MystbinState(State):
     """Only for db typing."""
 
     db: Database
-    user: _StateUser
+    user: Optional[_StateUser]
 
 
 class MystbinRequest(Request):
