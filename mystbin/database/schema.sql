@@ -3,15 +3,15 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
-    token TEXT,
-    emails TEXT[],
+    token TEXT NOT NULL,
+    emails TEXT[] NOT NULL DEFAULT '{}',
     discord_id TEXT,
     github_id TEXT,
     google_id TEXT,
-    admin BOOLEAN DEFAULT false,
-    theme TEXT DEFAULT 'dark',
+    admin BOOLEAN NOT NULL DEFAULT false,
+    theme TEXT NOT NULL DEFAULT 'dark',
     subscriber BOOLEAN DEFAULT false,
-    username TEXT
+    username TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS pastes (
