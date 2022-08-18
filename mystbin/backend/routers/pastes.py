@@ -26,7 +26,7 @@ from random import sample
 from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 
@@ -256,9 +256,8 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
 @router.patch(
     "/paste/{paste_id}",
     tags=["pastes"],
-    response_model=responses.PastePatchResponse,
     responses={
-        200: {"model": responses.PastePatchResponse},
+        204: {},
         401: {"model": errors.Unauthorized},
         403: {"model": errors.Forbidden},
         404: {"model": errors.NotFound},
@@ -271,7 +270,7 @@ async def edit_paste(
     request: MystbinRequest,
     paste_id: str,
     payload: payloads.PastePatch,
-) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
+) -> Union[UJSONResponse, Response]:
     author = request.state.user
     if not author:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
@@ -289,7 +288,7 @@ async def edit_paste(
             status_code=404,
         )
 
-    return UJSONResponse(content={"result": "ok"}, status_code=200)
+    return Response(status_code=204)
 
 
 desc = f"""Deletes a paste.

@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -65,10 +65,6 @@ class PastePostResponse(BaseModel):
                 "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated",
             }
         }
-
-
-class PastePatchResponse(BaseModel):
-    result: Literal["ok"]
 
 
 class PasteGetResponse(BaseModel):
