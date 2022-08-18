@@ -30,7 +30,7 @@ from fastapi import APIRouter
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 
-from mystbin.backend.mystbin_models import MystbinRequest
+from mystbin_models import MystbinRequest
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
 

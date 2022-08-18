@@ -22,7 +22,7 @@ from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
 from models import errors, payloads, responses
 
-from mystbin.backend.mystbin_models import MystbinRequest
+from mystbin_models import MystbinRequest
 from utils.ratelimits import limit
 
 
