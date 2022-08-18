@@ -60,9 +60,7 @@ class CLIHandler:
         self.subparser_admin.add_argument(
             "--remove", "-r", help="remove admin privileges from the target user", metavar="USERID"
         )
-        self.subparser_admin.add_argument(
-            "--list", "-l", help="list the users with admin privileges", action="store_true"
-        )
+        self.subparser_admin.add_argument("--list", "-l", help="list the users with admin privileges", action="store_true")
 
         self.subparser_users = self.subparsers.add_parser(
             "users", help="subcommand to manage user accounts. use 'users -h' to see more info"
@@ -142,9 +140,7 @@ class CLIHandler:
 
         elif namespace.set_password:
             if bad_args := find_disallowed_args(namespace, ["remove_password", "list", "delete"]):
-                print(
-                    f"Paste: The following args cannot be used with the `set-password` argument: {','.join(bad_args)}"
-                )
+                print(f"Paste: The following args cannot be used with the `set-password` argument: {','.join(bad_args)}")
                 return
 
             pid = namespace.set_password[0]
@@ -158,9 +154,7 @@ class CLIHandler:
 
         elif namespace.remove_password:
             if bad_args := find_disallowed_args(namespace, ["set_password", "list", "delete"]):
-                print(
-                    f"Paste: The following args cannot be used with the `remove-password` argument: {','.join(bad_args)}"
-                )
+                print(f"Paste: The following args cannot be used with the `remove-password` argument: {','.join(bad_args)}")
                 return
 
             resp = await self.db.set_paste_password(namespace.remove_password, None)

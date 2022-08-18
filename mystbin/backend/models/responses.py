@@ -34,7 +34,7 @@ class File(BaseModel):
                 "filename": "foo.py",
                 "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                 "loc": 2,
-                "charcount": 49
+                "charcount": 49,
             }
         }
 
@@ -59,10 +59,10 @@ class PastePostResponse(BaseModel):
                         "filename": "foo.py",
                         "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                         "loc": 2,
-                        "charcount": 49
+                        "charcount": 49,
                     }
                 ],
-                "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated"
+                "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated",
             }
         }
 
@@ -94,9 +94,9 @@ class PasteGetResponse(BaseModel):
                         "filename": "foo.py",
                         "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                         "loc": 2,
-                        "charcount": 49
+                        "charcount": 49,
                     }
-                ]
+                ],
             }
         }
 

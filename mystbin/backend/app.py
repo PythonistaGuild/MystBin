@@ -19,27 +19,23 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
-from typing import Any, Callable, Coroutine, Dict, Optional
+from typing import Any, Callable, Coroutine, Dict, Optional, Tuple
 
 import aiohttp
 import aioredis
 import sentry_sdk
 import ujson
-from fastapi import FastAPI, Request, Response
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from starlette_prometheus import metrics, PrometheusMiddleware
-
+from fastapi import FastAPI, Response
+from fastapi_models import MystbinRequest, MystbinState
 from routers import admin, apps, pastes, user
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette_prometheus import PrometheusMiddleware, metrics
-from utils import cli as _cli
-from utils import ratelimits
+from utils import cli as _cli, ratelimits
 from utils.db import Database
 
-from fastapi_models import MystbinRequest, MystbinState
 
-METHODS = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
+METHODS: Tuple[str, ...] = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
+
 
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
@@ -69,12 +65,16 @@ class MystbinApp(FastAPI):
         self.should_close = False
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
         self.add_event_handler("startup", func=self.app_startup)
-    
-    async def cors_middleware(self, request: Request, call_next: Callable[[Request], Coroutine[Any, Any, Response]]):
-        headers={
+
+    async def cors_middleware(
+        self,
+        request: MystbinRequest,
+        call_next: Callable[[MystbinRequest], Coroutine[Any, Any, Response]],
+    ):
+        headers = {
             "Access-Control-Allow-Headers": request.headers.get("Access-Control-Request-Headers", ""),
             "Access-Control-Allow-Methods": ", ".join(METHODS),
-            "Access-Control-Allow-Origin": app.config["site"]["frontend_site"],
+            "Access-Control-Allow-Origin": self.config["site"]["frontend_site"],
             "Access-Control-Max-Age": "600",
             "Vary": "Origin",
         }
@@ -125,6 +125,8 @@ class MystbinApp(FastAPI):
         self.loop.create_task(self.cli.parse_cli())
 
 
+app = MystbinApp()
+
 app.include_router(admin.router)
 app.include_router(apps.router)
 app.include_router(pastes.router)
@@ -141,5 +143,5 @@ else:
 
     app.add_middleware(SentryAsgiMiddleware)
 
-#app.add_middleware(PrometheusMiddleware)
-#app.add_route("/metrics/", metrics)
+# app.add_middleware(PrometheusMiddleware)
+# app.add_route("/metrics/", metrics)

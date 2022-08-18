@@ -163,19 +163,19 @@ class Limiter:
                 background=response.background,
                 media_type=cast(str, response.media_type),
             )
-            del response._headers['content-type']
-            del response._headers['content-length']
+            del response._headers["content-type"]
+            del response._headers["content-length"]
             resp_._headers = response._headers
             body = b""
             async for chunk in response.body_iterator:
                 if not isinstance(chunk, bytes):
                     chunk = chunk.encode(response.charset)
-                
+
                 body += chunk
-            
+
             resp_.body = body
             response = resp_
-            
+
         await self.app.state.db.put_log(request, response)
         return response
 

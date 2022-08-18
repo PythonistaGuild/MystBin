@@ -156,7 +156,10 @@ async def get_admin_userlist(request: MystbinRequest, page: int = 1):
     "/admin/users/count",
     tags=["admin"],
     response_model=responses.UserCount,
-    responses={200: {"model": responses.UserCount}, 401: {"model": errors.Unauthorized}},
+    responses={
+        200: {"model": responses.UserCount},
+        401: {"model": errors.Unauthorized},
+    },
     include_in_schema=False,
 )
 @limit("admin")
@@ -190,7 +193,12 @@ async def search_bans(request: MystbinRequest, search: Optional[str] = None, pag
 
 @router.post("/admin/bans", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def post_ban(request: MystbinRequest, reason: str, ip: Optional[str] = None, userid: Optional[int] = None):
+async def post_ban(
+    request: MystbinRequest,
+    reason: str,
+    ip: Optional[str] = None,
+    userid: Optional[int] = None,
+):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 

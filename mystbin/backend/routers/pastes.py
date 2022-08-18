@@ -234,9 +234,7 @@ async def get_all_pastes(
 ) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
     user = request.state.user
     if not user:
-        return UJSONResponse(
-            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
-        )
+        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
 
     pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
     pastes = [dict(entry) for entry in pastes]
@@ -275,9 +273,7 @@ async def edit_paste(
 ) -> Union[UJSONResponse, Dict[str, Optional[Union[str, int, datetime.datetime]]]]:
     author = request.state.user
     if not author:
-        return UJSONResponse(
-            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
-        )
+        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
 
     paste: Union[Record, int] = await request.app.state.db.edit_paste(
         paste_id,
@@ -320,16 +316,12 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
 async def delete_paste(request: MystbinRequest, paste_id: str) -> Union[UJSONResponse, Dict[str, str]]:
     user = request.state.user
     if not user:
-        return UJSONResponse(
-            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401
-        )
+        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
 
     if not user["admin"]:
         is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
         if not is_owner:
-            return UJSONResponse(
-                {"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, status_code=401
-            )
+            return UJSONResponse({"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, status_code=401)
 
     deleted: Record = await request.app.state.db.delete_paste(paste_id, user["id"], admin=False)
 
@@ -365,7 +357,7 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     },
     status_code=200,
     name="Delete multiple pastes",
-    description=desc
+    description=desc,
 )
 @limit("deletepaste")
 async def delete_pastes(

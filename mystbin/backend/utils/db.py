@@ -428,9 +428,7 @@ class Database:
         return (await self._do_query(query))[0]["count"]
 
     @wrapped_hook_callback
-    async def delete_paste(
-        self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False
-    ) -> Optional[str]:
+    async def delete_paste(self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False) -> Optional[str]:
         """Delete a paste, with an admin override.
 
         Parameters

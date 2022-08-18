@@ -25,12 +25,9 @@ from pydantic import BaseModel
 class PasteFile(BaseModel):
     content: str
     filename: str
-    
+
     class Config:
-        schema_extra = {
-            "content": "explosions everywhere",
-            "filename": "kaboom.txt"
-        }
+        schema_extra = {"content": "explosions everywhere", "filename": "kaboom.txt"}
 
 
 class PastePut(BaseModel):
@@ -44,10 +41,7 @@ class PastePut(BaseModel):
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": None,
                 "files": [
-                    {
-                        "content": "import this",
-                        "filename": "foo.py"
-                    },
+                    {"content": "import this", "filename": "foo.py"},
                     {
                         "content": "doc.md",
                         "filename": "**do not use this in production**",
