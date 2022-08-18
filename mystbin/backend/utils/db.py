@@ -325,7 +325,9 @@ class Database:
 
             query = """
                     UPDATE pastes
-                    SET last_edited = NOW() AT TIME ZONE 'UTC', password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null), expires = $4
+                    SET last_edited = NOW() AT TIME ZONE 'UTC',
+                    password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null),
+                    expires = $4
                     WHERE id = $1 AND author_id = $2
                     RETURNING *
                     """
