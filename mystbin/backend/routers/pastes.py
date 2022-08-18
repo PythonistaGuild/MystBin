@@ -283,7 +283,7 @@ async def edit_paste(
         new_password=payload.new_password,
         files=payload.new_files,
     )
-    if not paste or paste == 404:
+    if paste == 404:
         return UJSONResponse(
             {"error": "Paste was not found or you are not it's author."},
             status_code=404,
