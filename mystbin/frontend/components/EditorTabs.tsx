@@ -1,7 +1,7 @@
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
-import {Dropdown, Toast} from "react-bootstrap";
+import { Dropdown, Toast } from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
@@ -9,10 +9,10 @@ import pasteDispatcher from "../dispatchers/PasteDispatcher";
 import getLanguage from "../stores/languageStore";
 import config from "../config.json";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
-import {Button} from "@material-ui/core";
+import { Button } from "@material-ui/core";
 import DropdownItem from "react-bootstrap/DropdownItem";
 import React from "react";
-import InsertPhotoIcon from '@material-ui/icons/InsertPhoto';
+import InsertPhotoIcon from "@material-ui/icons/InsertPhoto";
 
 const languages = {
   py: "python",
@@ -78,7 +78,7 @@ export default function EditorTabs({
   const id = pid;
   const [initialState, setInitialState] = useState(false);
   const [langDropDown, setLangDropDown] = useState(false);
-  const [dropLang, setDropLang] = useState(null)
+  const [dropLang, setDropLang] = useState(null);
 
   const tabRef = useRef();
 
@@ -110,10 +110,9 @@ export default function EditorTabs({
   }, [value]);
 
   useEffect(() => {
-    let newLang = [...lang]
-    newLang.splice(currTab, 1, dropLang)
-    setLang(newLang)
-
+    let newLang = [...lang];
+    newLang.splice(currTab, 1, dropLang);
+    setLang(newLang);
   }, [langDropDown]);
 
   useEffect(() => {
@@ -186,32 +185,45 @@ export default function EditorTabs({
                 let newValue = [...value];
                 newValue.splice(i, 1);
                 setValue(newValue);
-              }} >
-              {!!pid ?
-              <div className={styles.dropdownContainer} ref={tabRef}>
-                <Button type="submit" className={styles.langButton} onClick={() => setLangDropDown(!langDropDown)}>
-                  <ArrowDownwardIcon/>
-                </Button>
-                {langDropDown ?
+              }}
+            >
+              {!!pid ? (
+                <div className={styles.dropdownContainer} ref={tabRef}>
+                  <Button
+                    type="submit"
+                    className={styles.langButton}
+                    onClick={() => setLangDropDown(!langDropDown)}
+                  >
+                    <ArrowDownwardIcon />
+                  </Button>
+                  {langDropDown ? (
                     <div className={styles.langParent}>
                       <Dropdown className={styles.dropDown} autoClose>
                         {Object.keys(languages).map((v, index) => {
                           if (i !== currTab) {
-                            return <></>
+                            return <></>;
                           }
-                          return(<DropdownItem
+                          return (
+                            <DropdownItem
                               key={v}
                               className={styles.dropdownItem}
-                              onBlur={(e) => {e.preventDefault()}}
+                              onBlur={(e) => {
+                                e.preventDefault();
+                              }}
                               onClick={() => {
-                                setLangDropDown(false)
-                                setDropLang(v)
-                              }}>{v}</DropdownItem>)})}
+                                setLangDropDown(false);
+                                setDropLang(v);
+                              }}
+                            >
+                              {v}
+                            </DropdownItem>
+                          );
+                        })}
                       </Dropdown>
                     </div>
-                    : null}
-              </div>
-                  : null }
+                  ) : null}
+                </div>
+              ) : null}
             </Tab>
           ))}
           <NewTabButton
@@ -223,14 +235,14 @@ export default function EditorTabs({
             }}
             enabled={value.length <= 4 && !id}
           />
-          {!pid ?
-          <div className={styles.addAttachmentIconContainer}>
-          <Button>
-            <InsertPhotoIcon className={styles.addAttachmentIcon} />
-          </Button>
-            <span className={styles.addAttachmentsText}>Add Images</span>
-          </div>
-              : null }
+          {!pid ? (
+            <div className={styles.addAttachmentIconContainer}>
+              <Button>
+                <InsertPhotoIcon className={styles.addAttachmentIcon} />
+              </Button>
+              <span className={styles.addAttachmentsText}>Add Images</span>
+            </div>
+          ) : null}
         </div>
 
         {value.map((v, i, arr) => (
