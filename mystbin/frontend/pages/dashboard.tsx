@@ -12,11 +12,11 @@ import BeenhereIcon from "@material-ui/icons/Beenhere";
 import AddBoxIcon from "@material-ui/icons/AddBox";
 import {
   XGrid,
-  RowsProp,
-  ColDef,
+  GridRowsProp,
+  GridColDef,
   LicenseInfo,
-  CellParams,
-  RowParams,
+  GridCellParams,
+  GridRowParams,
 } from "@material-ui/x-grid";
 import { Collapse } from "@material-ui/core";
 import PeopleIcon from "@material-ui/icons/People";
@@ -59,7 +59,7 @@ export default function Dashboard(props) {
   const adminTotalUsers = users["user_count"];
   const adminTotalPastes = analytics["total_pastes"];
 
-  const standardPasteColumns: ColDef[] = [
+  const standardPasteColumns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 250 },
     { field: "file_count", headerName: "Files", width: 100 },
     {
@@ -75,9 +75,9 @@ export default function Dashboard(props) {
       field: "delete",
       headerName: "Delete",
       width: 125,
-      renderCell: (params: CellParams) => (
+      renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete} variant={"danger"}>
+          <Badge className={styles.tableRowDelete}>
             Delete Paste
           </Badge>
         </h5>
@@ -91,7 +91,7 @@ export default function Dashboard(props) {
     subscribertext = "Not Subscribed :(";
   }
 
-  const realPasteColumns: ColDef[] = [
+  const realPasteColumns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 250 },
     { field: "author_id", headerName: "Author ID", width: 240 },
     {
@@ -108,16 +108,16 @@ export default function Dashboard(props) {
       field: "delete",
       headerName: "Delete",
       width: 125,
-      renderCell: (params: CellParams) => (
+      renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete} variant={"danger"}>
+          <Badge className={styles.tableRowDelete}>
             Delete Paste
           </Badge>
         </h5>
       ),
     },
   ];
-  const userColumns: ColDef[] = [
+  const userColumns: GridColDef[] = [
     { field: "id", headerName: "ID" },
     { field: "admin", headerName: "Is Admin" },
     { field: "theme", headerName: "Theme" },
@@ -129,23 +129,23 @@ export default function Dashboard(props) {
       field: "ban",
       headerName: "Ban",
       width: 125,
-      renderCell: (params: CellParams) => (
+      renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete} variant={"danger"}>
+          <Badge className={styles.tableRowDelete}>
             Ban User
           </Badge>
         </h5>
       ),
     },
   ];
-  const bookmarkColumns: ColDef[] = [
+  const bookmarkColumns: GridColDef[] = [
     { field: "id", headerName: "ID" },
     { field: "created_at", headerName: "Created At" },
     { field: "expires", headerName: "Expires" },
     { field: "views", headerName: "Views" },
   ];
 
-  const standardPasteRows: RowsProp = [
+  const standardPasteRows: GridRowsProp = [
     {
       id: "ThreeRandomWords",
       file_count: 3,
@@ -511,7 +511,7 @@ export default function Dashboard(props) {
                         (p) =>
                           !!p.id
                             .toLowerCase()
-                            .includes(param.filterModel.items[0].value)
+                            .includes(param.items[0].value)
                       );
                       setAdminUsersRows(newRows);
                       setPageLoading(false);
@@ -522,7 +522,7 @@ export default function Dashboard(props) {
 
                   fetch(
                     `${config["site"]["backend_site"]}/admin/users?page=${
-                      param.page + 1
+                      param + 1
                     }`,
                     {
                       method: "GET",
@@ -568,7 +568,7 @@ export default function Dashboard(props) {
                         (p) =>
                           !!p.id
                             .toLowerCase()
-                            .includes(param.filterModel.items[0].value)
+                            .includes(param.items[0].value)
                       );
                       setAdminPasteRows(newRows);
                       setPageLoading(false);
@@ -578,7 +578,7 @@ export default function Dashboard(props) {
                   setPageLoading(true);
 
                   fetch(
-                    `${config["site"]["backend_site"]}/admin/pastes?count=100&page=${param.page}`,
+                    `${config["site"]["backend_site"]}/admin/pastes?count=100&page=${param}`,
                     {
                       method: "GET",
                       headers: { Authorization: `Bearer ${token}` },
