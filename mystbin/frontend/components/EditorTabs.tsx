@@ -1,13 +1,59 @@
-import { useEffect, useState } from "react";
+import {useEffect, useRef, useState} from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
-import { Toast } from "react-bootstrap";
+import {Dropdown, Toast} from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
 import pasteDispatcher from "../dispatchers/PasteDispatcher";
 import getLanguage from "../stores/languageStore";
 import config from "../config.json";
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import {Button} from "@material-ui/core";
+import DropdownItem from "react-bootstrap/DropdownItem";
+import React from "react";
+import InsertPhotoIcon from '@material-ui/icons/InsertPhoto';
+
+const languages = {
+  py: "python",
+  python: "python",
+  pyi: "python",
+  js: "javascript",
+  javascript: "javascript",
+  jsx: "javascript",
+  ts: "typescript",
+  typescript: "typescript",
+  tsx: "typescript",
+  html: "html",
+  swift: "swift",
+  json: "json",
+  rs: "rust",
+  rust: "rust",
+  ex: "elixir",
+  elixir: "elixir",
+  md: "markdown",
+  markdown: "markdown",
+  go: "go",
+  cpp: "cpp",
+  c: "cpp",
+  h: "cpp",
+  cs: "csharp",
+  css: "css",
+  hs: "haskell",
+  perl: "perl",
+  pl: "perl",
+  pm: "perl",
+  bash: "bash",
+  zsh: "bash",
+  sh: "bash",
+  sql: "sql",
+  nginx: "nginx",
+  ini: "ini",
+  toml: "toml",
+  xml: "xml",
+  yml: "yml",
+  yaml: "yml",
+};
 
 interface TabInfo {
   initialData?: any;
@@ -31,6 +77,10 @@ export default function EditorTabs({
   const [lang, setLang] = useState<string[]>([]);
   const id = pid;
   const [initialState, setInitialState] = useState(false);
+  const [langDropDown, setLangDropDown] = useState(false);
+  const [dropLang, setDropLang] = useState(null)
+
+  const tabRef = useRef();
 
   pasteDispatcher.dispatch({ paste: value });
   const maxCharCount = config["paste"]["character_limit"];
@@ -58,6 +108,13 @@ export default function EditorTabs({
       setCurrTab(tabNumber);
     }
   }, [value]);
+
+  useEffect(() => {
+    let newLang = [...lang]
+    newLang.splice(currTab, 1, dropLang)
+    setLang(newLang)
+
+  }, [langDropDown]);
 
   useEffect(() => {
     let initialLangs = [];
@@ -129,8 +186,33 @@ export default function EditorTabs({
                 let newValue = [...value];
                 newValue.splice(i, 1);
                 setValue(newValue);
-              }}
-            />
+              }} >
+              {!!pid ?
+              <div className={styles.dropdownContainer} ref={tabRef}>
+                <Button type="submit" className={styles.langButton} onClick={() => setLangDropDown(!langDropDown)}>
+                  <ArrowDownwardIcon/>
+                </Button>
+                {langDropDown ?
+                    <div className={styles.langParent}>
+                      <Dropdown className={styles.dropDown} autoClose>
+                        {Object.keys(languages).map((v, index) => {
+                          if (i !== currTab) {
+                            return <></>
+                          }
+                          return(<DropdownItem
+                              key={v}
+                              className={styles.dropdownItem}
+                              onBlur={(e) => {e.preventDefault()}}
+                              onClick={() => {
+                                setLangDropDown(false)
+                                setDropLang(v)
+                              }}>{v}</DropdownItem>)})}
+                      </Dropdown>
+                    </div>
+                    : null}
+              </div>
+                  : null }
+            </Tab>
           ))}
           <NewTabButton
             onClick={() => {
@@ -141,6 +223,14 @@ export default function EditorTabs({
             }}
             enabled={value.length <= 4 && !id}
           />
+          {!pid ?
+          <div className={styles.addAttachmentIconContainer}>
+          <Button>
+            <InsertPhotoIcon className={styles.addAttachmentIcon} />
+          </Button>
+            <span className={styles.addAttachmentsText}>Add Images</span>
+          </div>
+              : null }
         </div>
 
         {value.map((v, i, arr) => (

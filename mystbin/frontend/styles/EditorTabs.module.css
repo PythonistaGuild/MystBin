@@ -22,3 +22,86 @@
 .maxCountToastHeader > button {
   outline: none;
 }
+
+.langButton {
+  position: relative;
+  color: #3C94DF!important;
+  display: flex;
+  align-self: center;
+  justify-content: center;
+}
+
+.langButton:hover {
+  filter: brightness(120%);
+  color: #3C94DF;
+  outline: none;
+  border: none;
+}
+
+.dropdownContainer {
+  position: relative;
+  display: flex;
+  align-self: center;
+  height: 100%;
+  width: 100%;
+}
+
+.dropDown {
+  background-color: #3b3b3b;
+  color: #e3e3e3!important;
+  font-size: 0.9em!important;
+  border-radius: 5px;
+  overflow-y: scroll;
+  position: absolute;
+  height: 30vh;
+  z-index: 99999;
+  margin-top: 3rem;
+  text-align: left;
+  width: fit-content;
+  overflow-x: hidden;
+}
+
+.dropdownItem {
+  background-color: #3b3b3b;
+  color: #e3e3e3;
+  font-size: 0.9em;
+  padding: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.dropdownItem:hover {
+  filter: brightness(120%);
+}
+
+.langParent {
+  width: 100%;
+  position: relative;
+}
+
+.addAttachmentIcon {
+  color: #e3e3e3;
+  height: 1.75rem!important;
+  width: 1.75rem!important;
+}
+
+.addAttachmentIconContainer {
+  background-color: #3C94DF;
+  display: flex;
+  flex-direction: row;
+  border-radius:  0 0 5px 5px;
+  width: fit-content;
+}
+
+.addAttachmentsText {
+  font-size: 0.8em;
+  color: #e3e3e3;
+  padding: 0.5rem;
+  margin-right: 1rem;
+  margin-left: -0.5rem;
+  align-self: center;
+}
+
+.addAttachmentIconContainer:hover {
+  cursor: pointer;
+  filter: brightness(120%);
+}

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import styles from "../styles/Tab.module.css";
 import CloseIcon from "@material-ui/icons/Close";
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 
 export default function Tab({
   current,
+  children,
   onFocus,
   onChange,
   onDelete,
@@ -18,6 +20,7 @@ export default function Tab({
   filename: string;
   deletable: boolean;
   editable: boolean;
+  children: any;
 }) {
   const spanRef = React.createRef<HTMLSpanElement>();
 
@@ -64,6 +67,7 @@ export default function Tab({
           <CloseIcon className={styles.tabsCloseButton} />
         </button>
       )}
+      {children}
     </div>
   );
 }

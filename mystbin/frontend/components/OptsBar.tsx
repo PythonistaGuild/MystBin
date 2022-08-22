@@ -1,5 +1,7 @@
-import { OverlayTrigger, Popover, Spinner, Toast } from "react-bootstrap";
-import React, { useEffect, useRef, useState } from "react";
+import { OverlayTrigger, Popover, Spinner, Toast} from "react-bootstrap";
+import PopoverBody from "react-bootstrap/PopoverBody";
+import PopoverHeader from "react-bootstrap/PopoverHeader";
+import { useEffect, useRef, useState } from "react";
 import EnhancedEncryptionIcon from "@material-ui/icons/EnhancedEncryption";
 import HourglassFullIcon from "@material-ui/icons/HourglassFull";
 import SaveIcon from "@material-ui/icons/Save";
@@ -342,7 +344,7 @@ function OptsButton(obj: {
       placement={"left"}
       overlay={
         <Popover id={`opt-${obj.title}`} className={styles.popoverBody}>
-          <Popover.Title className={styles.popoverHeader} as="h3">
+          <PopoverHeader className={styles.popoverHeader} as="h3">
             {obj.title}
             {obj.hotKey && (
               <span
@@ -354,13 +356,13 @@ function OptsButton(obj: {
                 {obj.hotKey}
               </span>
             )}
-          </Popover.Title>
-          <Popover.Content>
-            {obj.content}{" "}
+          </PopoverHeader>
+          <PopoverBody>
+            {obj.content}
             {obj.optional !== undefined && (
               <strong>{obj.optional ? "Optional" : "Required"}</strong>
             )}
-          </Popover.Content>
+          </PopoverBody>
         </Popover>
       }
     >

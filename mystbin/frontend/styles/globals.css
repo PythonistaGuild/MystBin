@@ -103,7 +103,7 @@ body .monaco-aria-container {
 }
 
 .maxed > section {
-  max-height: 87.5vh;
+  max-height: 85.5vh;
 }
 
 @media only screen and (max-width: 768px) {
@@ -201,6 +201,20 @@ input[type=radio] {
   font-size: 1.25rem!important;
 }
 
-.popover .arrow::after, .popover .arrow::before {
+.popover-arrow::after, .popover-arrow::before {
   content: none!important;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+.dropdown::-webkit-scrollbar-track {
+  background: rgba(200, 200, 255, 0.3);
+}
+
+/* Handle */
+.dropdown::-webkit-scrollbar-thumb {
+  background: #0070f3;
 }
