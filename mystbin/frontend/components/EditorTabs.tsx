@@ -235,14 +235,6 @@ export default function EditorTabs({
             }}
             enabled={value.length <= 4 && !id}
           />
-          {!pid ? (
-            <div className={styles.addAttachmentIconContainer}>
-              <Button>
-                <InsertPhotoIcon className={styles.addAttachmentIcon} />
-              </Button>
-              <span className={styles.addAttachmentsText}>Add Images</span>
-            </div>
-          ) : null}
         </div>
 
         {value.map((v, i, arr) => (

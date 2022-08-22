@@ -24,14 +24,14 @@ export default function PasswordInput({
         onChange={(event) => {
           onChange(event.currentTarget.value);
         }}
-        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+        onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
             onSubmit(value);
           }
         }}
       />
-      <InputGroup.Append>
+      <InputGroup.Text>
         <span
           className={
             passwordHide
@@ -42,7 +42,7 @@ export default function PasswordInput({
         >
           {passwordHide ? <VisibilityIcon /> : <VisibilityOffIcon />}
         </span>
-      </InputGroup.Append>
+      </InputGroup.Text>
     </InputGroup>
   );
 }

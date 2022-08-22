@@ -52,7 +52,6 @@ export default function ExpiryModal({
       </Modal.Header>
       <Modal.Body>
         <Form
-          inline
           style={{
             justifyContent: "center",
           }}
@@ -70,7 +69,6 @@ export default function ExpiryModal({
                   id={`expiry-${optName}`}
                   className="my-1 mr-sm-2"
                   as={"select"}
-                  custom
                   onChange={(e) => {
                     const oldExpiry = expiryValue;
                     oldExpiry[index] = parseInt(e.target.value);

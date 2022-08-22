@@ -31,7 +31,7 @@ export default function SetPasswordModal({ onHide }: { onHide: () => void }) {
       show={true}
       onHide={onHide}
       aria-labelledby="contained-modal-title-vcenter"
-      centered
+      centered={true}
       className={styles.passwordModal}
     >
       <Modal.Header className={styles.passwordModalHeader}>
@@ -41,7 +41,6 @@ export default function SetPasswordModal({ onHide }: { onHide: () => void }) {
       </Modal.Header>
       <Modal.Body>
         <Form
-          inline
           style={{
             justifyContent: "flex-start",
             display: "flex",
