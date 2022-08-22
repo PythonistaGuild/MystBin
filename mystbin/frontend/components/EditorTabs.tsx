@@ -13,6 +13,7 @@ import { Button } from "@material-ui/core";
 import DropdownItem from "react-bootstrap/DropdownItem";
 import React from "react";
 import InsertPhotoIcon from "@material-ui/icons/InsertPhoto";
+import SettingsIcon from '@material-ui/icons/Settings';
 
 const languages = {
   py: "python",
@@ -194,7 +195,7 @@ export default function EditorTabs({
                     className={styles.langButton}
                     onClick={() => setLangDropDown(!langDropDown)}
                   >
-                    <ArrowDownwardIcon />
+                    <SettingsIcon />
                   </Button>
                   {langDropDown ? (
                     <div className={styles.langParent}>
