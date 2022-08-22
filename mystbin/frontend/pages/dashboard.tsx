@@ -77,9 +77,7 @@ export default function Dashboard(props) {
       width: 125,
       renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete}>
-            Delete Paste
-          </Badge>
+          <Badge className={styles.tableRowDelete}>Delete Paste</Badge>
         </h5>
       ),
     },
@@ -110,9 +108,7 @@ export default function Dashboard(props) {
       width: 125,
       renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete}>
-            Delete Paste
-          </Badge>
+          <Badge className={styles.tableRowDelete}>Delete Paste</Badge>
         </h5>
       ),
     },
@@ -131,9 +127,7 @@ export default function Dashboard(props) {
       width: 125,
       renderCell: (params: GridCellParams) => (
         <h5>
-          <Badge className={styles.tableRowDelete}>
-            Ban User
-          </Badge>
+          <Badge className={styles.tableRowDelete}>Ban User</Badge>
         </h5>
       ),
     },
@@ -509,9 +503,7 @@ export default function Dashboard(props) {
                     .then((d) => {
                       const newRows = d.pastes.filter(
                         (p) =>
-                          !!p.id
-                            .toLowerCase()
-                            .includes(param.items[0].value)
+                          !!p.id.toLowerCase().includes(param.items[0].value)
                       );
                       setAdminUsersRows(newRows);
                       setPageLoading(false);
@@ -566,9 +558,7 @@ export default function Dashboard(props) {
                     .then((d) => {
                       const newRows = d.pastes.filter(
                         (p) =>
-                          !!p.id
-                            .toLowerCase()
-                            .includes(param.items[0].value)
+                          !!p.id.toLowerCase().includes(param.items[0].value)
                       );
                       setAdminPasteRows(newRows);
                       setPageLoading(false);
