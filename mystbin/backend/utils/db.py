@@ -269,7 +269,7 @@ class Database:
                         resp["id"],
                         page.content,
                         page.filename,
-                        page.content.count("\n"),
+                        page.content.count("\n") + 1, # add an extra for line 1
                     )
                 )
 
@@ -959,7 +959,7 @@ class Database:
         await self._do_query(
             query,
             request.headers.get("X-Forwarded-For", request.client.host),
-            request.state.user and request.state.user.id,
+            request.state.user and request.state.user["id"],
             datetime.datetime.utcnow(),
             request.headers.get("CF-RAY"),
             request.headers.get("CF-IPCOUNTRY"),
