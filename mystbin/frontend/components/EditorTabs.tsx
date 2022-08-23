@@ -213,7 +213,7 @@ export default function EditorTabs({
                               }}
                               onClick={() => {
                                 setLangDropDown(false);
-                                setDropLang(v);
+                                setDropLang(getLanguage(v));
                               }}
                             >
                               {v}
