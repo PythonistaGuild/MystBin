@@ -1,8 +1,10 @@
+import argparse
 import json
 import os
 import pathlib
 import sys
 from typing import cast
+
 
 import uvicorn
 from uvicorn.supervisors import Multiprocess
@@ -24,20 +26,19 @@ def get_config() -> dict[str, dict[str, int | str]]:
 
     return data
 
-
-async def run_cli():
-    pass
-
-
-def run_cli_with_workers():
-    pass
-
-
 if __name__ == "__main__":
     cfg = get_config()
     port = cast(int, cfg["site"]["backend_port"])
-    use_workers = "--no-workers" not in sys.argv and cfg["redis"]["use-redis"]
-    use_cli = "--no-cli" not in sys.argv
+    parser = argparse.ArgumentParser(prog="Mystbin")
+    parser.add_argument("--no-workers", "-nw", action="store_true", default=False)
+    parser.add_argument("--no-cli", "-nc", action="store_true", default=False)
+    parser.add_argument("--workers", "-w", nargs=1, default=os.cpu_count() or 1)
+
+    ns = parser.parse_args(sys.argv[1:])
+    
+    use_workers: bool = not ns.no_workers
+    use_cli: bool = not ns.no_cli
+    worker_count: int = ns.workers
     _cli_path = pathlib.Path(".nocli")
 
     if not use_cli:
@@ -57,7 +58,7 @@ if __name__ == "__main__":
     server = uvicorn.Server(config)
 
     if use_workers:
-        config.workers = os.cpu_count() or 1
+        config.workers = worker_count
         sock = config.bind_socket()
 
         runner = Multiprocess(config, target=server.run, sockets=[sock])
