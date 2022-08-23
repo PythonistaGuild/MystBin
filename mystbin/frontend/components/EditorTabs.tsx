@@ -14,6 +14,7 @@ import DropdownItem from "react-bootstrap/DropdownItem";
 import React from "react";
 import InsertPhotoIcon from "@material-ui/icons/InsertPhoto";
 import SettingsIcon from '@material-ui/icons/Settings';
+import {language} from "@hapi/accept";
 
 const languages = {
   py: "python",
@@ -199,7 +200,7 @@ export default function EditorTabs({
                   </Button>
                   {langDropDown ? (
                     <div className={styles.langParent}>
-                      <Dropdown className={styles.dropDown} autoClose>
+                      <Dropdown className={styles.dropDown} autoClose={'outside'}>
                         {Object.keys(languages).map((v, index) => {
                           if (i !== currTab) {
                             return <></>;
@@ -213,7 +214,7 @@ export default function EditorTabs({
                               }}
                               onClick={() => {
                                 setLangDropDown(false);
-                                setDropLang(v);
+                                setDropLang(getLanguage(v));
                               }}
                             >
                               {v}
