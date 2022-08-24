@@ -11,7 +11,6 @@ export default function DiscordAuth(props) {
 }
 
 export const getServerSideProps = async ({ req, res, query }) => {
-
   const cookies = new Cookies(req, res);
   let headers;
 
@@ -21,7 +20,10 @@ export const getServerSideProps = async ({ req, res, query }) => {
       Authorization: cookies.get("auth"),
     };
   } else {
-    headers = { "Content-Type": "application/json", 'User-Agent': 'MystBin-FrontEnd' };
+    headers = {
+      "Content-Type": "application/json",
+      "User-Agent": "MystBin-FrontEnd",
+    };
   }
   let response = await fetch(
     `${config["site"]["backend_site"]}/users/connect/discord/`,
