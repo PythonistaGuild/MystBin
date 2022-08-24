@@ -11,7 +11,7 @@ export default function DiscordAuth(props) {
 }
 
 export const getServerSideProps = async ({ req, res, query }) => {
-  console.error(1)
+  console.error(1);
   const cookies = new Cookies(req, res);
   let headers;
 
@@ -36,10 +36,11 @@ export const getServerSideProps = async ({ req, res, query }) => {
     }
   );
 
+  console.error(2);
   console.log(await response.json())
   const token = await response.json();
   console.error(token);
   cookies.set("auth", token["token"], { httpOnly: false });
-
+  console.error(3);
   return { props: { token } };
 };
