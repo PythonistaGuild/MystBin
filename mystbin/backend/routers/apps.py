@@ -69,7 +69,6 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
         "https://discord.com/api/v8/users/@me",
         headers={"Authorization": f"Bearer {token}"},
     ) as resp:
-        resp.raise_for_status()
         data = await resp.json()
         userid = data["id"]
         email = [data["email"]]
