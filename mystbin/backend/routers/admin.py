@@ -244,7 +244,7 @@ async def get_server_stats(request: MystbinRequest):
     return UJSONResponse(data, status_code=200)
 
 
-@router.put("/admin/release_hook", tags=["admin"], include_in_schema=False)
+@router.post("/admin/release_hook", tags=["admin"], include_in_schema=False)
 @limit("admin")
 async def release_hook(request: MystbinRequest):
 
