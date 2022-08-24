@@ -30,7 +30,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
     {
       method: "POST",
       headers: headers,
-      body: JSON.stringify(query)
+      body: JSON.stringify(query),
     }
   );
 
