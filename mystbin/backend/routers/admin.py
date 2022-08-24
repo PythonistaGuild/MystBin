@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import datetime
 import subprocess
+from hmac import HMAC, compare_digest
+from hashlib import sha256
 from typing import Dict, Optional, Union
 
 import psutil
@@ -245,7 +247,19 @@ async def get_server_stats(request: MystbinRequest):
 @router.get("/admin/release_hook", tags=["admin"], include_in_schema=False)
 @limit("admin")
 async def release_hook(request: MystbinRequest):
-    if not request.state.user or not request.state.user["admin"]:
+
+    config = pathlib.Path("config.json")
+    if not config.exists():
+        config = pathlib.Path("../../config.json")
+
+    with open(config) as f:
+        config: Dict[str, Dict[str, Any]] = ujson.load(f)
+
+    SECRET = config['github_secret'].encode()
+
+    received_sign = request.headers.get('X-Hub-Signature-256').split('sha256=')[-1].strip()
+    expected_sign = HMAC(key=SECRET, msg=(await request.data), digestmod=sha256).hexdigest()
+    if not compare_digest(received_sign, expected_sign):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     command = 'cd /root/MystBin/; git pull;'
