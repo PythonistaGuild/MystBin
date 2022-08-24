@@ -69,6 +69,7 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
         "https://discord.com/api/v8/users/@me",
         headers={"Authorization": f"Bearer {token}"},
     ) as resp:
+        resp.raise_for_status()
         data = await resp.json()
         userid = data["id"]
         email = [data["email"]]
@@ -84,7 +85,7 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
 
     else:
         data = await request.app.state.db.new_user(email, username, userid)
-        return UJSONResponse({"token": data["token"]})
+        return UJSONResponse({"token": token})
 
 
 @router.post("/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False)
