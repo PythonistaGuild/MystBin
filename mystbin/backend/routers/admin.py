@@ -267,7 +267,7 @@ async def release_hook(request: MystbinRequest):
     command = 'cd /root/MystBin/; git pull;'
     subprocess.run(command, stdout=subprocess.PIPE, shell=True)
 
-    return UJSONResponse(data, status_code=200)
+    return Response(status_code=200)
 
 
 @router.get(
