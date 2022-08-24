@@ -19,6 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
+import subprocess
 from typing import Dict, Optional, Union
 
 import psutil
@@ -237,6 +238,18 @@ async def get_server_stats(request: MystbinRequest):
         "requests": request.app.state.request_stats["total"],
         "latest_request": request.app.state.request_stats["latest"].isoformat(),
     }
+
+    return UJSONResponse(data, status_code=200)
+
+
+@router.get("/admin/release_hook", tags=["admin"], include_in_schema=False)
+@limit("admin")
+async def get_server_stats(request: MystbinRequest):
+    if not request.state.user or not request.state.user["admin"]:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    command = 'cd /root/MystBin/; git pull;'
+    subprocess.run(command, stdout=subprocess.PIPE, shell=True)
 
     return UJSONResponse(data, status_code=200)
 
