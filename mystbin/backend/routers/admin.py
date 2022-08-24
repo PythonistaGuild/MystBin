@@ -19,6 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
+import pathlib
 import subprocess
 from hmac import HMAC, compare_digest
 from hashlib import sha256
