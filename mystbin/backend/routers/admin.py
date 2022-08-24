@@ -260,7 +260,7 @@ async def release_hook(request: MystbinRequest):
     SECRET = config['github_secret'].encode()
 
     received_sign = request.headers.get('X-Hub-Signature-256').split('sha256=')[-1].strip()
-    expected_sign = HMAC(key=SECRET, msg=(await request.json()).encode(), digestmod=sha256).hexdigest()
+    expected_sign = HMAC(key=SECRET, msg=await request.body(), digestmod=sha256).hexdigest()
     if not compare_digest(received_sign, expected_sign):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
