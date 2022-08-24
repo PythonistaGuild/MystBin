@@ -254,7 +254,7 @@ async def release_hook(request: MystbinRequest):
         config = pathlib.Path("../../config.json")
 
     with open(config) as f:
-        config: Dict[str, Dict[str, Any]] = ujson.load(f)
+        config = ujson.load(f)
 
     SECRET = config['github_secret'].encode()
 
