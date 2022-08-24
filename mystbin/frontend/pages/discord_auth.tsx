@@ -23,7 +23,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
     headers = {
       "Content-Type": "application/json",
       "User-Agent": "MystBin-FrontEnd",
-      'Access-Control-Allow-Origin': '*'
+      "Access-Control-Allow-Origin": "*",
     };
   }
   let response = await fetch(
