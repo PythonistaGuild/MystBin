@@ -244,7 +244,7 @@ async def get_server_stats(request: MystbinRequest):
 
 @router.get("/admin/release_hook", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def get_server_stats(request: MystbinRequest):
+async def release_hook(request: MystbinRequest):
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
