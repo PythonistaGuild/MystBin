@@ -26,6 +26,7 @@ from hashlib import sha256
 from typing import Dict, Optional, Union
 
 import psutil
+import ujson
 from asyncpg import Record
 from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
