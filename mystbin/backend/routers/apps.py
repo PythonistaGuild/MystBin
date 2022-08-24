@@ -61,12 +61,12 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with request.app.state.client.post("https://discord.com/api/v10/oauth2/token", data=data, headers=headers) as resp:
+    async with request.app.state.client.post("https://discord.com/api/oauth2/token", data=data, headers=headers) as resp:
         data = await resp.json()
         token = data["access_token"]
 
     async with request.app.state.client.get(
-        "https://discord.com/api/v8/users/@me",
+        "https://discord.com/api/v10/users/@me",
         headers={"Authorization": f"Bearer {token}"},
     ) as resp:
         resp.raise_for_status()
