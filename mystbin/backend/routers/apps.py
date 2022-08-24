@@ -81,11 +81,11 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
 
     elif _id := await request.app.state.db.check_email(email):
         token = await request.app.state.db.update_user(_id, discord_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        return {"token": token}
 
     else:
         data = await request.app.state.db.new_user(email, username, userid)
-        return UJSONResponse({"token": data["token"]})
+        return {"token": data["token"]}
 
 
 @router.post("/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False)
