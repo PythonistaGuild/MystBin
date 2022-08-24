@@ -36,9 +36,10 @@ export const getServerSideProps = async ({ req, res, query }) => {
     }
   );
 
-  console.error(2)
+  console.log(await response.json())
   const token = await response.json();
+  console.error(token);
   cookies.set("auth", token["token"], { httpOnly: false });
-  console.error(3)
+
   return { props: { token } };
 };
