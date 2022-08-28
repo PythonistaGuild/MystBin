@@ -5,7 +5,7 @@ import Script from "next/script";
 
 function MyApp({ Component, pageProps }) {
   return(<>
-  <Script src={"https://media.ethicalads.io/media/client/ethicalads.min.js"} strategy={"beforeInteractive"}/>
+  <Script async src={"https://media.ethicalads.io/media/client/ethicalads.min.js"} strategy={"beforeInteractive"}/>
   <Component {...pageProps} />;
     </>)
 }
