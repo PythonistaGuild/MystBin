@@ -6,14 +6,13 @@ import GitHubIcon from "@material-ui/icons/GitHub";
 import DiscordColorIcon from "../icons/DiscordColour";
 import TipModal from "./TipModal";
 import Head from "next/head";
-import Script from "next/script";
 
 export default function Base(props: PropsWithChildren<{ className: string }>) {
   const { children, className } = props;
 
   return (
     <div className={styles.Base}>
-      <Script src="https://media.ethicalads.io/media/client/ethicalads.min.js" />
+      <script async src="https://media.ethicalads.io/media/client/ethicalads.min.js"></script>
       <div
         data-ea-publisher="mystbin"
         data-ea-type="text"
