@@ -1,6 +1,6 @@
 {
   "name": "mystbin",
-  "version": "0.1.0",
+  "version": "3",
   "private": true,
   "scripts": {
     "dev": "next dev --port 4340",
