@@ -16,7 +16,10 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
         data-ea-type="text"
         data-ea-style="fixedfooter"
       ></div>
-<script async src="https://media.ethicalads.io/media/client/ethicalads.min.js"></script>
+      <script
+        async
+        src="https://media.ethicalads.io/media/client/ethicalads.min.js"
+      ></script>
 
       <OptsBar />
       <TipModal />
