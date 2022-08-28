@@ -11,7 +11,11 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
 
   return (
     <div className={styles.Base}>
-    <div data-ea-publisher="mystbin" data-ea-type="text" data-ea-style="fixedfooter" ></div>
+      <div
+        data-ea-publisher="mystbin"
+        data-ea-type="text"
+        data-ea-style="fixedfooter"
+      ></div>
 
       <OptsBar />
       <TipModal />
