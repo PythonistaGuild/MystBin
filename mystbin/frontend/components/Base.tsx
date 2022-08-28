@@ -13,7 +13,7 @@ export default function Base(props: PropsWithChildren<{ className: string }>) {
 
   return (
     <div className={styles.Base}>
-        <Script src="https://media.ethicalads.io/media/client/ethicalads.min.js" />
+      <Script src="https://media.ethicalads.io/media/client/ethicalads.min.js" />
       <div
         data-ea-publisher="mystbin"
         data-ea-type="text"
