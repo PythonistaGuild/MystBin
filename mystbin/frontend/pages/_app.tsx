@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Script from "next/Script"
+import Script from "next/script";
 
 
 function MyApp({ Component, pageProps }) {
