@@ -34,11 +34,11 @@
     "react-popout": "^1.0.3",
     "react-responsive": "^9.0.0-beta.10",
     "react-tabs": "^3.1.1",
-    "typescript",
-    "@types/node",
-    "@types/react",
-    "@types/react-dom",
-    "@types/jest"
+    "typescript": "*",
+    "@types/node": "*",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@types/jest":"*"
   },
   "devDependencies": {
     "@types/node": "^14.14.7",
