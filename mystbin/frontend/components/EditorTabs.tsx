@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import styles from "../styles/EditorTabs.module.css";
-import { Dropdown, Toast } from "react-bootstrap";
+import {Dropdown, Toast, ToastHeader} from "react-bootstrap";
 import PasswordModal from "./PasswordModal";
 import Tab from "./Tab";
 import NewTabButton from "./NewTabButton";
