@@ -274,12 +274,10 @@ export default function EditorTabs({
         delay={5000}
         autohide
       >
-        <Toast.Header className={styles.maxCountToastHeader}>
-          <span>
+        <ToastHeader className={styles.maxCountToastHeader}>
           <strong className="mr-auto">Max Character Count</strong>
-          Max count: {{ maxCharCount }}
-            </span>
-        </Toast.Header>
+            <small>Max count: {{ maxCharCount }}</small>
+        </ToastHeader>
         <Toast.Body>
           You've reached the max character count for this file.
         </Toast.Body>
