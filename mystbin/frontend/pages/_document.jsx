@@ -7,18 +7,12 @@ export default function Document() {
     <Html>
 
       <Head />
-
+<div data-ea-publisher="mystbin" data-ea-type="text" data-ea-style="fixedfooter"></div>
       <body>
-<div
 
-        data-ea-publisher="mystbin"
 
-        data-ea-type="text"
 
-        data-ea-style="fixedfooter"
-
-      ></div>
-        <Main />
+<Main />
 
         <NextScript />
 
