@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -26,6 +28,7 @@ def get_config() -> dict[str, dict[str, int | str]]:
 
     return data
 
+
 if __name__ == "__main__":
     cfg = get_config()
     port = cast(int, cfg["site"]["backend_port"])
@@ -35,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("--workers", "-w", nargs=1, default=os.cpu_count() or 1)
 
     ns = parser.parse_args(sys.argv[1:])
-    
+
     use_workers: bool = not ns.no_workers
     use_cli: bool = not ns.no_cli
     worker_count: int = ns.workers
