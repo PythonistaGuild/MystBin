@@ -269,7 +269,7 @@ class Database:
                         resp["id"],
                         page.content,
                         page.filename,
-                        page.content.count("\n") + 1, # add an extra for line 1
+                        page.content.count("\n") + 1,  # add an extra for line 1
                     )
                 )
 
