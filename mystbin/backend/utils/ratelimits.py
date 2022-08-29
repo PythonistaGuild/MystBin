@@ -162,10 +162,8 @@ class Limiter:
                 status_code=response.status_code,
                 background=response.background,
                 media_type=cast(str, response.media_type),
+                headers=response.headers,  # type: ignore
             )
-            del response._headers["content-type"]
-            del response._headers["content-length"]
-            resp_._headers = response._headers
             body = b""
             async for chunk in response.body_iterator:
                 if not isinstance(chunk, bytes):
@@ -257,7 +255,8 @@ class Limiter:
             }
             resp = await call_next(request)
             resp.headers.update(headers)
-            return await self._transform_and_log(request, resp)
+            resp = await self._transform_and_log(request, resp)
+            return resp
 
 
 def parse_ratelimit(limit: str) -> tuple[int, int]:
