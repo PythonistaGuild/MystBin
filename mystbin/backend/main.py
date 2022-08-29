@@ -7,7 +7,6 @@ import pathlib
 import sys
 from typing import cast
 
-
 import uvicorn
 from uvicorn.supervisors import Multiprocess
 
