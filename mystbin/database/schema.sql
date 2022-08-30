@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS files (
 CREATE TABLE IF NOT EXISTS images (
     parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
     tab_id BIGINT,
+    url TEXT,
     index SERIAL NOT NULL,
     PRIMARY KEY (parent_id, index)
 

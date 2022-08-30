@@ -183,6 +183,15 @@ class Database:
                 resp = dict(resp[0])
                 resp["files"] = [{a: str(b) for a, b in x.items()} for x in contents]
 
+                images = await self.get_images(paste_id=paste_id)
+
+                for index, file in enumerate(resp['files']):
+                    try:
+                        file['image'] = images[index]['url']
+                        file['tab_id'] = images[index]['tab_id']
+                    except IndexError:
+                        pass
+
                 return resp
             else:
                 return None
@@ -291,6 +300,18 @@ class Database:
             resp["files"] = [dict(file) for file in inserted]
 
             return resp
+
+    async def update_paste_with_files(self, *, paste_id: str, tab_id: str, url: str) -> None:
+        query = """INSERT INTO images VALUES($1, $2, $3)"""
+
+        async with self.pool.acquire() as conn:
+            await self._do_query(query, paste_id, int(tab_id), url)
+
+    async def get_images(self, *, paste_id: str):
+
+        query = """SELECT * FROM images WHERE parent_id = $1"""
+        async with self.pool.acquire() as conn:
+             return [dict(x) for x in await self._do_query(query, paste_id)]
 
     @wrapped_hook_callback
     async def edit_paste(

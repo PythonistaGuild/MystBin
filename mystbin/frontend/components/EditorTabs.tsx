@@ -67,9 +67,7 @@ export default function EditorTabs({
   hasPassword = false,
   pid = null,
 }: TabInfo) {
-  const [value, setValue] = useState<Record<string, string>[]>([
-    { title: "file.txt", content: "", image: null },
-  ]);
+  const [value, setValue] = useState([{ title: "file.txt", content: "", image: "" },]);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
   const [passwordModal, setPasswordModal] = useState(!!hasPassword);
@@ -86,9 +84,10 @@ export default function EditorTabs({
   const tabRef = useRef();
   const imageRef = useRef();
 
+
   function handleSetImage(e) {
     let file = e.currentTarget.files[0]
-    let allowed = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'];
+    let allowed = ['image/gif', 'image/jpeg', 'image/png'];
 
     if (!!file && !allowed.includes(file['type'])) {
       alert('Only images are currently supported.')
@@ -111,10 +110,12 @@ export default function EditorTabs({
   pasteDispatcher.dispatch({ paste: value });
   const maxCharCount = config["paste"]["character_limit"];
 
-  if (initialData !== null && !initialState) {
-    setValue(initialData);
-    setInitialState(true);
-  }
+  useEffect( () => {
+    if (initialData !== null && !initialState) {
+      setValue(initialData);
+      setInitialState(true);
+    }
+  }, [])
 
   useEffect(() => {
     if (sessionStorage.getItem("pasteCopy") !== null) {
@@ -185,12 +186,13 @@ export default function EditorTabs({
 
   return (
     <>
-      {showImage ?
-          <div className={styles.attachmentImageBackdrop} onClick={(e) => setShowImage(false)}>
-            <img className={styles.attachmentImage} src={"https://mystbin.b-cdn.net/images/0-OffSpecificationCharm-9a0f0b7719a4f55a5e104922e4d42204.png"}/>
+      <div>
+      {value.map((v, i) => (
+          <div className={styles.attachmentImageBackdrop} onClick={(e) => setShowImage(-1)} style={{ display: showImage === i ? "block" : "none",}}>
+            <img className={styles.attachmentImage} src={value[i]['image']} style={{ display: showImage === i ? "block" : "none",}}/>
           </div>
-      : null}
-      <input ref={imageRef} type="file" style={{display: 'none'}} onChange={e => handleSetImage(e)}/>
+        ))}
+      </div>
 
       <PasswordModal
         show={passwordModal}
@@ -220,17 +222,19 @@ export default function EditorTabs({
                 setValue(newValue);
               }}
             >
-              {!pid && value[i]['image'] === null ?
-              <div className={styles.addImageButtonContainer} onClick={((e) => {
+              <input ref={imageRef} type="file" style={{display: 'none'}} onChange={e => (handleSetImage(e))} />
+              {!pid && value[i]['image'] === null || value[i]['image'] === "" ?
+              <div className={styles.addImageButtonContainer} onClick={(e) => {
               e.preventDefault();
-              imageRef.current.click();
+              // @ts-ignore
+                imageRef.current.click();
 
-            })} >
+            }} >
                 <AddBoxIcon className={styles.addImagesButtonNS} ></AddBoxIcon>
               </div> : null}
 
               { value[i]['image'] ?
-                  <div className={styles.addImageButtonContainer} onClick={(e) => setShowImage(true)}>
+                  <div className={styles.addImageButtonContainer} onClick={(e) => setShowImage(i)}>
                   <LibraryAddCheckIcon style={{color: "#E3E3E3"}}/>
                   </div>
                   : null }
@@ -277,7 +281,7 @@ export default function EditorTabs({
           <NewTabButton
             onClick={() => {
               let newValue = [...value];
-              newValue.push({ title: "default_name.ext", content: "" });
+              newValue.push({ title: "file.txt", content: "", image: "" });
               setValue(newValue);
               setCurrTab(value.length);
             }}

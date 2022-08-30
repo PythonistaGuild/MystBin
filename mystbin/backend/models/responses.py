@@ -27,6 +27,9 @@ class File(BaseModel):
     content: str
     loc: int
     charcount: int
+    tab_id: int | None
+    image: str | None
+
 
     class Config:
         schema_extra = {
@@ -35,6 +38,8 @@ class File(BaseModel):
                 "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                 "loc": 2,
                 "charcount": 49,
+                "tab_id": 0,
+                "url": "..."
             }
         }
 

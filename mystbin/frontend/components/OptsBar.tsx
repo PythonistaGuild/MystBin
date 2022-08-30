@@ -23,6 +23,7 @@ import { Slide } from "@material-ui/core";
 import config from "../config.json";
 import { useMediaQuery } from "react-responsive";
 import SetPasswordModal from "./SetPasswordModal";
+import axios from "axios";
 
 export default function OptsBar() {
   const [currentModal, setCurrentModal] = useState(null);
@@ -36,6 +37,8 @@ export default function OptsBar() {
     !useMediaQuery({ query: `(max-width: 768px)` })
   );
 
+  const [uploaded, setUploaded] = useState(false)
+
   function handleFileUploads(id) {
     let paste = pasteStore.getPaste();
     let FD = new FormData();
@@ -44,16 +47,25 @@ export default function OptsBar() {
       if (element['image'] === null || element['image'] == undefined) {
         continue
       }
+      else {
+        let name = `${index}-${id}-${element['image'].name}`
+        FD.append('images', element['image'], name)
+      }
 
-      let name = `${index}-${id}-${element['image'].name}`
-      FD.append('images', element['image'], name)
+      if (FD.entries().next().done === true) {
+        setUploaded(true)
+        return
+      }
     }
 
-    fetch(`${config['site']['backend_site']}/images/upload/${id}`, {
-      method: "PUT",
-      body: FD
-    }).then((r) => console.log(r.status))
-  }
+    axios({
+        url: `${config['site']['backend_site']}/images/upload/${id}`,
+        method: 'PUT',
+        data: FD,
+      }).then((response) => {
+        setUploaded(true);
+      })
+    }
 
   const personal = [
     {
@@ -186,7 +198,7 @@ export default function OptsBar() {
                 setSaveSuccessToast(d.id);
                 setTimeout(() => {
                   router.push(path);
-                }, 3000);
+                }, 6000);
               });
             }
           });

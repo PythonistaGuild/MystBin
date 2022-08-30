@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 import Base from "../components/Base";
 import styles from "../styles/Home.module.css";
-import { PropsWithoutRef } from "react";
-import { GetServerSideProps } from "next";
+import {PropsWithoutRef} from "react";
+import {GetServerSideProps} from "next";
 import Head from "next/head";
 
 import config from "../config.json";
@@ -22,7 +22,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
     });
   } else {
     for (let file of paste["files"]) {
-      initialData.push({ title: file["filename"], content: file["content"] });
+      initialData.push({ title: file["filename"], content: file["content"], image: file['image'] });
     }
   }
 
@@ -69,7 +69,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   let { pid } = query;
   pid = pid.toString().split(".", 1)[0];
-  const response = await fetch(
+  let response = await fetch(
     `${config["site"]["backend_site"]}/paste/${pid}`
   );
 
