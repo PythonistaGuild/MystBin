@@ -21,8 +21,8 @@ from __future__ import annotations
 import datetime
 import pathlib
 import subprocess
-from hmac import HMAC, compare_digest
 from hashlib import sha256
+from hmac import HMAC, compare_digest
 from typing import Dict, Optional, Union
 
 import psutil
@@ -257,14 +257,14 @@ async def release_hook(request: MystbinRequest):
     with open(config) as f:
         config = ujson.load(f)
 
-    SECRET = config['github_secret'].encode()
+    SECRET = config["github_secret"].encode()
 
-    received_sign = request.headers.get('X-Hub-Signature-256').split('sha256=')[-1].strip()
+    received_sign = request.headers.get("X-Hub-Signature-256").split("sha256=")[-1].strip()
     expected_sign = HMAC(key=SECRET, msg=await request.body(), digestmod=sha256).hexdigest()
     if not compare_digest(received_sign, expected_sign):
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    command = 'cd /root/MystBin/; git pull;'
+    command = "cd /root/MystBin/; git pull;"
     subprocess.run(command, stdout=subprocess.PIPE, shell=True)
 
     return Response(status_code=200)

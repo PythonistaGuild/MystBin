@@ -16,6 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import asyncio
 import datetime
 import difflib
@@ -269,7 +271,7 @@ class Database:
                         resp["id"],
                         page.content,
                         page.filename,
-                        page.content.count("\n") + 1, # add an extra for line 1
+                        page.content.count("\n") + 1,  # add an extra for line 1
                     )
                 )
 

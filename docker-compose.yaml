@@ -2,14 +2,13 @@ version: "3.7"
 
 services:
   api:
-    image: python:3.9.1-buster
-    build: mystbin/rest
+    build: mystbin/backend
     ports:
       - 127.0.0.1:5557:9000/tcp
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./config.json:/usr/src/app/config.json:ro
-    container_name: "staging-api"
+    container_name: "mystbin-api"
     networks:
       main:
         ipv4_address: 172.25.0.11
@@ -17,12 +16,13 @@ services:
       - database
 
   database:
-    image: postgres:13-alpine
+    image: postgres:14-alpine
     ports:
       - 127.0.0.1:5558:5432
-    container_name: "staging-database"
+    container_name: "mystbin-database"
     volumes:
       - postgresdata:/var/lib/postgresql/data/pgdata
+      - ./mystbin/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     environment:
       POSTGRES_DB: mystbin
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -40,7 +40,7 @@ services:
       - ./config.json:/app/config.json:ro
     ports:
       - 127.0.0.1:5559:3000
-    container_name: "staging-frontend"
+    container_name: "mystbin-frontend"
     build: ./mystbin/frontend
     depends_on:
       - api
