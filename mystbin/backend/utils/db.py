@@ -185,10 +185,10 @@ class Database:
 
                 images = await self.get_images(paste_id=paste_id)
 
-                for index, file in enumerate(resp['files']):
+                for index, file in enumerate(resp["files"]):
                     try:
-                        file['image'] = images[index]['url']
-                        file['tab_id'] = images[index]['tab_id']
+                        file["image"] = images[index]["url"]
+                        file["tab_id"] = images[index]["tab_id"]
                     except IndexError:
                         pass
 
@@ -311,7 +311,7 @@ class Database:
 
         query = """SELECT * FROM images WHERE parent_id = $1"""
         async with self.pool.acquire() as conn:
-             return [dict(x) for x in await self._do_query(query, paste_id)]
+            return [dict(x) for x in await self._do_query(query, paste_id)]
 
     @wrapped_hook_callback
     async def edit_paste(
@@ -995,8 +995,4 @@ class Database:
         async def put_paste_images(self, parent_id, tab_id) -> None:
             query = """INSERT INTO images VALUES($1, $2)"""
 
-            await self._do_query(
-            query,
-            parent_id,
-            tab_id
-            )
+            await self._do_query(query, parent_id, tab_id)

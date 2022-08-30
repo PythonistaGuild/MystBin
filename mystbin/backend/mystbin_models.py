@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, TypedDict
 
+import aiohttp
 from fastapi import Request
 from starlette.datastructures import State
 
@@ -37,6 +38,7 @@ class MystbinState(State):
 
     db: Database
     user: Optional[_StateUser]
+    session: aiohttp.ClientSession
 
 
 class MystbinRequest(Request):

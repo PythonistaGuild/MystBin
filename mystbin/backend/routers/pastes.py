@@ -18,7 +18,6 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
-import asyncio
 import datetime
 import json
 import pathlib
@@ -27,7 +26,7 @@ from random import sample
 from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
-from fastapi import APIRouter, Response, UploadFile, File
+from fastapi import APIRouter, File, Response, UploadFile
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 
@@ -177,19 +176,22 @@ async def put_pastes(
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste, status_code=201)
 
+
 @router.put(
     "/images/upload/{paste_id}",
     tags=["pastes"],
     responses={
         201: {"model": responses.PastePostResponse},
         401: {"model": errors.Unauthorized},
-        404: {"model": errors.NotFound}
+        404: {"model": errors.NotFound},
     },
     include_in_schema=False,
 )
 @limit("postpastes")
-async def get_image_upload_link(request: MystbinRequest, paste_id: str, password: Optional[str] = None, images: List[UploadFile] = File(...)):
-    """    user = request.state.user
+async def get_image_upload_link(
+    request: MystbinRequest, paste_id: str, password: Optional[str] = None, images: List[UploadFile] = File(...)
+):
+    """user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unauthorized", "notice": "You must be signed in to use this route"}, status_code=401)"""
 
@@ -197,22 +199,21 @@ async def get_image_upload_link(request: MystbinRequest, paste_id: str, password
     if paste is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
 
-    headers = {
-        "Content-Type": "application/octet-stream",
-        "AccessKey": f"{__config['bunny_cdn']['token']}"
-    }
+    headers = {"Content-Type": "application/octet-stream", "AccessKey": f"{__config['bunny_cdn']['token']}"}
 
     for image in images:
         i = image.filename[0]
-        await request.app.state.db.update_paste_with_files(paste_id=paste_id, tab_id=i, url=f'https://mystbin.b-cdn.net/images/{image.filename}')
+        await request.app.state.db.update_paste_with_files(
+            paste_id=paste_id, tab_id=i, url=f"https://mystbin.b-cdn.net/images/{image.filename}"
+        )
 
         URL = f'https://storage.bunnycdn.com/{__config["bunny_cdn"]["hostname"]}/images/{image.filename}'
         data = await image.read()
 
-        async with request.app.state.client.put(URL, headers=headers, data=data) as resp:
-            pass
+        await request.app.state.client.put(URL, headers=headers, data=data)
 
     return Response(status_code=201)
+
 
 desc = f"""Get a paste by ID.
 

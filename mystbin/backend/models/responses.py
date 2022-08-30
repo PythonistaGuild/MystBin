@@ -30,7 +30,6 @@ class File(BaseModel):
     tab_id: int | None
     image: str | None
 
-
     class Config:
         schema_extra = {
             "example": {
@@ -39,7 +38,7 @@ class File(BaseModel):
                 "loc": 2,
                 "charcount": 49,
                 "tab_id": 0,
-                "url": "..."
+                "url": "...",
             }
         }
 
