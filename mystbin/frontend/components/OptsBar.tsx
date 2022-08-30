@@ -36,6 +36,25 @@ export default function OptsBar() {
     !useMediaQuery({ query: `(max-width: 768px)` })
   );
 
+  function handleFileUploads(id) {
+    let paste = pasteStore.getPaste();
+    let FD = new FormData();
+
+    for (const [index, element] of paste.entries()) {
+      if (element['image'] === null || element['image'] == undefined) {
+        continue
+      }
+
+      let name = `${index}-${id}-${element['image'].name}`
+      FD.append('images', element['image'], name)
+    }
+
+    fetch(`${config['site']['backend_site']}/images/upload/${id}`, {
+      method: "PUT",
+      body: FD
+    }).then((r) => console.log(r.status))
+  }
+
   const personal = [
     {
       title: "Dashboard",
@@ -158,6 +177,8 @@ export default function OptsBar() {
           })
           .then((d) => {
             if (d && d.id) {
+              handleFileUploads(d.id)
+
               let path = `/${d.id}`;
               let full = window.location.origin + path;
               navigator.clipboard.writeText(full).then(() => {

@@ -79,30 +79,38 @@
   position: relative;
 }
 
-.addAttachmentIcon {
-  color: #e3e3e3;
-  height: 1.75rem!important;
-  width: 1.75rem!important;
-}
-
-.addAttachmentIconContainer {
-  background-color: #3C94DF;
+.addImageButtonContainer {
   display: flex;
-  flex-direction: row;
-  border-radius:  0 0 5px 5px;
-  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem
 }
 
-.addAttachmentsText {
-  font-size: 0.8em;
+.addImagesButtonNS {
   color: #e3e3e3;
-  padding: 0.5rem;
-  margin-right: 1rem;
-  margin-left: -0.5rem;
-  align-self: center;
 }
 
-.addAttachmentIconContainer:hover {
-  cursor: pointer;
-  filter: brightness(120%);
+.addImagesButtonNS:hover {
+  filter: brightness(80%);
+}
+
+.addImagesButton {
+  color: #3C94DF;
+}
+
+.attachmentImageBackdrop {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9;
+}
+
+.attachmentImage {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  max-width: 100%;
 }

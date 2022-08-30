@@ -4,12 +4,12 @@
   border: none;
   border-bottom: 2px solid #3C94DF;
   outline: none !important;
-  font-size: 1em;
   min-width: 4rem;
   display: inline-flex;
   min-height: 2.5rem;
   text-align: center;
   vertical-align: bottom;
+  font-size: smaller;
 }
 
 .tabs {
@@ -17,12 +17,12 @@
   color: rgba(255, 255, 255, 0.4);
   border-bottom: 2px solid transparent;
   outline: none !important;
-  font-size: 1em;
   min-width: 4rem;
   display: inline-flex;
   text-align: center;
   vertical-align: bottom;
   filter: brightness(70%);
+  font-size: smaller;
 }
 
 .tabs:hover {

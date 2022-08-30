@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
+import asyncio
 import datetime
 import json
 import pathlib
@@ -26,7 +27,7 @@ from random import sample
 from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, UploadFile, File
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 
@@ -51,9 +52,6 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
-
-
-CF_DLURL = f"https://api.cloudflare.com/client/v4/accounts/{__config['cf_images_account']}/images/v2/direct_upload?requireSignedURLs=true"
 
 
 def generate_paste_id():
@@ -179,26 +177,41 @@ async def put_pastes(
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste, status_code=201)
 
-
-@router.get(
-    "/images/upload",
+@router.put(
+    "/images/upload/{paste_id}",
     tags=["pastes"],
-    status_code=201,
+    responses={
+        201: {"model": responses.PastePostResponse},
+        401: {"model": errors.Unauthorized},
+        404: {"model": errors.NotFound}
+    },
     include_in_schema=False,
 )
-async def get_image_upload_link(request: MystbinRequest, auth: Optional[str] = ''):
-    if auth != __config['cf_images_frontend_secret']:
-        return UJSONResponse({'error': 'Unauthorized.'}, status_code=401)
-
+@limit("postpastes")
+async def get_image_upload_link(request: MystbinRequest, paste_id: str, images: List[UploadFile] = File(...)):
     headers = {
-    'Authorization': f'Bearer {__config["cf_images_token"]}'}
+        "Content-Type": "application/octet-stream",
+        "AccessKey": f"{__config['bunny_cdn']['token']}"
+    }
 
-    async with request.app.state.client.post(CF_DLURL, headers=headers) as resp:
-        data = await resp.json()
+    for image in images:
+        await asyncio.sleep(0.1)
 
-    result = data['result']['uploadURL']
-    return UJSONResponse({'url': result}, status_code=201)
+        URL = f'https://storage.bunnycdn.com/{__config["bunny_cdn"]["hostname"]}/images/{image.filename}'
+        data = await image.read()
 
+        async with request.app.state.client.put(URL, headers=headers, data=data) as resp:
+            print(resp.status)
+
+    user = request.state.user
+    if not user:
+        return UJSONResponse({"error": "Unauthorized", "notice": "You must be signed in to use this route"}, status_code=401)
+
+    paste = await request.app.state.db.get_paste(paste_id, password)
+    if paste is None:
+        return UJSONResponse({"error": "Not Found"}, status_code=404)
+
+    return Response(status_code=201)
 
 desc = f"""Get a paste by ID.
 

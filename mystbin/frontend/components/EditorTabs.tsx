@@ -8,12 +8,12 @@ import NewTabButton from "./NewTabButton";
 import pasteDispatcher from "../dispatchers/PasteDispatcher";
 import getLanguage from "../stores/languageStore";
 import config from "../config.json";
-import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import { Button } from "@material-ui/core";
 import DropdownItem from "react-bootstrap/DropdownItem";
 import React from "react";
-import InsertPhotoIcon from "@material-ui/icons/InsertPhoto";
 import SettingsIcon from "@material-ui/icons/Settings";
+import AddBoxIcon from '@material-ui/icons/AddBox';
+import LibraryAddCheckIcon from '@material-ui/icons/LibraryAddCheck';
 
 const languages = {
   py: "python",
@@ -68,7 +68,7 @@ export default function EditorTabs({
   pid = null,
 }: TabInfo) {
   const [value, setValue] = useState<Record<string, string>[]>([
-    { title: "file.txt", content: "" },
+    { title: "file.txt", content: "", image: null },
   ]);
   const [currTab, setCurrTab] = useState(0);
   const [charCountToast, setCharCountToast] = useState(false);
@@ -80,8 +80,33 @@ export default function EditorTabs({
   const [initialState, setInitialState] = useState(false);
   const [langDropDown, setLangDropDown] = useState(false);
   const [dropLang, setDropLang] = useState(null);
+  const [image, setImage] = useState(null)
+  const [showImage, setShowImage] = useState(null)
 
   const tabRef = useRef();
+  const imageRef = useRef();
+
+  function handleSetImage(e) {
+    let file = e.currentTarget.files[0]
+    let allowed = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'];
+
+    if (!!file && !allowed.includes(file['type'])) {
+      alert('Only images are currently supported.')
+    }
+    else if (file.size / 1024 / 1024 > 4) {
+      alert('You can only upload files 4Mb in size or less.')
+    }
+    else {
+      setImage(file)
+    }
+  }
+
+  useEffect( () => {
+    let newValue = [...value];
+    newValue[currTab]['image'] = image
+
+    setValue(newValue)
+  }, [image])
 
   pasteDispatcher.dispatch({ paste: value });
   const maxCharCount = config["paste"]["character_limit"];
@@ -160,6 +185,13 @@ export default function EditorTabs({
 
   return (
     <>
+      {showImage ?
+          <div className={styles.attachmentImageBackdrop} onClick={(e) => setShowImage(false)}>
+            <img className={styles.attachmentImage} src={"https://mystbin.b-cdn.net/images/0-OffSpecificationCharm-9a0f0b7719a4f55a5e104922e4d42204.png"}/>
+          </div>
+      : null}
+      <input ref={imageRef} type="file" style={{display: 'none'}} onChange={e => handleSetImage(e)}/>
+
       <PasswordModal
         show={passwordModal}
         shake={shake}
@@ -188,6 +220,21 @@ export default function EditorTabs({
                 setValue(newValue);
               }}
             >
+              {!pid && value[i]['image'] === null ?
+              <div className={styles.addImageButtonContainer} onClick={((e) => {
+              e.preventDefault();
+              imageRef.current.click();
+
+            })} >
+                <AddBoxIcon className={styles.addImagesButtonNS} ></AddBoxIcon>
+              </div> : null}
+
+              { value[i]['image'] ?
+                  <div className={styles.addImageButtonContainer} onClick={(e) => setShowImage(true)}>
+                  <LibraryAddCheckIcon style={{color: "#E3E3E3"}}/>
+                  </div>
+                  : null }
+
               {!!pid ? (
                 <div className={styles.dropdownContainer} ref={tabRef}>
                   <Button
