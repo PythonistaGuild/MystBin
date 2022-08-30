@@ -968,3 +968,12 @@ class Database:
             response.status_code,
             resp,
         )
+
+        async def put_paste_images(self, parent_id, tab_id) -> None:
+            query = """INSERT INTO images VALUES($1, $2)"""
+
+            await self._do_query(
+            query,
+            parent_id,
+            tab_id
+            )

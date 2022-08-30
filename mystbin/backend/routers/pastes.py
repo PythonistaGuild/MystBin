@@ -53,6 +53,9 @@ with __p.open() as __f:
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
 
 
+CF_DLURL = f"https://api.cloudflare.com/client/v4/accounts/{__config['cf_images_account']}/images/v2/direct_upload?requireSignedURLs=true"
+
+
 def generate_paste_id():
     """Generate three random words."""
     word_samples = sample(word_list, 3)
@@ -175,6 +178,26 @@ async def put_pastes(
     paste = responses.PastePostResponse(**paste)  # type: ignore # this is a problem for future me #TODO
     paste = recursive_hook(paste.dict())
     return UJSONResponse(paste, status_code=201)
+
+
+@router.get(
+    "/images/upload",
+    tags=["pastes"],
+    status_code=201,
+    include_in_schema=False,
+)
+async def get_image_upload_link(request: MystbinRequest, auth: Optional[str] = ''):
+    if auth != __config['cf_images_frontend_secret']:
+        return UJSONResponse({'error': 'Unauthorized.'}, status_code=401)
+
+    headers = {
+    'Authorization': f'Bearer {__config["cf_images_token"]}'}
+
+    async with request.app.state.client.post(CF_DLURL, headers=headers) as resp:
+        data = await resp.json()
+
+    result = data['result']['uploadURL']
+    return UJSONResponse({'url': result}, status_code=201)
 
 
 desc = f"""Get a paste by ID.

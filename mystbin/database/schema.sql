@@ -35,6 +35,14 @@ CREATE TABLE IF NOT EXISTS files (
     PRIMARY KEY (parent_id, index)
 );
 
+CREATE TABLE IF NOT EXISTS images (
+    parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
+    tab_id BIGINT,
+    index SERIAL NOT NULL,
+    PRIMARY KEY (parent_id, index)
+
+);
+
 CREATE TABLE IF NOT EXISTS bookmarks (
     userid bigint not null references users(id) ON DELETE CASCADE,
     paste text not null references pastes(id) ON DELETE CASCADE,
