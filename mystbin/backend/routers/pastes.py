@@ -23,7 +23,6 @@ import json
 import pathlib
 import re
 from random import sample
-from typing import Dict, List, Optional, Union
 
 from asyncpg import Record
 from fastapi import APIRouter, File, Response, UploadFile
@@ -146,8 +145,8 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
 async def put_pastes(
     request: MystbinRequest,
     payload: payloads.PastePut,
-) -> Union[Dict[str, Optional[Union[str, int, datetime.datetime]]], UJSONResponse]:
-    author_: Optional[Record] = request.state.user
+) -> dict[str, str | int | datetime.datetime] | UJSONResponse | None:
+    author_: Record | None = request.state.user
 
     if err := enforce_multipaste_limit(request.app, payload):
         return err
@@ -158,7 +157,7 @@ async def put_pastes(
         data = await upload_to_gist(request, "\n".join(tokens))
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
-    author: Optional[int] = author_["id"] if author_ else None
+    author: int | None = author_["id"] if author_ else None
 
     paste = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
@@ -189,7 +188,7 @@ async def put_pastes(
 )
 @limit("postpastes")
 async def get_image_upload_link(
-    request: MystbinRequest, paste_id: str, password: Optional[str] = None, images: List[UploadFile] = File(...)
+    request: MystbinRequest, paste_id: str, password: str | None = None, images: list[UploadFile] | None = File(...)
 ):
     """user = request.state.user
     if not user:
@@ -201,16 +200,17 @@ async def get_image_upload_link(
 
     headers = {"Content-Type": "application/octet-stream", "AccessKey": f"{__config['bunny_cdn']['token']}"}
 
-    for image in images:
-        i = image.filename[0]
-        await request.app.state.db.update_paste_with_files(
-            paste_id=paste_id, tab_id=i, url=f"https://mystbin.b-cdn.net/images/{image.filename}"
-        )
+    if images:
+        for image in images:
+            i = image.filename[0]
+            await request.app.state.db.update_paste_with_files(
+                paste_id=paste_id, tab_id=i, url=f"https://mystbin.b-cdn.net/images/{image.filename}"
+            )
 
-        URL = f'https://storage.bunnycdn.com/{__config["bunny_cdn"]["hostname"]}/images/{image.filename}'
-        data = await image.read()
+            URL = f'https://storage.bunnycdn.com/{__config["bunny_cdn"]["hostname"]}/images/{image.filename}'
+            data = await image.read()
 
-        await request.app.state.client.put(URL, headers=headers, data=data)
+            await request.app.state.client.put(URL, headers=headers, data=data)
 
     return Response(status_code=201)
 
@@ -235,7 +235,7 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     description=desc,
 )
 @limit("getpaste")
-async def get_paste(request: MystbinRequest, paste_id: str, password: Optional[str] = None) -> UJSONResponse:
+async def get_paste(request: MystbinRequest, paste_id: str, password: str | None = None) -> UJSONResponse:
     paste = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
         return UJSONResponse({"error": "Not Found"}, status_code=404)
@@ -258,9 +258,9 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 @router.get(
     "/pastes/@me",
     tags=["pastes"],
-    response_model=List[responses.PasteGetAllResponse],
+    response_model=list[responses.PasteGetAllResponse],
     responses={
-        200: {"model": Optional[List[responses.PasteGetAllResponse]]},
+        200: {"model": list[responses.PasteGetAllResponse] | None},
         401: {"model": errors.Unauthorized},
     },
     name="Get user pastes",
@@ -269,16 +269,32 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 @limit("getpaste")
 async def get_all_pastes(
     request: MystbinRequest,
-    limit: Optional[int] = None,
-) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
+    limit: int | None = None,
+) -> UJSONResponse | dict[str, list[dict[str, str]]]:
     user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
 
     pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
+    if not pastes:
+        return UJSONResponse({"pastes": None})
+
     pastes = [dict(entry) for entry in pastes]
 
     return UJSONResponse({"pastes": pastes})
+
+
+@router.get("/pastes/@me/views")
+async def get_total_view_count(request: MystbinRequest) -> UJSONResponse | dict[str, list[dict[str, str]]]:
+    user = request.state.user
+    if not user:
+        return UJSONResponse(
+            {"error": "Unauthorized", "notice": "You must be signed in to use this route."}, status_code=401
+        )
+
+    view_count = await request.app.state.db.get_user_total_view_count(user["id"])
+
+    return UJSONResponse({"total_views": view_count})
 
 
 desc = f"""Edit a paste.
@@ -308,7 +324,7 @@ async def edit_paste(
     request: MystbinRequest,
     paste_id: str,
     payload: payloads.PastePatch,
-) -> Union[UJSONResponse, Response]:
+) -> UJSONResponse | Response:
     author = request.state.user
     if not author:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
@@ -351,7 +367,7 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     description=desc,
 )
 @limit("deletepaste")
-async def delete_paste(request: MystbinRequest, paste_id: str) -> Union[UJSONResponse, Dict[str, str]]:
+async def delete_paste(request: MystbinRequest, paste_id: str) -> UJSONResponse | dict[str, str]:
     user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
@@ -401,7 +417,7 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
 async def delete_pastes(
     request: MystbinRequest,
     payload: payloads.PasteDelete,
-) -> Union[UJSONResponse, Dict[str, List[str]]]:
+) -> UJSONResponse | dict[str, list[str]]:
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response
     response = {"succeeded": [], "failed": []}
 

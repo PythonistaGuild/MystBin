@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -31,9 +30,9 @@ class PasteFile(BaseModel):
 
 
 class PastePut(BaseModel):
-    expires: Optional[datetime.datetime] = None
-    password: Optional[str] = None
-    files: List[PasteFile]
+    expires: datetime.datetime | None = None
+    password: str | None = None
+    files: list[PasteFile]
 
     class Config:
         schema_extra = {
@@ -52,13 +51,13 @@ class PastePut(BaseModel):
 
 
 class PastePatch(BaseModel):
-    new_expires: Optional[datetime.datetime] = None
-    new_password: Optional[str] = None
-    new_files: List[PasteFile]
+    new_expires: datetime.datetime | None = None
+    new_password: str | None = None
+    new_files: list[PasteFile]
 
 
 class PasteDelete(BaseModel):
-    pastes: List[str]
+    pastes: list[str]
 
 
 class BookmarkPutDelete(BaseModel):

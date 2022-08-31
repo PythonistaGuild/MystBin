@@ -19,19 +19,18 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import Dict, Optional, Union
 
 
 class Embed:
     def __init__(
         self,
         *,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
         colour: int = 0,
-        author: Optional[Dict[str, str]] = None,
-        timestamp: Optional[datetime.datetime] = None,
-        footer: Optional[Dict[str, str]] = None,
+        author: dict[str, str] | None = None,
+        timestamp: datetime.datetime | None = None,
+        footer: dict[str, str] | None = None,
     ) -> None:
         self.title = title
         self.description = description
@@ -40,7 +39,7 @@ class Embed:
         self.timestamp = timestamp
         self.footer = footer
 
-    def to_dict(self) -> Dict[str, Union[str, int, Dict[str, str]]]:
+    def to_dict(self) -> dict[str, str | int | dict[str, str]]:
         final = {}
         final["type"] = "rich"
         final["color"] = self.colour

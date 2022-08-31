@@ -15,3 +15,4 @@ yarl
 aioconsole
 tabulate
 aioredis>2<3
+python-multipart

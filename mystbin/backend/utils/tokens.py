@@ -1,5 +1,4 @@
 import binascii
-from typing import Optional
 
 import jwt
 from Crypto.Random import get_random_bytes
@@ -15,7 +14,7 @@ def generate(userid: int) -> str:
     return jwt.encode(payload, key, algorithm="HS512")
 
 
-def get_user_id(token: str) -> Optional[int]:
+def get_user_id(token: str) -> int | None:
     """Get user ID from a token."""
     try:
         payload = jwt.decode(token, algorithms=["HS512"], options=JWT_OPTIONS)

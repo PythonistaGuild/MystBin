@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import datetime
 import pathlib
-from typing import Any, Callable, Coroutine, Dict, Optional, Tuple
+from typing import Any, Callable, Coroutine
 
 import aiohttp
 import aioredis
@@ -35,17 +35,17 @@ from utils import cli as _cli, ratelimits
 from utils.db import Database
 
 
-METHODS: Tuple[str, ...] = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
+METHODS: tuple[str, ...] = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
 
 
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
-    redis: Optional[aioredis.Redis]
-    cli: Optional[_cli.CLIHandler] = None
+    redis: aioredis.Redis | None
+    cli: _cli.CLIHandler | None = None
     state: MystbinState
 
-    def __init__(self, *, loop: Optional[asyncio.AbstractEventLoop] = None, config: Optional[pathlib.Path] = None):
+    def __init__(self, *, loop: asyncio.AbstractEventLoop | None = None, config: pathlib.Path | None = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
         super().__init__(
             title="MystBin",
@@ -62,7 +62,7 @@ class MystbinApp(FastAPI):
                 config = pathlib.Path("../../config.json")
 
         with open(config) as f:
-            self.config: Dict[str, Dict[str, Any]] = ujson.load(f)
+            self.config: dict[str, dict[str, Any]] = ujson.load(f)
         self.should_close = False
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
         self.add_event_handler("startup", func=self.app_startup)

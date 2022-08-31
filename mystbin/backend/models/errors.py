@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -39,4 +38,4 @@ class NotFound(BaseModel):
 
 class BadRequest(BaseModel):
     error: str = "Bad Request"
-    reason: Optional[str] = None
+    reason: str | None = None

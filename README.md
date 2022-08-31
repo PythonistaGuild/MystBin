@@ -49,7 +49,7 @@ Alongside the above headers, there are also global ratelimits, which will return
 # Installation
 
 This site requires the following external software:
-- Python 3.8+
+- Python 3.10+
 - Node.js / yarn
 - postgresql 12+
 - Redis (optional)

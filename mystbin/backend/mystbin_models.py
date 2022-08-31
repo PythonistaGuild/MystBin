@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
 from fastapi import Request
@@ -21,23 +21,23 @@ __all__ = (
 class _StateUser(TypedDict):
     id: int
     token: str
-    emails: List[str]
-    discord_id: Optional[str]
-    github_id: Optional[str]
-    google_id: Optional[str]
+    emails: list[str]
+    discord_id: str | None
+    github_id: str | None
+    google_id: str | None
     admin: bool
     theme: str
     subscriber: bool
     username: str
-    _is_ip_banned: Optional[str]
-    _is_user_banned: Optional[int]
+    _is_ip_banned: str | None
+    _is_user_banned: int | None
 
 
 class MystbinState(State):
     """Only for db typing."""
 
     db: Database
-    user: Optional[_StateUser]
+    user: _StateUser | None
     session: aiohttp.ClientSession
 
 
