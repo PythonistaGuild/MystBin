@@ -18,6 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
 import datetime
+import os
 import pathlib
 from typing import Any, Callable, Coroutine
 
@@ -117,7 +118,7 @@ class MystbinApp(FastAPI):
         self.middleware("http")(self.cors_middleware)
 
         nocli = pathlib.Path(".nocli")
-        if nocli.exists():
+        if nocli.exists() or os.environ.get("ISDOCKER") == "true":
             return
 
         print()
