@@ -188,7 +188,7 @@ async def put_pastes(
 )
 @limit("postpastes")
 async def get_image_upload_link(
-    request: MystbinRequest, paste_id: str, password: str | None = None, images: list[UploadFile] | None = File(...)
+    request: MystbinRequest, paste_id: str, password: str | None = None, images: list[UploadFile] | None = File(None)
 ):
     """user = request.state.user
     if not user:
