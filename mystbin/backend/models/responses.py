@@ -142,7 +142,7 @@ class UserCount(BaseModel):
     count: int
 
 
-class Userlist(BaseModel):
+class UserList(BaseModel):
     users: list[SmallUser]
     page: int
     page_count: int

@@ -137,8 +137,8 @@ async def unsubscribe_user(request: MystbinRequest, user_id: int) -> UJSONRespon
 @router.get(
     "/admin/users",
     tags=["admin"],
-    response_model=responses.Userlist,
-    responses={200: {"model": responses.Userlist}, 401: {"model": errors.Unauthorized}},
+    response_model=responses.UserList,
+    responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
     include_in_schema=False,
 )
 @limit("admin")
