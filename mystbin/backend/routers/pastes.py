@@ -28,6 +28,7 @@ from typing import Dict, List, Optional, Union
 from asyncpg import Record
 from fastapi import APIRouter, File, Response, UploadFile
 from fastapi.responses import UJSONResponse
+from fastapi.encoders import jsonable_encoder
 from models import errors, payloads, responses
 
 from mystbin_models import MystbinRequest
@@ -278,7 +279,7 @@ async def get_all_pastes(
     pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
     pastes = [dict(entry) for entry in pastes]
 
-    return UJSONResponse({"pastes": pastes})
+    return UJSONResponse({"pastes": jsonable_encoder(pastes)})
 
 
 desc = f"""Edit a paste.
