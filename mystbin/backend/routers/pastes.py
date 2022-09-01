@@ -26,6 +26,7 @@ from random import sample
 
 from asyncpg import Record
 from fastapi import APIRouter, File, Response, UploadFile
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import UJSONResponse
 from models import errors, payloads, responses
 
@@ -281,7 +282,7 @@ async def get_all_pastes(
 
     pastes = [dict(entry) for entry in pastes]
 
-    return UJSONResponse({"pastes": pastes})
+    return UJSONResponse({"pastes": jsonable_encoder(pastes)})
 
 
 @router.get("/pastes/@me/views")
