@@ -32,16 +32,8 @@ CREATE TABLE IF NOT EXISTS files (
     loc INTEGER NOT NULL,
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
     index SERIAL NOT NULL,
+    attachment TEXT,
     PRIMARY KEY (parent_id, index)
-);
-
-CREATE TABLE IF NOT EXISTS images (
-    parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
-    tab_id BIGINT,
-    url TEXT,
-    index SERIAL NOT NULL,
-    PRIMARY KEY (parent_id, index)
-
 );
 
 CREATE TABLE IF NOT EXISTS bookmarks (

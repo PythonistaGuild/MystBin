@@ -17,15 +17,18 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
+import asyncio
 
 import datetime
 import json
 import pathlib
 import re
+import uuid
 from random import sample
-from typing import Dict, List, Optional, Union
+from typing import Coroutine, cast, Dict, List, Optional, Union
 
 from asyncpg import Record
+import pydantic
 from fastapi import APIRouter, File, Response, UploadFile
 from fastapi.responses import UJSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -34,6 +37,13 @@ from models import errors, payloads, responses
 from mystbin_models import MystbinRequest
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
+
+try:
+    import ujson
+    _loads = ujson.loads
+except ModuleNotFoundError:
+    import json
+    _loads = json.loads
 
 
 _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
@@ -54,9 +64,9 @@ with __p.open() as __f:
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
 
 
-def generate_paste_id():
+def generate_paste_id(n: int = 3):
     """Generate three random words."""
-    word_samples = sample(word_list, 3)
+    word_samples = sample(word_list, n)
     return "".join(word_samples).replace("\n", "")
 
 
@@ -137,7 +147,7 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     response_model=responses.PastePostResponse,
     responses={
         201: {"model": responses.PastePostResponse},
-        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided a bad paste"}}}},
+        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided too many files"}}}},
     },
     status_code=201,
     name="Create paste",
@@ -178,42 +188,87 @@ async def put_pastes(
     return UJSONResponse(paste, status_code=201)
 
 
-@router.put(
-    "/images/upload/{paste_id}",
+@router.post(
+    "/rich-paste",
     tags=["pastes"],
+    response_model=responses.PastePostResponse,
     responses={
         201: {"model": responses.PastePostResponse},
-        401: {"model": errors.Unauthorized},
-        404: {"model": errors.NotFound},
+        400: {"content": {"application/json": {"example": {"error": "files.length: You have provided too many files"}}}}
     },
-    include_in_schema=False,
+    status_code=201,
+    name="Create Rich Paste"
 )
 @limit("postpastes")
-async def get_image_upload_link(
-    request: MystbinRequest, paste_id: str, password: Optional[str] = None, images: List[UploadFile] = File(...)
+async def post_rich_paste(
+    request: MystbinRequest,
+    data: bytes = File(None, max_length=(__config["paste"]["character_limit"] * __config["paste"]["file_limit"]) + 500),
+    images: List[UploadFile] = File(None),
 ):
-    """user = request.state.user
-    if not user:
-        return UJSONResponse({"error": "Unauthorized", "notice": "You must be signed in to use this route"}, status_code=401)"""
+            
+    reads = data
+    try:
+        payload = payloads.RichPastePost.parse_raw(reads, content_type="application/json")
+        print(payload)
+    except pydantic.ValidationError as e:
+        return UJSONResponse({"detail": e.errors()}, status_code=422)
+    except:
+        return UJSONResponse({"error": f"multipart.section.data: Invalid JSON"})
+    
+    paste_id = generate_paste_id()
 
-    paste = await request.app.state.db.get_paste(paste_id, password)
-    if paste is None:
-        return UJSONResponse({"error": "Not Found"}, status_code=404)
+    if images:
+        async def _partial(target, spool: UploadFile):
+            data = await spool.read()
+            await request.app.state.client.put(target, data=data, headers=headers) # TODO figure out how to pass spooled object instead of load into memory
+        
+        image_idx = {}
+        headers = {"Content-Type": "application/octet-stream", "AccessKey": f"{__config['bunny_cdn']['token']}"}
+        partials: list[Coroutine] = []
 
-    headers = {"Content-Type": "application/octet-stream", "AccessKey": f"{__config['bunny_cdn']['token']}"}
+        for image in images: # TODO honour config filesize limit
+            origin = image.filename.split(".")[-1]
+            new_name = f"{('%032x' % uuid.uuid4().int)[:8]}-{paste_id}.{origin}"
+            url = f"https://{__config['bunny_cdn']['hostname']}.b-cdn.net/images/{new_name}"
+            image_idx[image.filename] = url
+            target = f"https://storage.bunnycdn.com/{__config['bunny_cdn']['hostname']}/images/{new_name}"
+            partials.append(_partial(target, image))
 
-    for image in images:
-        i = image.filename[0]
-        await request.app.state.db.update_paste_with_files(
-            paste_id=paste_id, tab_id=i, url=f"https://mystbin.b-cdn.net/images/{image.filename}"
-        )
+        for n, file in enumerate(payload.files):
+            if file.attachment is not None:
+                if file.attachment not in image_idx:
+                    return UJSONResponse({"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"})
+                
+                file.__dict__["attachment"] = image_idx[file.attachment]
+        
+        await asyncio.wait(partials, return_when=asyncio.ALL_COMPLETED)
+    
+    if err := enforce_multipaste_limit(request.app, payload):
+        return err
 
-        URL = f'https://storage.bunnycdn.com/{__config["bunny_cdn"]["hostname"]}/images/{image.filename}'
-        data = await image.read()
+    notice = None
 
-        await request.app.state.client.put(URL, headers=headers, data=data)
+    if tokens := await find_discord_tokens(request, payload):
+        gist = await upload_to_gist(request, "\n".join(tokens))
+        notice = f"Discord tokens have been found and uploaded to {gist['html_url']}"
 
-    return Response(status_code=201)
+    author: Optional[int] = request.state.user["id"] if request.state.user else None
+
+    paste = await request.app.state.db.put_paste(
+        paste_id=paste_id,
+        pages=payload.files,
+        expires=payload.expires,
+        author=author,
+        password=payload.password,
+        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
+        if request.app.config["paste"]["log_ip"]
+        else None,
+    )
+
+    paste["notice"] = notice
+    paste = responses.PastePostResponse(**paste)  # type: ignore # this is a problem for future me #TODO
+    paste = recursive_hook(paste.dict())
+    return UJSONResponse(paste, status_code=201)
 
 
 desc = f"""Get a paste by ID.

@@ -182,16 +182,6 @@ class Database:
                 contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
                 resp = dict(resp[0])
                 resp["files"] = [{a: str(b) for a, b in x.items()} for x in contents]
-
-                images = await self.get_images(paste_id=paste_id)
-
-                for index, file in enumerate(resp["files"]):
-                    try:
-                        file["image"] = images[index]["url"]
-                        file["tab_id"] = images[index]["tab_id"]
-                    except IndexError:
-                        pass
-
                 return resp
             else:
                 return None
@@ -232,7 +222,7 @@ class Database:
         *,
         paste_id: str,
         origin_ip: Optional[str],
-        pages: List[payloads.PasteFile],
+        pages: List[payloads.RichPasteFile] | List[payloads.PasteFile],
         expires: Optional[datetime.datetime] = None,
         author: Optional[int] = None,
         password: Optional[str] = None,
@@ -281,13 +271,14 @@ class Database:
                         page.content,
                         page.filename,
                         page.content.count("\n") + 1,  # add an extra for line 1
+                        getattr(page, "attachment", None)
                     )
                 )
 
             files_query = """
-                          INSERT INTO files (parent_id, content, filename, loc)
-                          VALUES ($1, $2, $3, $4)
-                          RETURNING index, filename, loc, charcount, content
+                          INSERT INTO files (parent_id, content, filename, loc, attachment)
+                          VALUES ($1, $2, $3, $4, $5)
+                          RETURNING index, filename, loc, charcount, content, attachment
                           """
             inserted = []
             async with conn.transaction():
@@ -300,18 +291,6 @@ class Database:
             resp["files"] = [dict(file) for file in inserted]
 
             return resp
-
-    async def update_paste_with_files(self, *, paste_id: str, tab_id: str, url: str) -> None:
-        query = """INSERT INTO images VALUES($1, $2, $3)"""
-
-        async with self.pool.acquire() as conn:
-            await self._do_query(query, paste_id, int(tab_id), url)
-
-    async def get_images(self, *, paste_id: str):
-
-        query = """SELECT * FROM images WHERE parent_id = $1"""
-        async with self.pool.acquire() as conn:
-            return [dict(x) for x in await self._do_query(query, paste_id)]
 
     @wrapped_hook_callback
     async def edit_paste(

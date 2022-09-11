@@ -27,7 +27,14 @@ class PasteFile(BaseModel):
     filename: str
 
     class Config:
-        schema_extra = {"content": "explosions everywhere", "filename": "kaboom.txt"}
+        schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt"}}
+
+
+class RichPasteFile(PasteFile):
+    attachment: str | None
+
+    class Config:
+        schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}}
 
 
 class PastePut(BaseModel):
@@ -43,13 +50,35 @@ class PastePut(BaseModel):
                 "files": [
                     {"content": "import this", "filename": "foo.py"},
                     {
-                        "content": "doc.md",
-                        "filename": "**do not use this in production**",
+                        "filename": "doc.md",
+                        "content": "**do not use this in production**",
                     },
                 ],
             }
         }
 
+class RichPastePost(PastePut):
+    files: List[RichPasteFile]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "expires": "2020-11-16T13:46:49.215Z",
+                "password": None,
+                "files": [
+                    {
+                        "content": "import this",
+                        "filename": "foo.py",
+                        "attachment": None
+                    },
+                    {
+                        "filename": "doc.md",
+                        "content": "**do not use this in production**",
+                        "attachment": "image2.jpeg"
+                    },
+                ],
+            }
+        }
 
 class PastePatch(BaseModel):
     new_expires: Optional[datetime.datetime] = None
