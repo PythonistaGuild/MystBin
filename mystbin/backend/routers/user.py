@@ -30,7 +30,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/users/me",
+    "/users/@me",
     tags=["users"],
     response_model=responses.User,
     responses={
