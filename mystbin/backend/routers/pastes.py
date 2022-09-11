@@ -134,6 +134,15 @@ async def find_discord_tokens(request: MystbinRequest, pastes: payloads.PastePut
     return tokens or None
 
 
+def respect_dnt(request: MystbinRequest):
+    if request.headers.get("DNT", None) == "1":
+        return "DNT"
+    
+    if request.app.config["paste"]["log_ip"]:
+        return request.headers.get("X-Forwarded-For", request.client.host)
+    
+    return None
+
 desc = f"""Post a paste.
 
 This endpoint falls under the `postpastes` ratelimit bucket.
@@ -177,9 +186,7 @@ async def put_pastes(
         expires=payload.expires,
         author=author,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
 
     paste["notice"] = notice
@@ -260,9 +267,7 @@ async def post_rich_paste(
         expires=payload.expires,
         author=author,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
 
     paste["notice"] = notice
@@ -512,8 +517,6 @@ async def compat_create_paste(request: MystbinRequest):
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
     return UJSONResponse({"key": paste["id"]})
