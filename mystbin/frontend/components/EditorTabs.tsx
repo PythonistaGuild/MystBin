@@ -84,6 +84,31 @@ export default function EditorTabs({
 
   const tabRef = useRef();
   const imageRef = useRef();
+  const DnDRef = useRef();
+
+  async function handleDnD(e, index) {
+    e.preventDefault()
+
+    if(e.dataTransfer && e.dataTransfer.files.length != 0) {
+      let file = e.dataTransfer.files[0]
+
+      if (file.size / 1024 / 1024 > 4) {
+        alert('You can only upload files 4Mb in size or less.');
+        return;
+
+      }
+
+      let data = await file.text();
+      let name = file.name;
+
+      let newValue = [...value];
+      newValue[index]['title'] = name;
+      newValue[index]['content'] = data;
+
+      setValue(newValue);
+    }
+
+  }
 
 
   function handleSetImage(e) {
@@ -235,7 +260,7 @@ export default function EditorTabs({
                 <AddBoxIcon className={styles.addImagesButtonNS} ></AddBoxIcon>
               </div> : null}
 
-              { value[i]['image'] ?
+              { value[i]['image'] !== 'None' && value[i]['image'] !== null && value[i]['image'] !== undefined && value[i]['image'] !== "" ?
                   <div
                       className={styles.addImageButtonContainer}
                       onClick={() => setShowImage(i)}
@@ -252,13 +277,10 @@ export default function EditorTabs({
                   >
                     <SettingsIcon />
                   </div>
-                  {langDropDown ? (
+                  {langDropDown && i === currTab ? (
                     <div className={styles.langParent}>
                       <Dropdown className={styles.dropDown} autoClose>
                         {Object.keys(languages).map((v, index) => {
-                          if (i !== currTab) {
-                            return <></>;
-                          }
                           return (
                             <DropdownItem
                               key={v}
@@ -302,22 +324,27 @@ export default function EditorTabs({
             className={"maxed"}
             id={`tab-${i}`}
           >
-            <MonacoEditor
-              language={lang[i]}
-              onChange={(_, newVal) => {
-                if (newVal.length > maxCharCount) {
-                  setCharCountToast(true);
-                  newVal = newVal.slice(0, maxCharCount);
-                }
-                let newValue = [...value];
-                newValue[i]["content"] = newVal;
-                setValue(newValue);
-                return `${newVal}`;
-              }}
-              value={v.content}
-              theme={"mystBinDark"}
-              readOnly={!!id}
-            />
+            <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={async (e) => await handleDnD(e, i)}
+            >
+              <MonacoEditor
+                language={lang[i]}
+                onChange={(_, newVal) => {
+                  if (newVal.length > maxCharCount) {
+                    setCharCountToast(true);
+                    newVal = newVal.slice(0, maxCharCount);
+                  }
+                  let newValue = [...value];
+                  newValue[i]["content"] = newVal;
+                  setValue(newValue);
+                  return `${newVal}`;
+                }}
+                value={v.content}
+                theme={"mystBinDark"}
+                readOnly={!!id}
+              />
+            </div>
           </div>
         ))}
       </div>

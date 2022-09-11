@@ -140,7 +140,7 @@ export default function OptsBar() {
         let FD = new FormData();
 
         for (let file of paste) {
-          if (file['image'] === null || file['image'] == undefined) {
+          if (file['image'] === null || file['image'] == undefined || file['image'] === '') {
             files.push({ filename: file["title"], content: file["content"] });
           }
           else {
