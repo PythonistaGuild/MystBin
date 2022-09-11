@@ -22,7 +22,7 @@ export default function Pastey(props: PropsWithoutRef<{ paste }>) {
     });
   } else {
     for (let file of paste["files"]) {
-      initialData.push({ title: file["filename"], content: file["content"], image: file['image'] });
+      initialData.push({ title: file["filename"], content: file["content"], image: file['attachment'] });
     }
   }
 

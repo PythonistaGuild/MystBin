@@ -14,6 +14,7 @@ import React from "react";
 import SettingsIcon from "@material-ui/icons/Settings";
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import LibraryAddCheckIcon from '@material-ui/icons/LibraryAddCheck';
+import {ImageRounded} from "@material-ui/icons";
 
 const languages = {
   py: "python",
@@ -188,8 +189,9 @@ export default function EditorTabs({
     <>
       <div>
       {value.map((v, i) => (
-          <div className={styles.attachmentImageBackdrop} onClick={(e) => setShowImage(-1)} style={{ display: showImage === i ? "block" : "none",}}>
+          <div className={styles.attachmentImageBackdrop} onClick={(e) => setShowImage(-1)} style={{ display: showImage === i ? "flex" : "none",}}>
             <img className={styles.attachmentImage} src={value[i]['image']} style={{ display: showImage === i ? "block" : "none",}}/>
+            <a className={styles.attachmentLink} href={value[i]['image']} target={"_blank"}>Open Original</a>
           </div>
         ))}
       </div>
@@ -234,20 +236,22 @@ export default function EditorTabs({
               </div> : null}
 
               { value[i]['image'] ?
-                  <div className={styles.addImageButtonContainer} onClick={(e) => setShowImage(i)}>
-                  <LibraryAddCheckIcon style={{color: "#E3E3E3"}}/>
+                  <div
+                      className={styles.addImageButtonContainer}
+                      onClick={() => setShowImage(i)}
+                  >
+                    <ImageRounded className={styles.addImagesButtonNS}/>
                   </div>
                   : null }
 
               {!!pid ? (
                 <div className={styles.dropdownContainer} ref={tabRef}>
-                  <Button
-                    type="submit"
+                  <div
                     className={styles.langButton}
                     onClick={() => setLangDropDown(!langDropDown)}
                   >
                     <SettingsIcon />
-                  </Button>
+                  </div>
                   {langDropDown ? (
                     <div className={styles.langParent}>
                       <Dropdown className={styles.dropDown} autoClose>

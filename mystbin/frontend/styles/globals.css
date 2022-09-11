@@ -218,3 +218,17 @@ input[type=radio] {
 .dropdown::-webkit-scrollbar-thumb {
   background: #0070f3;
 }
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: rgba(200, 200, 255, 0.3);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #3b3b3b;
+}

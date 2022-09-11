@@ -39,33 +39,6 @@ export default function OptsBar() {
 
   const [uploaded, setUploaded] = useState(false)
 
-  function handleFileUploads(id) {
-    let paste = pasteStore.getPaste();
-    let FD = new FormData();
-
-    for (const [index, element] of paste.entries()) {
-      if (element['image'] === null || element['image'] == undefined) {
-        continue
-      }
-      else {
-        let name = `${index}-${id}-${element['image'].name}`
-        FD.append('images', element['image'], name)
-      }
-
-      if (FD.entries().next().done === true) {
-        setUploaded(true)
-        return
-      }
-    }
-
-    axios({
-        url: `${config['site']['backend_site']}/images/upload/${id}`,
-        method: 'PUT',
-        data: FD,
-      }).then((response) => {
-        setUploaded(true);
-      })
-    }
 
   const personal = [
     {
@@ -164,32 +137,49 @@ export default function OptsBar() {
 
         setSaving(true);
         let files = [];
+        let FD = new FormData();
 
         for (let file of paste) {
-          files.push({ filename: file["title"], content: file["content"] });
+          if (file['image'] === null || file['image'] == undefined) {
+            files.push({ filename: file["title"], content: file["content"] });
+          }
+          else {
+            files.push({ filename: file["title"], content: file["content"], attachment: file['image'].name });
+            FD.append('images', file['image'], file['image'].name)
+          }
         }
 
+        let data = { "files": files, "password": paste.password }
+        FD.append('data', JSON.stringify(data))
+
         const headers = {
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         };
+
         if (!!cookieCutter.get("auth")) {
           headers["Authorization"] = cookieCutter.get("auth");
         }
-        fetch(config["site"]["backend_site"] + "/paste", {
-          method: "PUT",
+
+        axios( {
+          url: config["site"]["backend_site"] + "/rich-paste",
+          method: "POST",
           headers: headers,
-          body: JSON.stringify({ files: files, password: paste.password }),
+          data: FD,
         })
           .then((r) => {
             if (r.status === 201) {
-              return r.json();
+              return r.data;
             }
             setSaving(false);
+            setUploaded(false);
+
             console.error(r.status);
+            console.log(r.data)
           })
           .then((d) => {
+            setUploaded(true);
+
             if (d && d.id) {
-              handleFileUploads(d.id)
 
               let path = `/${d.id}`;
               let full = window.location.origin + path;
@@ -198,7 +188,7 @@ export default function OptsBar() {
                 setSaveSuccessToast(d.id);
                 setTimeout(() => {
                   router.push(path);
-                }, 6000);
+                }, 3000);
               });
             }
           });
