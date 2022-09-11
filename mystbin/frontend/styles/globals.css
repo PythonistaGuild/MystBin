@@ -216,7 +216,7 @@ input[type=radio] {
 
 /* Handle */
 .dropdown::-webkit-scrollbar-thumb {
-  background: #0070f3;
+  background: #2b2b2b;
 }
 
 ::-webkit-scrollbar {

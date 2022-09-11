@@ -89,6 +89,10 @@ export default function EditorTabs({
   async function handleDnD(e, index) {
     e.preventDefault()
 
+    if (!!id) {
+      return;
+    }
+
     if(e.dataTransfer && e.dataTransfer.files.length != 0) {
       let file = e.dataTransfer.files[0]
 
