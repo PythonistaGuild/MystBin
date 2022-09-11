@@ -84,7 +84,7 @@ export default function MonacoEditor(
 
   return (
     <ControlledEditor
-      height="calc(90vh)"
+      height="calc(82.5vh)"
       width="95%"
       value={value}
       theme={theme}
