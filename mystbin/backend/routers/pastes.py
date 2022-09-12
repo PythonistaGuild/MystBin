@@ -62,6 +62,7 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
+HAS_BUNNYCDN = bool(__config["bunnycdn"]["token"])
 
 
 def generate_paste_id(n: int = 3):
@@ -224,7 +225,7 @@ async def post_rich_paste(
     
     paste_id = generate_paste_id()
 
-    if images:
+    if images and HAS_BUNNYCDN:
         async def _partial(target, spool: UploadFile):
             data = await spool.read()
             await request.app.state.client.put(target, data=data, headers=headers) # TODO figure out how to pass spooled object instead of load into memory
