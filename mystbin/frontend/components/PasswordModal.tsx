@@ -57,9 +57,7 @@ export default function PasswordModal({
           onClick={() => onAttempt(passwordAttempt)}
         >
           {loading ? (
-            <Spinner animation="border" role="status">
-              <span className="sr-only">Loading...</span>
-            </Spinner>
+            <Spinner className={styles.spinner} animation="border" role="status" />
           ) : (
             "Submit"
           )}
