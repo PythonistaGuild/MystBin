@@ -193,15 +193,16 @@ export default function EditorTabs({
 
     try {
       if (response.status === 200) {
-        setPasswordModal(false);
 
-        for (let file of paste["pastes"]) {
+        for (let file of paste["files"]) {
           actualData.push({
             title: file["filename"],
             content: file["content"],
+            image: file['attachment']
           });
         }
         setValue(actualData);
+        setPasswordModal(false);
       } else {
         throw () => {};
       }
