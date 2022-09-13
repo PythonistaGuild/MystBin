@@ -62,6 +62,7 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
+HAS_BUNNYCDN = bool(__config["bunnycdn"]["token"])
 
 
 def generate_paste_id(n: int = 3):
@@ -134,6 +135,15 @@ async def find_discord_tokens(request: MystbinRequest, pastes: payloads.PastePut
     return tokens or None
 
 
+def respect_dnt(request: MystbinRequest):
+    if request.headers.get("DNT", None) == "1":
+        return "DNT"
+    
+    if request.app.config["paste"]["log_ip"]:
+        return request.headers.get("X-Forwarded-For", request.client.host)
+    
+    return None
+
 desc = f"""Post a paste.
 
 This endpoint falls under the `postpastes` ratelimit bucket.
@@ -177,9 +187,7 @@ async def put_pastes(
         expires=payload.expires,
         author=author,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
 
     paste["notice"] = notice
@@ -217,7 +225,7 @@ async def post_rich_paste(
     
     paste_id = generate_paste_id()
 
-    if images:
+    if images and HAS_BUNNYCDN:
         async def _partial(target, spool: UploadFile):
             data = await spool.read()
             await request.app.state.client.put(target, data=data, headers=headers) # TODO figure out how to pass spooled object instead of load into memory
@@ -260,9 +268,7 @@ async def post_rich_paste(
         expires=payload.expires,
         author=author,
         password=payload.password,
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
 
     paste["notice"] = notice
@@ -317,6 +323,7 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     response_model=List[responses.PasteGetAllResponse],
     responses={
         200: {"model": Optional[List[responses.PasteGetAllResponse]]},
+        400: {"content": {"application/json": {"example": {"error": "You have provided an invalid query argument"}}}},
         401: {"model": errors.Unauthorized},
     },
     name="Get user pastes",
@@ -325,13 +332,17 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 @limit("getpaste")
 async def get_all_pastes(
     request: MystbinRequest,
-    limit: Optional[int] = None,
+    limit: int = 50,
+    page: int = 1
 ) -> Union[UJSONResponse, Dict[str, List[Dict[str, str]]]]:
     user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+    
+    if limit < 1 or page < 1:
+        return UJSONResponse({"error": "limit and page must be greater than 1"}, status_code=400)
 
-    pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit)
+    pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit, page)
     pastes = [dict(entry) for entry in pastes]
 
     return UJSONResponse({"pastes": jsonable_encoder(pastes)})
@@ -450,7 +461,7 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
         403: {"model": errors.Forbidden},
     },
     status_code=200,
-    name="Delete multiple pastes",
+    name="Bulk delete pastes",
     description=desc,
 )
 @limit("deletepaste")
@@ -490,18 +501,23 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     "/documents",
     tags=["pastes"],
     deprecated=True,
-    response_description='{"key": "string"}',
+    responses={
+        200: {"application/json": {"example": {"key": "string"}, "description": "A key containing the slug for your paste"}},
+        400: {"application/json": {"example": {"error": "You have provided an invalid paste body"}}}
+    },
     name="Hastebin create paste",
     description=desc,
 )
 @limit("postpastes")
 async def compat_create_paste(request: MystbinRequest):
     content = await request.body()
+    limit = request.app.config["paste"]["character_limit"]
+    if len(content) > limit:
+        return UJSONResponse({"error": f"body: file size exceeds character limit of {limit}"}, status_code=400)
+    
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
-        origin_ip=request.headers.get("x-forwarded-for", request.client.host)
-        if request.app.config["paste"]["log_ip"]
-        else None,
+        origin_ip=respect_dnt(request)
     )
     return UJSONResponse({"key": paste["id"]})

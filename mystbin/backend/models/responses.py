@@ -99,14 +99,16 @@ class PasteGetResponse(BaseModel):
         }
 
 
-class PasteGetAllResponse(BaseModel):
+class PasteGetAll(BaseModel):
     id: str
-    loc: int
-    charcount: int
+    author_id: int
     created_at: datetime
+    views: int
     expires: Optional[datetime] = None
     has_password: bool
 
+class PasteGetAllResponse(BaseModel):
+    pastes: List[PasteGetAll]
 
 class TokenResponse(BaseModel):
     token: str

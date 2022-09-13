@@ -118,10 +118,10 @@ class Database:
         except asyncio.TimeoutError:
             return None
         else:
+            return response
+        finally:
             if not conn:
                 await self.pool.release(_conn)
-
-            return response
 
     @wrapped_hook_callback
     async def get_all_pastes(self, page: int, count: int, reverse=False) -> List[Dict[str, Any]]:
@@ -388,7 +388,7 @@ class Database:
         return None
 
     @wrapped_hook_callback
-    async def get_all_user_pastes(self, author_id: Optional[int], limit: Optional[int] = None) -> List[asyncpg.Record]:
+    async def get_all_user_pastes(self, author_id: Optional[int], limit: int, page: int) -> List[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
@@ -403,15 +403,19 @@ class Database:
             The potential list of pastes.
         """
         query = """
-                SELECT id, author_id, created_at,
+                SELECT id, author_id, created_at, views, expires
                 CASE WHEN password IS NOT NULL THEN true ELSE false END AS has_password
                 FROM pastes
                 WHERE author_id = $1
                 ORDER BY created_at DESC
                 LIMIT $2
+                OFFSET $3
                 """
 
-        response = await self._do_query(query, author_id, limit)
+        assert page > 1 and limit > 1, ValueError("limit and page cannot be smaller than 1")
+        response = await self._do_query(query, author_id, limit, page - 1)
+        if not response:
+            return []
 
         return response
 
