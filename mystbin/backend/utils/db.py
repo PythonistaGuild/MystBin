@@ -403,7 +403,7 @@ class Database:
             The potential list of pastes.
         """
         query = """
-                SELECT id, author_id, created_at, views, expires
+                SELECT id, author_id, created_at, views, expires,
                 CASE WHEN password IS NOT NULL THEN true ELSE false END AS has_password
                 FROM pastes
                 WHERE author_id = $1
@@ -412,7 +412,7 @@ class Database:
                 OFFSET $3
                 """
 
-        assert page > 1 and limit > 1, ValueError("limit and page cannot be smaller than 1")
+        assert page >= 1 and limit >= 1, ValueError("limit and page cannot be smaller than 1")
         response = await self._do_query(query, author_id, limit, page - 1)
         if not response:
             return []

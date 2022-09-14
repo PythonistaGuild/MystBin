@@ -62,7 +62,7 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
-HAS_BUNNYCDN = bool(__config["bunnycdn"]["token"])
+HAS_BUNNYCDN = bool(__config["bunny_cdn"]["token"])
 
 
 def generate_paste_id(n: int = 3):
