@@ -1,4 +1,3 @@
-import loader from '@monaco-editor/loader';
 import {
   monaco,
   ControlledEditor,
@@ -7,9 +6,7 @@ import {
 import { PropsWithoutRef } from "react";
 
 
-loader.config({ monaco })
-
-loader.init().then((monaco) => {
+monaco.init().then((monaco) => {
   // MystBin Dark
   monaco.editor.defineTheme("mystBinDark", {
     base: "vs-dark",
@@ -96,12 +93,12 @@ export default function MonacoEditor(
       language={language}
       options={{
         contextmenu: true,
-        suggest: false,
+        suggest: {},
         quickSuggestions: false,
         minimap: { enabled: false },
         readOnly: readOnly,
-        lineDecorationsWidth: "0",
-        lineNumbersMinChars: "2",
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 2,
       }}
     />
   );
