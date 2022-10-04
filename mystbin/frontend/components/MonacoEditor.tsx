@@ -1,3 +1,4 @@
+import loader from '@monaco-editor/loader';
 import {
   monaco,
   ControlledEditor,
@@ -5,7 +6,10 @@ import {
 } from "@monaco-editor/react";
 import { PropsWithoutRef } from "react";
 
-monaco.init().then((monaco) => {
+
+loader.config({ monaco })
+
+loader.init().then((monaco) => {
   // MystBin Dark
   monaco.editor.defineTheme("mystBinDark", {
     base: "vs-dark",
