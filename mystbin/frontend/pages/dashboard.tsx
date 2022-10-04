@@ -673,7 +673,7 @@ export const getServerSideProps = async ({ req, res, query }) => {
   let initialAdminPastes = {};
   let users = {};
 
-  let resp = await fetch(`${config["site"]["backend_site"]}/users/me`, {
+  let resp = await fetch(`${config["site"]["backend_site"]}/users/@me`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
