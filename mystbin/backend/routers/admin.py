@@ -23,7 +23,6 @@ import pathlib
 import subprocess
 from hashlib import sha256
 from hmac import HMAC, compare_digest
-from typing import Dict, Optional, Union
 
 import psutil
 import ujson
@@ -57,14 +56,14 @@ START_TIME = datetime.datetime.utcnow()
     include_in_schema=False,
 )
 @limit("admin")
-async def get_any_user(request: MystbinRequest, user_id: int) -> Union[UJSONResponse, Dict[str, str]]:
+async def get_any_user(request: MystbinRequest, user_id: int) -> UJSONResponse | dict[str, str]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data: Optional[Union[Record, int]] = await request.app.state.db.get_user(user_id=user_id)
+    data: Record | int | None = await request.app.state.db.get_user(user_id=user_id)
     if data and not isinstance(data, int):
         return UJSONResponse(dict(data))
     return UJSONResponse({"error": "The given user was not found"}, status_code=400)
@@ -75,8 +74,8 @@ async def get_any_user(request: MystbinRequest, user_id: int) -> Union[UJSONResp
 async def ban_user(
     request: MystbinRequest,
     user_id: int,
-    ip: Optional[str] = None,
-    reason: Optional[str] = None,
+    ip: str | None = None,
+    reason: str | None = None,
 ) -> UJSONResponse:
     """
     Bans a user from the service
@@ -94,7 +93,7 @@ async def ban_user(
 async def unban_user(
     request: MystbinRequest,
     user_id: int,
-    ip: Optional[str] = None,
+    ip: str | None = None,
 ) -> UJSONResponse:
     """
     Unbans a user from the service
@@ -169,7 +168,7 @@ async def get_admin_userlist(request: MystbinRequest, page: int = 1):
     include_in_schema=False,
 )
 @limit("admin")
-async def get_admin_usercount(request: MystbinRequest):
+async def get_admin_usercount(request: MystbinRequest) -> UJSONResponse:
     """
     Returns a count of how many users there are
     * Requires admin authentication.
@@ -183,7 +182,7 @@ async def get_admin_usercount(request: MystbinRequest):
 
 @router.get("/admin/bans", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def search_bans(request: MystbinRequest, search: Optional[str] = None, page: int = 1):
+async def search_bans(request: MystbinRequest, search: str | None = None, page: int = 1) -> UJSONResponse:
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -202,9 +201,9 @@ async def search_bans(request: MystbinRequest, search: Optional[str] = None, pag
 async def post_ban(
     request: MystbinRequest,
     reason: str,
-    ip: Optional[str] = None,
-    userid: Optional[int] = None,
-):
+    ip: str | None = None,
+    userid: int | None = None,
+) -> UJSONResponse:
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -214,7 +213,7 @@ async def post_ban(
 
 @router.delete("/admin/bans", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def remove_ban(request: MystbinRequest, ip: Optional[str] = None, userid: Optional[int] = None):
+async def remove_ban(request: MystbinRequest, ip: str | None = None, userid: int | None = None) -> UJSONResponse | Response:
     if not ip and not userid:
         return UJSONResponse({"error": "Bad Request"}, status_code=400)
 
@@ -229,7 +228,7 @@ async def remove_ban(request: MystbinRequest, ip: Optional[str] = None, userid: 
 
 @router.get("/admin/stats", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def get_server_stats(request: MystbinRequest):
+async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -248,7 +247,7 @@ async def get_server_stats(request: MystbinRequest):
 
 @router.post("/admin/release_hook", tags=["admin"], include_in_schema=False)
 @limit("admin")
-async def release_hook(request: MystbinRequest):
+async def release_hook(request: MystbinRequest) -> UJSONResponse | Response:
 
     config = pathlib.Path("config.json")
     if not config.exists():
@@ -283,7 +282,7 @@ async def release_hook(request: MystbinRequest):
     include_in_schema=False,
 )
 @limit("admin")
-async def get_paste(request: MystbinRequest, paste_id: str, password: Optional[str] = None) -> Response:
+async def get_paste(request: MystbinRequest, paste_id: str, password: str | None = None) -> Response:
     """Get a paste from MystBin."""
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)

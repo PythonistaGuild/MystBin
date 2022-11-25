@@ -16,8 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict, Optional, Union
-
 from fastapi import APIRouter
 from fastapi.responses import Response, UJSONResponse
 from models import errors, payloads, responses
@@ -43,7 +41,7 @@ router = APIRouter()
 @limit("self")
 async def get_self(
     request: MystbinRequest,
-) -> Union[UJSONResponse, Dict[str, Union[str, int, bool]]]:
+) -> UJSONResponse | dict[str, str | int | bool]:
     """Gets the User object of the currently logged in user.
     * Requires authentication.
     """
@@ -68,14 +66,14 @@ async def get_self(
     name="Regenerate your token",
 )
 @limit("tokengen")
-async def regen_token(request: MystbinRequest) -> Union[UJSONResponse, Dict[str, str]]:
+async def regen_token(request: MystbinRequest) -> UJSONResponse | dict[str, str]:
     """Regens the user's token.
     * Requires authentication.
     """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    token: Optional[str] = await request.app.state.db.regen_token(userid=request.state.user["id"])
+    token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"])
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 

@@ -5,7 +5,6 @@ import json
 import os
 import pathlib
 import sys
-from typing import cast
 
 import uvicorn
 from uvicorn.supervisors import Multiprocess
@@ -30,7 +29,7 @@ def get_config() -> dict[str, dict[str, int | str]]:
 
 if __name__ == "__main__":
     cfg = get_config()
-    port = cast(int, cfg["site"]["backend_port"])
+    port: int = cfg["site"]["backend_port"]  # type: ignore # resolved when typed dict
     parser = argparse.ArgumentParser(prog="Mystbin")
     parser.add_argument("--no-workers", "-nw", action="store_true", default=False)
     parser.add_argument("--no-cli", "-nc", action="store_true", default=False)

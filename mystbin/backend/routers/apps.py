@@ -19,7 +19,6 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import Dict, Optional, Union
 
 import yarl
 from fastapi import APIRouter
@@ -36,7 +35,7 @@ router = APIRouter()
 
 @limit("apps")
 @router.post("/users/connect/discord", response_model=responses.TokenResponse, include_in_schema=False)
-async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional[str]], UJSONResponse]:
+async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | UJSONResponse:
     """Allows user to authenticate from Discord OAuth."""
     try:
         data = await request.json()
@@ -90,7 +89,7 @@ async def auth_from_discord(request: MystbinRequest) -> Union[Dict[str, Optional
 
 @router.post("/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False)
 @limit("apps")
-async def auth_from_google(request: MystbinRequest) -> Union[Dict[str, str], UJSONResponse]:
+async def auth_from_google(request: MystbinRequest) -> dict[str, str] | UJSONResponse:
     """Allows user to authenticate from Google OAuth."""
     try:
         data = await request.json()
@@ -144,7 +143,7 @@ async def auth_from_google(request: MystbinRequest) -> Union[Dict[str, str], UJS
 
 @router.post("/users/connect/github", response_model=responses.TokenResponse, include_in_schema=False)
 @limit("apps")
-async def auth_from_github(request: MystbinRequest) -> Union[Response, UJSONResponse]:
+async def auth_from_github(request: MystbinRequest) -> Response | UJSONResponse:
     """Allows user to authenticate with GitHub OAuth."""
     try:
         data = await request.json()

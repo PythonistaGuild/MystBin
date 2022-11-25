@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -43,11 +42,11 @@ class File(BaseModel):
 
 class PastePostResponse(BaseModel):
     id: str
-    author_id: Optional[int] = None
+    author_id: int | None = None
     created_at: datetime
-    expires: Optional[datetime] = None
-    files: List[File]
-    notice: Optional[str]
+    expires: datetime | None = None
+    files: list[File]
+    notice: str | None
 
     class Config:
         schema_extra = {
@@ -71,12 +70,12 @@ class PastePostResponse(BaseModel):
 
 class PasteGetResponse(BaseModel):
     id: str
-    author_id: Optional[int]
+    author_id: int | None
     created_at: datetime
-    expires: Optional[datetime] = None
-    last_edited: Optional[datetime] = None
+    expires: datetime | None = None
+    last_edited: datetime | None = None
     views: int
-    files: List[File]
+    files: list[File]
 
     class Config:
         schema_extra = {
@@ -104,11 +103,13 @@ class PasteGetAll(BaseModel):
     author_id: int
     created_at: datetime
     views: int
-    expires: Optional[datetime] = None
+    expires: datetime | None = None
     has_password: bool
 
+
 class PasteGetAllResponse(BaseModel):
-    pastes: List[PasteGetAll]
+    pastes: list[PasteGetAll]
+
 
 class TokenResponse(BaseModel):
     token: str
@@ -118,10 +119,10 @@ class User(BaseModel):
     id: int
     username: str
     token: str
-    emails: List[str]
-    discord_id: Optional[str]
-    github_id: Optional[str]
-    google_id: Optional[str]
+    emails: list[str]
+    discord_id: str | None
+    github_id: str | None
+    google_id: str | None
     admin: bool
     theme: str
     subscriber: bool
@@ -130,12 +131,12 @@ class User(BaseModel):
 class SmallUser(BaseModel):
     id: int
     username: str
-    authorizations: List[str]
+    authorizations: list[str]
     admin: bool
     theme: str
     subscriber: bool
     banned: bool
-    last_seen: Optional[str]
+    last_seen: str | None
     paste_count: int
 
 
@@ -144,7 +145,7 @@ class UserCount(BaseModel):
 
 
 class UserList(BaseModel):
-    users: List[SmallUser]
+    users: list[SmallUser]
     page: int
     page_count: int
 
@@ -157,4 +158,4 @@ class Bookmark(BaseModel):
 
 
 class Bookmarks(BaseModel):
-    bookmarks: List[Bookmark]
+    bookmarks: list[Bookmark]

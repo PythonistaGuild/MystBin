@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
@@ -102,7 +102,7 @@ class RedisLimitBucket(BaseLimitBucket):
         self.key = key
         self.count = count
         self.per = per
-        self.reset: Optional[int] = None
+        self.reset: int | None = None
 
     async def _clear_dead_keys(self) -> None:
         pass  # we don't actually need this, keys will be deleted on their own by redis
@@ -111,7 +111,7 @@ class RedisLimitBucket(BaseLimitBucket):
         if not self.app.redis:
             raise NoRedisConnection()
 
-        value: Optional[int] = await self.app.redis.get(self.key)
+        value: int | None = await self.app.redis.get(self.key)
 
         if value is None:
             val = await self.app.redis.incr(self.key)
@@ -143,7 +143,7 @@ class Limiter:
         self.app = app
         self._keys: dict[str, BaseLimitBucket] = {}
         self._zone_cache: dict[str, tuple[int, int]] = {}
-        self._endpoints: dict[str, Optional[str]] = {}
+        self._endpoints: dict[str, str | None] = {}
 
         stragegy = app.config["redis"]["use-redis"]
         if not stragegy:
@@ -161,7 +161,7 @@ class Limiter:
             resp_ = Response(
                 status_code=response.status_code,
                 background=response.background,
-                media_type=cast(str, response.media_type),
+                media_type=response.media_type,  # type: ignore
                 headers=response.headers,  # type: ignore
             )
             body = b""
@@ -191,7 +191,7 @@ class Limiter:
         return bucket
 
     async def middleware(self, request: Request, call_next: _CT) -> Response:
-        zone: Optional[str] = None
+        zone: str | None = None
 
         for route in self.app.routes:
             match, _ = route.matches(request.scope)
@@ -344,8 +344,8 @@ def ratelimit_id_key(request: Request) -> str:
     return str(userid)
 
 
-def limit(zone: Optional[str] = None):
-    def wrapped(cb):
+def limit(zone: str | None = None) -> Callable[[Any], Callable[[Any], Any]]:
+    def wrapped(cb: Callable[[Any], Any]) -> Callable[[Any], Any]:
         cb.__zone__ = zone
         return cb
 

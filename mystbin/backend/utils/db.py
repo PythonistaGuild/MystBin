@@ -24,7 +24,7 @@ import difflib
 import functools
 import os
 import pathlib
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, cast
 
 import asyncpg
 from asyncpg import Record
@@ -81,7 +81,7 @@ class Database:
     timeout = 30
 
     def __init__(self, config: dict[str, dict[str, str | int]]):
-        self._pool: Optional[asyncpg.Pool] = None
+        self._pool: asyncpg.Pool | None = None
         self._config = config["database"]
         if "ISDOCKER" in os.environ:
             self._db_schema = pathlib.Path("/etc/schema.sql")
@@ -106,9 +106,7 @@ class Database:
         #    await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(
-        self, query: str, *args, conn: Optional[asyncpg.Connection] = None
-    ) -> Optional[List[asyncpg.Record]]:
+    async def _do_query(self, query: str, *args, conn: asyncpg.Connection | None = None) -> Any:
         if self._pool is None:
             await self.__ainit__()
 
@@ -124,7 +122,7 @@ class Database:
                 await self.pool.release(_conn)
 
     @wrapped_hook_callback
-    async def get_all_pastes(self, page: int, count: int, reverse=False) -> List[Dict[str, Any]]:
+    async def get_all_pastes(self, page: int, count: int, reverse=False) -> list[dict[str, Any]]:
         """
         Gets the most recent pastes (20) of them, or oldest if reverse is True
 
@@ -144,12 +142,15 @@ class Database:
                 LIMIT $1
                 OFFSET $2
                 """
-        return [dict(x) for x in await self._do_query(query, count, page * count)]
+        results = await self._do_query(query, count, page * count)
+        if not results:
+            return []
+        return [dict(x) for x in results]
 
     # for anyone who wonders why this doesnt have a wrapped hook on it, it's because the endpoints for this particular
     # db call have to validate the data themselves, and then manually call the hook, so theres no point repeating the
     # process twice
-    async def get_paste(self, paste_id: str, password: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def get_paste(self, paste_id: str, password: str | None = None) -> dict[str, Any] | None:
         """Get the specified paste.
         Parameters
         ------------
@@ -179,7 +180,7 @@ class Database:
                 query = """
                 SELECT * FROM files WHERE parent_id = $1
                 """
-                contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
+                contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
                 resp["files"] = [{a: str(b) for a, b in x.items()} for x in contents]
                 return resp
@@ -187,7 +188,7 @@ class Database:
                 return None
 
     @wrapped_hook_callback
-    async def get_paste_compat(self, paste_id: str) -> Optional[Dict[str, str]]:
+    async def get_paste_compat(self, paste_id: str) -> dict[str, str] | None:
         if not self._pool:
             await self.__ainit__()
 
@@ -205,7 +206,7 @@ class Database:
                 query = """
                 SELECT content, syntax FROM files WHERE parent_id = $1 LIMIT 1
                 """
-                contents = cast(List[asyncpg.Record], await self._do_query(query, paste_id, conn=conn))
+                contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 ret = {
                     "key": paste_id,
                     "data": contents[0]["content"],
@@ -221,12 +222,12 @@ class Database:
         self,
         *,
         paste_id: str,
-        origin_ip: Optional[str],
-        pages: List[payloads.RichPasteFile] | List[payloads.PasteFile],
-        expires: Optional[datetime.datetime] = None,
-        author: Optional[int] = None,
-        password: Optional[str] = None,
-    ) -> Dict[str, Union[str, int, None, List[Dict[str, Union[str, int]]]]]:
+        origin_ip: str | None,
+        pages: list[payloads.RichPasteFile] | list[payloads.PasteFile],
+        expires: datetime.datetime | None = None,
+        author: int | None = None,
+        password: str | None = None,
+    ) -> dict[str, str | int | None | list[dict[str, str | int]]]:
         """Puts the specified paste.
         Parameters
         -----------
@@ -257,9 +258,8 @@ class Database:
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
-            resp = cast(
-                List[asyncpg.Record],
-                await self._do_query(query, paste_id, author, expires, password, origin_ip, conn=conn),
+            resp: list[asyncpg.Record] = await self._do_query(
+                query, paste_id, author, expires, password, origin_ip, conn=conn
             )
 
             resp = resp[0]
@@ -267,11 +267,11 @@ class Database:
             for page in pages:
                 to_insert.append(
                     (
-                        resp["id"],
+                        resp["id"],  # type: ignore # TODO??
                         page.content,
                         page.filename,
                         page.content.count("\n") + 1,  # add an extra for line 1
-                        getattr(page, "attachment", None)
+                        getattr(page, "attachment", None),
                     )
                 )
 
@@ -286,11 +286,11 @@ class Database:
                     row = await conn.fetchrow(files_query, *insert)
                     inserted.append(row)
 
-            resp = dict(resp)
-            del resp["origin_ip"]
-            resp["files"] = [dict(file) for file in inserted]
+            formatted_resp = dict(resp)
+            del formatted_resp["origin_ip"]
+            formatted_resp["files"] = [dict(file) for file in inserted]
 
-            return resp
+            return formatted_resp
 
     @wrapped_hook_callback
     async def edit_paste(
@@ -298,10 +298,10 @@ class Database:
         paste_id: str,
         *,
         author: int,
-        new_expires: Optional[datetime.datetime] = None,
-        new_password: Optional[str] = None,
-        files: Optional[list[payloads.PasteFile]] = None,
-    ) -> Optional[Literal[404]]:
+        new_expires: datetime.datetime | None = None,
+        new_password: str | None = None,
+        files: list[payloads.PasteFile] | None = None,
+    ) -> Literal[404] | None:
         """Puts the specified paste.
         Parameters
         -----------
@@ -359,7 +359,7 @@ class Database:
                 await conn.executemany(query, qs)
 
     @wrapped_hook_callback
-    async def set_paste_password(self, paste_id: str, password: str | None) -> Optional[asyncpg.Record]:
+    async def set_paste_password(self, paste_id: str, password: str | None) -> asyncpg.Record | None:
         """Sets a password for the specified paste.
         This is for use by the cli module.
 
@@ -388,7 +388,7 @@ class Database:
         return None
 
     @wrapped_hook_callback
-    async def get_all_user_pastes(self, author_id: Optional[int], limit: int, page: int) -> List[asyncpg.Record]:
+    async def get_all_user_pastes(self, author_id: int | None, limit: int, page: int) -> list[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
@@ -433,7 +433,7 @@ class Database:
         return (await self._do_query(query))[0]["count"]
 
     @wrapped_hook_callback
-    async def delete_paste(self, paste_id: str, author_id: Optional[int] = None, *, admin: bool = False) -> Optional[str]:
+    async def delete_paste(self, paste_id: str, author_id: int | None = None, *, admin: bool = False) -> str | None:
         """Delete a paste, with an admin override.
 
         Parameters
@@ -462,7 +462,7 @@ class Database:
         return response[0] if response else None
 
     @wrapped_hook_callback
-    async def get_user(self, *, user_id: int = None, token: str = None) -> Optional[Union[asyncpg.Record, int]]:
+    async def get_user(self, *, user_id: int | None = None, token: str | None = None) -> asyncpg.Record | int | None:
         """Returns a User on successful query.
 
         Parameters
@@ -506,11 +506,11 @@ class Database:
     @wrapped_hook_callback
     async def new_user(
         self,
-        emails: List[str],
+        emails: list[str],
         username: str,
-        discord_id: str = None,
-        github_id: str = None,
-        google_id: str = None,
+        discord_id: str | None = None,
+        github_id: str | None = None,
+        google_id: str | None = None,
     ) -> asyncpg.Record:
         """Creates a new User record.
 
@@ -555,11 +555,11 @@ class Database:
     async def update_user(
         self,
         user_id: int,
-        emails: Optional[List[str]] = None,
-        discord_id: Optional[str] = None,
-        github_id: Optional[str] = None,
-        google_id: Optional[str] = None,
-    ) -> Optional[str]:
+        emails: list[str] | None = None,
+        discord_id: str | None = None,
+        github_id: str | None = None,
+        google_id: str | None = None,
+    ) -> str | None:
         """Updates an existing user account.
 
         Parameters
@@ -631,7 +631,7 @@ class Database:
 
         return bool(await self._do_query(query, user_id))
 
-    async def check_email(self, emails: Union[str, List[str]]) -> Optional[int]:
+    async def check_email(self, emails: str | list[str]) -> int | None:
         """Quick check to query an email."""
         query = """
                 SELECT id FROM users WHERE $1 && emails
@@ -651,7 +651,7 @@ class Database:
 
         return bool(await self._do_query(query, admin, userid))
 
-    async def list_admin(self) -> List[asyncpg.Record]:
+    async def list_admin(self) -> list[asyncpg.Record]:
         query = """
         SELECT id, username, discord_id, github_id, google_id FROM users WHERE admin = true
         """
@@ -659,7 +659,7 @@ class Database:
         return resp or []
 
     @wrapped_hook_callback
-    async def ban_user(self, userid: Optional[int] = None, ip: Optional[str] = None, reason: Optional[str] = None):
+    async def ban_user(self, userid: int | None = None, ip: str | None = None, reason: str | None = None) -> bool:
         """
         Bans a user.
         Returns False if the user/ip doesnt exist, or is already banned, otherwise returns True
@@ -675,7 +675,7 @@ class Database:
         else:
             return True
 
-    async def unban_user(self, userid: Optional[int] = None, ip: Optional[str] = None) -> bool:
+    async def unban_user(self, userid: int | None = None, ip: str | None = None) -> bool:
         """
         Unbans a user.
         Returns True if the user/ip was successfully unbanned, otherwise False
@@ -718,7 +718,7 @@ class Database:
         return len(val) > 0
 
     @wrapped_hook_callback
-    async def regen_token(self, *, userid: int = None, token: str = None) -> Optional[str]:
+    async def regen_token(self, *, userid: int, token: str | None = None) -> str | None:
         """Generates a new token for the given user id or token.
         Returns the new token, or None if the user does not exist.
         """
@@ -750,7 +750,7 @@ class Database:
             return new_token
 
     @wrapped_hook_callback
-    async def get_bookmarks(self, userid: int) -> List[Dict[str, Any]]:
+    async def get_bookmarks(self, userid: int) -> list[dict[str, Any]]:
         """
         Gets a list of bookmarks from the db
         """
@@ -766,7 +766,7 @@ class Database:
         data = await self._do_query(query, userid)
         return [dict(x) for x in data]
 
-    async def create_bookmark(self, userid: int, paste_id: str):  # doesnt return anything, no need for a hook
+    async def create_bookmark(self, userid: int, paste_id: str) -> None:  # doesnt return anything, no need for a hook
         """creates a bookmark for a user"""
         query = """
                 INSERT INTO bookmarks (userid, paste) VALUES ($1, $2)
@@ -836,7 +836,7 @@ class Database:
         return False
 
     @wrapped_hook_callback
-    async def get_admin_userlist(self, page: int) -> Dict[str, Union[int, Dict[str, Union[int, bool, None]]]]:
+    async def get_admin_userlist(self, page: int) -> dict[str, int | dict[str, int | bool | None]]:
         query = """
                 SELECT
                     id,
@@ -855,7 +855,7 @@ class Database:
 
         async with self.pool.acquire() as conn:
             users = await self._do_query(query, page - 1, conn=conn)
-            records: List[Record] = await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn)
+            records: list[Record] = await self._do_query("SELECT COUNT(*) AS count FROM users", conn=conn)
             pageinfo: int = records[0]["count"]
 
         users = [
@@ -879,7 +879,7 @@ class Database:
             }
             for x in users
         ]
-        return {"users": users, "user_count": pageinfo, "page": page}
+        return {"users": users, "user_count": pageinfo, "page": page}  # type: ignore # that's
 
     async def get_admin_usercount(self) -> int:
         query = "SELECT COUNT(id) AS count FROM users"
@@ -887,7 +887,9 @@ class Database:
         return data[0]["count"]
 
     @wrapped_hook_callback
-    async def search_bans(self, *, ip=None, userid=None, search=None) -> Union[Optional[str], List[Dict[str, Any]]]:
+    async def search_bans(
+        self, *, ip: str | None = None, userid: int | None = None, search: str | None = None
+    ) -> str | list[dict[str, Any]] | None:
         assert any((ip, userid, search))
         if not self.ban_cache:
             if ip and userid:
@@ -919,6 +921,7 @@ class Database:
 
         # long path
         # in reality this should only ever be called by the admin ban search endpoint
+        assert search
         matcher = difflib.SequenceMatcher()
         matcher.set_seq1(search)
         close = []
@@ -974,8 +977,3 @@ class Database:
             response.status_code,
             resp,
         )
-
-        async def put_paste_images(self, parent_id, tab_id) -> None:
-            query = """INSERT INTO images VALUES($1, $2)"""
-
-            await self._do_query(query, parent_id, tab_id)

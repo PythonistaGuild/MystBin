@@ -16,8 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -34,13 +35,15 @@ class RichPasteFile(PasteFile):
     attachment: str | None
 
     class Config:
-        schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}}
+        schema_extra = {
+            "example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}
+        }
 
 
 class PastePut(BaseModel):
-    expires: Optional[datetime.datetime] = None
-    password: Optional[str] = None
-    files: List[PasteFile]
+    expires: datetime.datetime | None = None
+    password: str | None = None
+    files: list[PasteFile]
 
     class Config:
         schema_extra = {
@@ -57,8 +60,9 @@ class PastePut(BaseModel):
             }
         }
 
+
 class RichPastePost(PastePut):
-    files: List[RichPasteFile]
+    files: list[RichPasteFile]
 
     class Config:
         schema_extra = {
@@ -66,28 +70,21 @@ class RichPastePost(PastePut):
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": None,
                 "files": [
-                    {
-                        "content": "import this",
-                        "filename": "foo.py",
-                        "attachment": None
-                    },
-                    {
-                        "filename": "doc.md",
-                        "content": "**do not use this in production**",
-                        "attachment": "image2.jpeg"
-                    },
+                    {"content": "import this", "filename": "foo.py", "attachment": None},
+                    {"filename": "doc.md", "content": "**do not use this in production**", "attachment": "image2.jpeg"},
                 ],
             }
         }
 
+
 class PastePatch(BaseModel):
-    new_expires: Optional[datetime.datetime] = None
-    new_password: Optional[str] = None
-    new_files: List[PasteFile]
+    new_expires: datetime.datetime | None = None
+    new_password: str | None = None
+    new_files: list[PasteFile]
 
 
 class PasteDelete(BaseModel):
-    pastes: List[str]
+    pastes: list[str]
 
 
 class BookmarkPutDelete(BaseModel):
