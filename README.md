@@ -1,5 +1,6 @@
 <div align="center">
-    <img src="res/mystbin_logo_light_full.svg", alt="Mystbin Logo"/>
+    <img width="320" src="res/mystbin_logo_light_full.svg", alt="Mystbin Logo"/>
+    <hr>
     <p>Easily share your code or text with syntax highlighting and themes for readability.</p>
     <br>
     <p>The stable release of this can be found at <a href="https://mystb.in">mystb.in</a></p>
