@@ -225,7 +225,6 @@ async def post_rich_paste(
     reads = data
     try:
         payload = payloads.RichPastePost.parse_raw(reads, content_type="application/json")
-        print(payload)
     except pydantic.ValidationError as e:
         return UJSONResponse({"detail": e.errors()}, status_code=422)
     except:
