@@ -236,9 +236,15 @@ class Limiter:
                 if is_limited:
                     return Response(status_code=429, headers=headers)
 
-            resp = await call_next(request)
-            resp.headers.update(headers)
-            resp = await self._transform_and_log(request, resp)
+            try:
+                resp = await call_next(request)
+                resp.headers.update(headers)
+            except:
+                resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
+                raise
+            finally:
+                resp = await self._transform_and_log(request, resp)
+            
             return resp
 
         else:
@@ -253,9 +259,15 @@ class Limiter:
                 "X-Ratelimit-Available": "1",
                 "X-Ratelimit-Strategy": "ignore",
             }
-            resp = await call_next(request)
-            resp.headers.update(headers)
-            resp = await self._transform_and_log(request, resp)
+            try:
+                resp = await call_next(request)
+                resp.headers.update(headers)
+            except:
+                resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
+                raise
+            finally:
+                resp = await self._transform_and_log(request, resp)
+            
             return resp
 
 
