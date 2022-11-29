@@ -15,4 +15,4 @@ uvicorn[standard]==0.18.0
 yarl
 aioconsole
 tabulate
-aioredis>2<3
+redis

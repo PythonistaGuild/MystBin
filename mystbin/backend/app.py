@@ -22,7 +22,7 @@ import pathlib
 from typing import Any, Callable, Coroutine
 
 import aiohttp
-import aioredis
+from redis import asyncio as aioredis # fuckin lol
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
