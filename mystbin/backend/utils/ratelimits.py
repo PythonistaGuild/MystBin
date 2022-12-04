@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
@@ -12,10 +13,20 @@ from . import tokens
 
 if TYPE_CHECKING:
     from app import MystbinApp
+    from mystbin_models import MystbinRequest
 
 
 class IPBanned(Exception):
-    pass
+    _resp = Response(status_code=423, content="You have been banned from this service for abuse.", media_type="text/plain")
+    
+    def __init__(self, reason: str | None) -> None:
+        self.reason = reason
+        if reason is not None:
+            self.resp = Response(status_code=423, content=f"You have been banned from this service: {reason}", media_type="text/plain")
+        else:
+            self.resp = self._resp
+        
+        super().__init__(reason)
 
 
 class NoRedisConnection(Exception):
@@ -151,7 +162,7 @@ class Limiter:
         else:
             self.bucket_cls = RedisLimitBucket
 
-    async def get_key(self, zone: str, request: Request) -> str:
+    async def get_key(self, zone: str, request: MystbinRequest) -> str:
         zone = await ratelimit_zone_key(zone, request)
         key = ratelimit_id_key(request)
         return f"{zone}%{key}"
@@ -177,7 +188,7 @@ class Limiter:
         await self.app.state.db.put_log(request, response)
         return response
 
-    async def get_bucket(self, zone: str, key: str, request: Request) -> BaseLimitBucket:
+    async def get_bucket(self, zone: str, key: str, request: MystbinRequest) -> BaseLimitBucket:
         if key in self._keys:
             return self._keys[key]
 
@@ -190,8 +201,14 @@ class Limiter:
 
         return bucket
 
-    async def middleware(self, request: Request, call_next: _CT) -> Response:
+    async def middleware(self, request: MystbinRequest, call_next: _CT) -> Response:
         zone: str | None = None
+        request.state.user = None
+
+        try:
+            await _fetch_user(request)
+        except IPBanned as e:
+            return e.resp # don't log attempts from banned ips (maybe we should?)
 
         for route in self.app.routes:
             match, _ = route.matches(request.scope)
@@ -278,20 +295,51 @@ def parse_ratelimit(limit: str) -> tuple[int, int]:
     transformed_units: int = time_units[units]
     return per, transformed_units
 
+async def _set_redis_ip_key(request: MystbinRequest, key: str, value: str) -> None:
+    redis = request.app.redis
+    if not redis:
+        return
+    
+    await redis.set(key, value, ex=120)
 
-async def _fetch_user(request: Request):
+async def _get_redis_ip_key(request: MystbinRequest, key: str) -> str | None:
+    redis = request.app.redis
+    if not redis:
+        return
+    
+    bans: bytes | None = await redis.get(key) # speed up ban checking by redis caching
+    return None if bans is None else bans.decode()
+
+async def _fetch_user(request: MystbinRequest):
     host = request.headers.get("X-Forwarded-For") or request.client.host
 
     auth = request.headers.get("Authorization", None)
+
+    if request.app.redis:
+        bans = await _get_redis_ip_key(request, f"ban-ip-{host}") # speed up ban checking by redis caching
+        if bans:
+            raise IPBanned(bans)
+        elif bans == "":
+            asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
+            if not auth:
+                request.state.user = None
+                return # quick path: no db requests
+    
     if not auth:
         query = "SELECT * FROM bans WHERE ip = $1"
         bans = await request.app.state.db._do_query(query, host)
         if bans:
-            raise IPBanned
-        return
+            ban = bans[0]
+            if request.app.redis:
+                asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ban["reason"]))
+            
+            raise IPBanned(ban["reason"])
+        
+        asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
+        return   
 
     query = """
-            SELECT users.*, bans.ip as _is_ip_banned , bans.userid as _is_user_banned
+            SELECT users.*, bans.ip as _is_ip_banned , bans.userid as _is_user_banned, bans.reason as _ban_reason
             FROM users
             FULL OUTER JOIN bans
             ON ip = $2
@@ -304,30 +352,27 @@ async def _fetch_user(request: Request):
         return
 
     user = user[0]
-    if user["_is_ip_banned"] or user["_is_user_banned"]:
-        raise IPBanned
+    if user["_is_ip_banned"]:
+        if request.app.redis:
+            asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", user["_ban_reason"]))
+        
+        raise IPBanned(user["_ban_reason"])
+
+    elif user["_is_user_banned"]:
+        raise IPBanned(user["_ban_reason"])
 
     request.state.user = user
 
 
-async def _ignores_ratelimits(request: Request):
-    if not hasattr(request.state, "user"):
-        request.state.user = None
-        await _fetch_user(request)
-
+async def _ignores_ratelimits(request: MystbinRequest):
     if request.state.user and request.state.user["admin"]:
         return True
 
     return False
 
 
-async def ratelimit_zone_key(zone: str, request: Request) -> str:
+async def ratelimit_zone_key(zone: str, request: MystbinRequest) -> str:
     _zone = zone
-
-    if not hasattr(request.state, "user"):
-        request.state.user = None
-        await _fetch_user(request)
-
     user = request.state.user
 
     if user:
@@ -336,7 +381,7 @@ async def ratelimit_zone_key(zone: str, request: Request) -> str:
     return _zone
 
 
-async def get_zone(zone: str, request: Request) -> str:
+async def get_zone(zone: str, request: MystbinRequest) -> str:
     zone = await ratelimit_zone_key(zone, request)
     try:
         return request.app.config["ratelimits"][zone]

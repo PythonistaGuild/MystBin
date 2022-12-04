@@ -208,6 +208,10 @@ async def post_ban(
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     data = await request.app.state.db.ban_user(ip=ip, userid=userid, reason=reason)
+    if data and request.app.redis:
+        if ip is not None:
+            await request.app.redis.set(f"ban-ip-{ip}", reason, ex=120)
+        
     return UJSONResponse({"success": data})
 
 
@@ -221,9 +225,12 @@ async def remove_ban(request: MystbinRequest, ip: str | None = None, userid: int
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     if await request.app.state.db.unban_user(userid, ip):
+        if ip is not None and request.app.redis:
+            await request.app.redis.set(f"ban-ip-{ip}", "", ex=120)
+        
         return Response(status_code=204)
 
-    return Response(status_code=400)
+    return UJSONResponse({"error": "Ban not found"}, status_code=400)
 
 
 @router.get("/admin/stats", tags=["admin"], include_in_schema=False)
