@@ -6,6 +6,6 @@ WORKDIR /app
 COPY . /app
 
 RUN yarn install --production
-RUN yarn add --dev typescript @types/node
 
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 CMD ["yarn", "run", "launch"]
