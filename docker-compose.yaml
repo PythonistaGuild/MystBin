@@ -8,6 +8,8 @@ services:
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./config.json:/usr/src/app/config.json:ro
+    environment:
+      DEBUG: "${DEBUG}"
     container_name: "mystbin-api"
     networks:
       main:
