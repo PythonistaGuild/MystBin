@@ -21,6 +21,22 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+__all__ = (
+    "File",
+    "PastePostResponse",
+    "PasteGetResponse",
+    "PasteGetAll",
+    "PasteGetAllResponse",
+    "TokenResponse",
+    "User",
+    "SmallUser",
+    "UserCount",
+    "UserList",
+    "Bookmark",
+    "Bookmarks",
+)
+
+
 class File(BaseModel):
     filename: str
     content: str
@@ -61,7 +77,7 @@ class PastePostResponse(BaseModel):
                         "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                         "loc": 2,
                         "charcount": 49,
-                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg"
+                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
                     }
                 ],
                 "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated",
@@ -93,7 +109,7 @@ class PasteGetResponse(BaseModel):
                         "content": "import datetime\\nprint(datetime.datetime.utcnow())",
                         "loc": 2,
                         "charcount": 49,
-                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg"
+                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
                     }
                 ],
             }

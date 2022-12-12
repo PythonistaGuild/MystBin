@@ -23,6 +23,17 @@ import datetime
 from pydantic import BaseModel
 
 
+__all__ = (
+    "PasteFile",
+    "RichPasteFile",
+    "PastePut",
+    "RichPastePost",
+    "PastePatch",
+    "PasteDelete",
+    "BookmarkPutDelete",
+)
+
+
 class PasteFile(BaseModel):
     content: str
     filename: str

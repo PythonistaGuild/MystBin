@@ -20,6 +20,14 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from pydantic import BaseModel
 
 
+__all__ = (
+    "Unauthorized",
+    "Forbidden",
+    "NotFound",
+    "BadRequest",
+)
+
+
 class Unauthorized(BaseModel):
     error: str = "Unauthorized"
     notice: str
