@@ -22,10 +22,10 @@ import pathlib
 from typing import Any, Callable, Coroutine
 
 import aiohttp
-from redis import asyncio as aioredis # fuckin lol
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
+from redis import asyncio as aioredis  # fuckin lol
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
