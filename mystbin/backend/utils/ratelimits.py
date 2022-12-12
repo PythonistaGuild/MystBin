@@ -175,8 +175,8 @@ class Limiter:
             resp_ = Response(
                 status_code=response.status_code,
                 background=response.background,
-                media_type=response.media_type,  # type: ignore
-                headers=response.headers,  # type: ignore
+                media_type=response.media_type,
+                headers=response.headers,
             )
             body = b""
             async for chunk in response.body_iterator:
