@@ -11,9 +11,6 @@ services:
     environment:
       DEBUG: "${DEBUG}"
     container_name: "mystbin-api"
-    networks:
-      main:
-        ipv4_address: 172.25.0.11
     depends_on:
       - database
 
@@ -31,14 +28,9 @@ services:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_HOST_AUTH_METHOD: "md5"
       PGDATA: /var/lib/postgresql/data/pgdata
-    networks:
-      main:
-        ipv4_address: 172.25.0.12
 
   frontend:
-    image: node:latest
     volumes:
-      - node_modules:/app/node_modules
       - ./config.json:/app/config.json:ro
     ports:
       - 127.0.0.1:5559:3000
@@ -46,18 +38,7 @@ services:
     build: ./mystbin/frontend
     depends_on:
       - api
-    networks:
-      main:
-        ipv4_address: 172.25.0.13
 
 volumes:
   postgresdata:
   node_modules:
-
-
-networks:
-  main:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.0.0/16

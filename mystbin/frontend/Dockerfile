@@ -1,11 +1,16 @@
-FROM node:latest
+FROM node:16-alpine as dep
 
-RUN mkdir -p /app
+# avoid rebuilding the node modules on every single file change, instead only when our deps change.
 WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-COPY . /app
+FROM node:16-alpine AS builder
 
-RUN yarn install --production
+ENV NODE_ENV=production
+WORKDIR /app
+COPY . .
+COPY --from=dep /app/node_modules ./node_modules
+RUN yarn build
 
-ENV NODE_OPTIONS="--openssl-legacy-provider"
-CMD ["yarn", "run", "launch"]
+CMD ["./node_modules/.bin/next", "start"]
