@@ -111,6 +111,9 @@ class MystbinApp(FastAPI):
                 password=self.config["redis"]["password"],
                 db=self.config["redis"]["db"],
             )
+        
+        else:
+            self.redis = None
 
         ratelimits.limiter.startup(self)
         self.middleware("http")(ratelimits.limiter.middleware)
