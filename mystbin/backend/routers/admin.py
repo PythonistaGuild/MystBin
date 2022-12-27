@@ -211,7 +211,7 @@ async def post_ban(
     if data and request.app.redis:
         if ip is not None:
             await request.app.redis.set(f"ban-ip-{ip}", reason, ex=120)
-        
+
     return UJSONResponse({"success": data})
 
 
@@ -227,7 +227,7 @@ async def remove_ban(request: MystbinRequest, ip: str | None = None, userid: int
     if await request.app.state.db.unban_user(userid, ip):
         if ip is not None and request.app.redis:
             await request.app.redis.set(f"ban-ip-{ip}", "", ex=120)
-        
+
         return Response(status_code=204)
 
     return UJSONResponse({"error": "Ban not found"}, status_code=400)

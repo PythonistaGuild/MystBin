@@ -1,0 +1,33 @@
+[tool.black]
+line-length = 125
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+line_length = 125
+combine_as_imports = true
+combine_star = true
+known_first_party = ["utils", "mystbin_models", "routers"]
+
+
+[tool.pyright]
+include = ["mystbin/backend/**/*.py"]
+exclude = ["**/__pycache__", "**/build", "**/dist"]
+
+useLibraryCodeForTypes = true
+typeCheckingMode = "basic"
+pythonVersion = "3.10"
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+strictParameterNoneValue = true
+reportMissingImports = "error"
+reportUnusedImport = "error"
+reportUnusedClass = "error"
+reportUnusedFunction = "error"
+reportUnusedVariable = "error"
+reportGeneralTypeIssues = "error"
+reportDuplicateImport = "error"
+reportUntypedFunctionDecorator = "error"
+reportUnnecessaryTypeIgnoreComment = "warning"

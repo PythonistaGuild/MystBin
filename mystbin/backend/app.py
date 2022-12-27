@@ -18,14 +18,15 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
 import datetime
+import os
 import pathlib
 from typing import Any, Callable, Coroutine
 
 import aiohttp
-from redis import asyncio as aioredis # fuckin lol
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
+from redis import asyncio as aioredis  # fuckin lol
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -55,6 +56,7 @@ class MystbinApp(FastAPI):
             redoc_url="/docs",
             docs_url=None,
         )
+        self._debug: bool = True if os.getenv("DEBUG") else False
 
         if not config:
             config = pathlib.Path("config.json")
@@ -111,7 +113,6 @@ class MystbinApp(FastAPI):
                 password=self.config["redis"]["password"],
                 db=self.config["redis"]["db"],
             )
-        
         else:
             self.redis = None
 

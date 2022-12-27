@@ -10,3 +10,4 @@ venv
 .next/
 .pytest_cache/
 notes.txt
+poetry.lock

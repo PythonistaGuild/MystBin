@@ -106,7 +106,7 @@ class Database:
         #    await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(self, query: str, *args, conn: asyncpg.Connection | None = None) -> Any:
+    async def _do_query(self, query: str, *args, conn: asyncpg.Connection | None = None) -> list[Any]:
         if self._pool is None:
             await self.__ainit__()
 
@@ -114,7 +114,7 @@ class Database:
         try:
             response = await _conn.fetch(query, *args, timeout=self.timeout)
         except asyncio.TimeoutError:
-            return None
+            return []
         else:
             return response
         finally:
