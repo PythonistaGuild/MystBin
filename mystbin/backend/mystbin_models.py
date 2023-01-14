@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
-from fastapi import Request
+from starlette.requests import Request
 from starlette.datastructures import State
 
 from utils.db import Database

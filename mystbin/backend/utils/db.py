@@ -28,7 +28,8 @@ from typing import Any, Literal, cast
 
 import asyncpg
 from asyncpg import Record
-from fastapi import Request, Response
+from starlette.requests import Request
+from starlette.responses import Response
 from models import payloads
 
 from . import tokens
@@ -967,7 +968,7 @@ class Database:
             resp = None
         await self._do_query(
             query,
-            request.headers.get("X-Forwarded-For", request.client.host),
+            request.headers.get("X-Forwarded-For", request.client.host if request.client else "IP unknown"),
             request.state.user and request.state.user["id"],
             datetime.datetime.utcnow(),
             request.headers.get("CF-RAY"),
