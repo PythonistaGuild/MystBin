@@ -19,47 +19,53 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-import pathlib
-import subprocess
-from hashlib import sha256
-from hmac import HMAC, compare_digest
 
 import psutil
-import ujson
 from asyncpg import Record
-from fastapi import APIRouter
-from fastapi.responses import Response, UJSONResponse
-from models import errors, responses
+from utils.responses import Response, UJSONResponse
+from models import responses
+import cattrs
 
 from mystbin_models import MystbinRequest
 from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
+from utils.router import Router
+from utils import openapi
 
 
-router = APIRouter()
+router = Router()
 
 
 # Statistic consts
 PROC = psutil.Process()
 START_TIME = datetime.datetime.utcnow()
 
+usernotfound = openapi._Component("ErrorUserNotFound", [openapi.ComponentProperty("error", "Error", "string", required=True)], {"error": "User Not Found"})
 
-@router.get(
+
+@router.get("/admin/users/{user_id:int}")
+@openapi.instance.route(openapi.Route(
     "/admin/users/{user_id}",
-    tags=["admin"],
-    response_model=responses.User,
-    responses={
-        200: {"model": responses.User},
-        401: {"model": errors.Unauthorized},
-        400: {"response": {"example": {"error": "The given user was not found"}}},
+    "GET",
+    "Fetch any user",
+    ["admin", "users"],
+    None,
+    [openapi.RouteParameter("User id", "integer", "user_id", True, "path")],
+    {
+        200: openapi.Response("User", openapi.User),
+        400: openapi.Response("User Not Found", usernotfound),
+        401: openapi.UnauthorizedResponse
     },
-    include_in_schema=False,
-)
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def get_any_user(request: MystbinRequest, user_id: int) -> UJSONResponse | dict[str, str]:
+async def get_any_user(request: MystbinRequest) -> UJSONResponse | dict[str, str]:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
+    user_id: int = request.path_params["user_id"]
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -68,19 +74,38 @@ async def get_any_user(request: MystbinRequest, user_id: int) -> UJSONResponse |
         return UJSONResponse(dict(data))
     return UJSONResponse({"error": "The given user was not found"}, status_code=400)
 
+_BanRouteSuccess = openapi._Component("BanRouteSuccess", [openapi.ComponentProperty("success", "Success", "boolean", None, True)], example={"success": True})
 
-@router.post("/admin/users/{user_id}/ban", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id:int}/ban")
+@openapi.instance.route(openapi.Route(
+    "/admin/users/{user_id}/ban",
+    "POST",
+    "Ban User",
+    ["admin", "moderation"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
+        openapi.RouteParameter("IP", "string", "ip", False, "query"),
+        openapi.RouteParameter("Reason", "string", "reason", False, "query"),
+    ],
+    {
+        200: openapi.Response("Success", _BanRouteSuccess),
+        400: openapi.Response("User Not Found", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def ban_user(
-    request: MystbinRequest,
-    user_id: int,
-    ip: str | None = None,
-    reason: str | None = None,
-) -> UJSONResponse:
+async def ban_user(request: MystbinRequest) -> UJSONResponse:
     """
     Bans a user from the service
     * Requires admin authentication
     """
+    user_id: int = request.path_params["user_id"]
+    ip: str | None = request.query_params.get("ip")
+    reason: str | None = request.query_params.get("reason")
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -88,17 +113,34 @@ async def ban_user(
     return UJSONResponse({"success": success})
 
 
-@router.post("/admin/users/{user_id}/unban", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id:int}/unban")
+@openapi.instance.route(openapi.Route(
+    "/admin/users/{user_id}/unban",
+    "POST",
+    "Unban User",
+    ["admin", "moderation"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
+        openapi.RouteParameter("IP", "string", "ip", False, "query")
+    ],
+    {
+        200: openapi.Response("Success", _BanRouteSuccess),
+        400: openapi.Response("User Not Found", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def unban_user(
-    request: MystbinRequest,
-    user_id: int,
-    ip: str | None = None,
-) -> UJSONResponse:
+async def unban_user(request: MystbinRequest) -> UJSONResponse:
     """
     Unbans a user from the service
     * Requires admin authentication
     """
+    user_id: int = request.path_params["user_id"]
+    ip: str | None = request.query_params.get("ip")
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -106,13 +148,31 @@ async def unban_user(
     return UJSONResponse({"success": success})
 
 
-@router.post("/admin/users/{user_id}/subscribe", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id:int}/subscribe")
+@openapi.instance.route(openapi.Route(
+    "/admin/users/{user_id}/subscribe",
+    "POST",
+    "Subscribe User",
+    ["admin"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "user_id", True, "path")
+    ],
+    {
+        200: openapi.Response("Success", _BanRouteSuccess),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def subscribe_user(request: MystbinRequest, user_id: int) -> UJSONResponse:
+async def subscribe_user(request: MystbinRequest) -> UJSONResponse:
     """
     Gives a user subscriber access
     * Requires admin authentication
     """
+    user_id: int = request.path_params["user_id"]
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -120,13 +180,31 @@ async def subscribe_user(request: MystbinRequest, user_id: int) -> UJSONResponse
     return UJSONResponse({"success": success})
 
 
-@router.post("/admin/users/{user_id}/unsubscribe", tags=["admin"], include_in_schema=False)
+@router.post("/admin/users/{user_id:int}/unsubscribe")
+@openapi.instance.route(openapi.Route(
+    "/admin/users/{user_id}/unsubscribe",
+    "POST",
+    "Unsubscribe User",
+    ["admin"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "user_id", True, "path")
+    ],
+    {
+        200: openapi.Response("Success", _BanRouteSuccess),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def unsubscribe_user(request: MystbinRequest, user_id: int) -> UJSONResponse:
+async def unsubscribe_user(request: MystbinRequest) -> UJSONResponse:
     """
     Revokes a users subscriber access
     * Requires admin authentication
     """
+    user_id: int = request.path_params["user_id"]
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -134,13 +212,22 @@ async def unsubscribe_user(request: MystbinRequest, user_id: int) -> UJSONRespon
     return UJSONResponse({"success": success})
 
 
-@router.get(
+@router.get("/admin/users")
+@openapi.instance.route(openapi.Route(
     "/admin/users",
-    tags=["admin"],
-    response_model=responses.UserList,
-    responses={200: {"model": responses.UserList}, 401: {"model": errors.Unauthorized}},
-    include_in_schema=False,
-)
+    "GET",
+    "Get Userlist",
+    ["admin"],
+    None,
+    [openapi.RouteParameter("Page", "integer", "page", True, "query")],
+    {
+        200: openapi.Response("Success", openapi.AdminUserList),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
 async def get_admin_userlist(request: MystbinRequest, page: int = 1):
     """
@@ -157,16 +244,22 @@ async def get_admin_userlist(request: MystbinRequest, page: int = 1):
     return UJSONResponse(data)
 
 
-@router.get(
+@router.get("/admin/users/count")
+@openapi.instance.route(openapi.Route(
     "/admin/users/count",
-    tags=["admin"],
-    response_model=responses.UserCount,
-    responses={
-        200: {"model": responses.UserCount},
-        401: {"model": errors.Unauthorized},
+    "GET",
+    "Get User Count",
+    ["admin"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi._Component("AdminUserCount", [openapi.ComponentProperty("count", "Count", "integer", required=True)], {"count": 100})),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
     },
-    include_in_schema=False,
-)
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
 async def get_admin_usercount(request: MystbinRequest) -> UJSONResponse:
     """
@@ -180,9 +273,30 @@ async def get_admin_usercount(request: MystbinRequest) -> UJSONResponse:
     return UJSONResponse({"count": count})
 
 
-@router.get("/admin/bans", tags=["admin"], include_in_schema=False)
+@router.get("/admin/bans")
+@openapi.instance.route(openapi.Route(
+    "/admin/bans",
+    "GET",
+    "Search Bans",
+    ["admin", "moderation"],
+    None,
+    [openapi.RouteParameter("Page", "integer", "page", False, "query"), openapi.RouteParameter("Search", "string", "search", True, "query")],
+    {
+        200: openapi.Response("Success", openapi.AdminBanList),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def search_bans(request: MystbinRequest, search: str | None = None, page: int = 1) -> UJSONResponse:
+async def search_bans(request: MystbinRequest) -> UJSONResponse:
+    search: str | None = request.query_params.get("search")
+    try:
+        page: int | None = int(request.query_params.get("page")) # type: ignore
+    except:
+        page = 1
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -196,14 +310,40 @@ async def search_bans(request: MystbinRequest, search: str | None = None, page: 
         return UJSONResponse(await request.app.state.db.get_bans(page))
 
 
-@router.post("/admin/bans", tags=["admin"], include_in_schema=False)
+@router.post("/admin/bans")
+@openapi.instance.route(openapi.Route(
+    "/admin/bans",
+    "POST",
+    "Create Ban",
+    ["admin", "moderation"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "userid", False, "query"),
+        openapi.RouteParameter("IP", "string", "ip", False, "query"),
+        openapi.RouteParameter("Reason", "string", "reason", True, "query")
+    ],
+    {
+        200: openapi.Response("Success", openapi.AdminUserList),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def post_ban(
-    request: MystbinRequest,
-    reason: str,
-    ip: str | None = None,
-    userid: int | None = None,
-) -> UJSONResponse:
+async def post_ban(request: MystbinRequest) -> UJSONResponse:
+    try:
+        reason: str = request.query_params["reason"]
+    except:
+        return UJSONResponse({"error": "No reason provided"}, status_code=400)
+    
+    try:
+        userid: int | None = int(request.query_params["userid"])
+    except:
+        userid = None
+    
+    ip = request.query_params.get("ip")
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -215,9 +355,33 @@ async def post_ban(
     return UJSONResponse({"success": data})
 
 
-@router.delete("/admin/bans", tags=["admin"], include_in_schema=False)
+@router.delete("/admin/bans")
+@openapi.instance.route(openapi.Route(
+    "/admin/bans",
+    "DELETE",
+    "Delete Ban",
+    ["admin", "moderation"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "userid", False, "query"),
+        openapi.RouteParameter("IP", "string", "ip", False, "query")
+    ],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def remove_ban(request: MystbinRequest, ip: str | None = None, userid: int | None = None) -> UJSONResponse | Response:
+async def remove_ban(request: MystbinRequest) -> UJSONResponse | Response:
+    ip: str | None = request.query_params.get("ip")
+    try:
+        userid: int | None = int(request.query_params.get("userid")) # type: ignore
+    except:
+        userid = None
+    
     if not ip and not userid:
         return UJSONResponse({"error": "Bad Request"}, status_code=400)
 
@@ -233,7 +397,7 @@ async def remove_ban(request: MystbinRequest, ip: str | None = None, userid: int
     return UJSONResponse({"error": "Ban not found"}, status_code=400)
 
 
-@router.get("/admin/stats", tags=["admin"], include_in_schema=False)
+@router.get("/admin/stats")
 @limit("admin")
 async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
     if not request.state.user or not request.state.user["admin"]:
@@ -251,60 +415,81 @@ async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
 
     return UJSONResponse(data, status_code=200)
 
-
-@router.post("/admin/release_hook", tags=["admin"], include_in_schema=False)
-@limit("admin")
-async def release_hook(request: MystbinRequest) -> UJSONResponse | Response:
-
-    config = pathlib.Path("config.json")
-    if not config.exists():
-        config = pathlib.Path("../../config.json")
-
-    with open(config) as f:
-        config = ujson.load(f)
-
-    SECRET = config["github_secret"].encode()
-
-    received_sign = request.headers.get("X-Hub-Signature-256").split("sha256=")[-1].strip()
-    expected_sign = HMAC(key=SECRET, msg=await request.body(), digestmod=sha256).hexdigest()
-    if not compare_digest(received_sign, expected_sign):
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    command = "cd /root/MystBin/; git pull;"
-    subprocess.run(command, stdout=subprocess.PIPE, shell=True)
-
-    return Response(status_code=200)
-
-
-@router.get(
+@router.get("/admin/pastes/{paste_id:str}")
+@openapi.instance.route(openapi.Route(
     "/admin/pastes/{paste_id}",
-    tags=["admin"],
-    response_model=responses.PasteGetResponse,
-    responses={
-        200: {"model": responses.PasteGetResponse},
-        401: {"model": errors.Unauthorized},
-        404: {"model": errors.NotFound},
+    "GET",
+    "Get Paste",
+    ["admin", "pastes"],
+    None,
+    [
+        openapi.RouteParameter("Paste ID", "integer", "paste_id", True, "query")
+    ],
+    {
+        200: openapi.Response("Success", openapi.PasteGetResponse),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
     },
-    name="Retrieve paste file(s)",
-    include_in_schema=False,
-)
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def get_paste(request: MystbinRequest, paste_id: str, password: str | None = None) -> Response:
+async def get_paste(request: MystbinRequest, paste_id: str) -> Response:
     """Get a paste from MystBin."""
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    paste = await request.app.state.db.get_paste(paste_id, password)
+    paste = await request.app.state.db.get_paste(paste_id, None)
     if paste is None:
         return Response(status_code=404)
 
     resp = responses.PasteGetResponse(**paste)
-    return UJSONResponse(recursive_hook(resp.dict()))
+    return UJSONResponse(recursive_hook(cattrs.unstructure(resp)))
 
 
-@router.get("/admin/pastes", tags=["admin"], include_in_schema=False)
+@router.get("/admin/pastes")
+@openapi.instance.route(openapi.Route(
+    "/admin/pastes",
+    "GET",
+    "Get Pastes Overview",
+    ["admin", "pastes"],
+    None,
+    [
+        openapi.RouteParameter("Count Per Page", "integer", "count", True, "query"),
+        openapi.RouteParameter("Page", "integer", "page", False, "query"),
+        openapi.RouteParameter("Oldest First", "boolean", "oldest_first", False, "query")
+    ],
+    {
+        200: openapi.Response("Success", openapi.PasteGetAllResponse),
+        400: openapi.Response("Request Error", usernotfound),
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("admin")
-async def get_all_pastes(request: MystbinRequest, count: int, page: int = 0, oldest_first: bool = False):
+async def get_all_pastes(request: MystbinRequest):
+    try:
+        count: int = int(request.query_params["count"])
+    except:
+        return UJSONResponse({"error": "Count parameter not given"}, status_code=400)
+    try:
+        page: int = int(request.query_params["page"])
+    except:
+        page = 1
+    try:
+        _oldest_first: str | None = request.query_params.get("oldest_first")
+        if not _oldest_first:
+            oldest_first = False
+        
+        else:
+            if _oldest_first.lower() in {"true", "1", "yes"}:
+                oldest_first = True
+            else:
+                oldest_first = False
+    except:
+        oldest_first = False
+
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
