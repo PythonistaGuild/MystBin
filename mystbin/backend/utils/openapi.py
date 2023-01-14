@@ -238,6 +238,9 @@ class Route:
                 str(status): resp.render() for status, resp in self.responses.items()
             }
         }
+        if self.parameters:
+            resp["parameters"] = [x.render() for x in self.parameters]
+            
         if self.request_body:
             resp["requestBody"] = {
                 "required": self.is_body_required,
