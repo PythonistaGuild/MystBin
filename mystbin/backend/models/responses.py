@@ -18,7 +18,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
 
-from pydantic import BaseModel
+from attrs import define
 
 
 __all__ = (
@@ -37,7 +37,8 @@ __all__ = (
 )
 
 
-class File(BaseModel):
+@define()
+class File:
     filename: str
     content: str
     loc: int
@@ -55,14 +56,14 @@ class File(BaseModel):
             }
         }
 
-
-class PastePostResponse(BaseModel):
-    id: str
-    author_id: int | None = None
+@define()
+class PastePostResponse:
     created_at: datetime
-    expires: datetime | None = None
     files: list[File]
-    notice: str | None
+    id: str
+    notice: str | None = None
+    author_id: int | None = None
+    expires: datetime | None = None
 
     class Config:
         schema_extra = {
@@ -85,14 +86,15 @@ class PastePostResponse(BaseModel):
         }
 
 
-class PasteGetResponse(BaseModel):
+@define
+class PasteGetResponse:
     id: str
+    views: int
+    files: list[File]
     author_id: int | None
     created_at: datetime
     expires: datetime | None = None
     last_edited: datetime | None = None
-    views: int
-    files: list[File]
 
     class Config:
         schema_extra = {
@@ -111,29 +113,31 @@ class PasteGetResponse(BaseModel):
                         "charcount": 49,
                         "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
                     }
-                ],
+                ]
             }
         }
 
 
-class PasteGetAll(BaseModel):
+@define()
+class PasteGetAll:
     id: str
     author_id: int
     created_at: datetime
     views: int
-    expires: datetime | None = None
     has_password: bool
+    expires: datetime | None = None
 
 
-class PasteGetAllResponse(BaseModel):
+@define()
+class PasteGetAllResponse:
     pastes: list[PasteGetAll]
 
-
-class TokenResponse(BaseModel):
+@define()
+class TokenResponse:
     token: str
 
-
-class User(BaseModel):
+@define()
+class User:
     id: int
     username: str
     token: str
@@ -146,7 +150,8 @@ class User(BaseModel):
     subscriber: bool
 
 
-class SmallUser(BaseModel):
+@define()
+class SmallUser:
     id: int
     username: str
     authorizations: list[str]
@@ -158,22 +163,26 @@ class SmallUser(BaseModel):
     paste_count: int
 
 
-class UserCount(BaseModel):
+@define()
+class UserCount:
     count: int
 
 
-class UserList(BaseModel):
+@define()
+class UserList:
     users: list[SmallUser]
     page: int
     page_count: int
 
 
-class Bookmark(BaseModel):
+@define()
+class Bookmark:
     id: str
     created_at: datetime
     expires: datetime
     views: int
 
 
-class Bookmarks(BaseModel):
+@define()
+class Bookmarks:
     bookmarks: list[Bookmark]

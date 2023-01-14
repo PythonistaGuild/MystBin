@@ -25,13 +25,14 @@ from typing import Any, Callable, Coroutine
 import aiohttp
 import sentry_sdk
 import ujson
-from fastapi import FastAPI, Response
 from redis import asyncio as aioredis  # fuckin lol
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.applications import Starlette
+from starlette.responses import Response
 
 from mystbin_models import MystbinRequest, MystbinState
-from routers import admin, apps, pastes, user
+from routers import admin, doc# apps, pastes, user
 from utils import cli as _cli, ratelimits
 from utils.db import Database
 
@@ -39,7 +40,7 @@ from utils.db import Database
 METHODS: tuple[str, ...] = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
 
 
-class MystbinApp(FastAPI):
+class MystbinApp(Starlette):
     """Subclassed API for Mystbin."""
 
     redis: aioredis.Redis | None
@@ -48,14 +49,7 @@ class MystbinApp(FastAPI):
 
     def __init__(self, *, loop: asyncio.AbstractEventLoop | None = None, config: pathlib.Path | None = None):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop_policy().get_event_loop()
-        super().__init__(
-            title="MystBin",
-            version="3.0.0",
-            description="MystBin backend server",
-            loop=self.loop,
-            redoc_url="/docs",
-            docs_url=None,
-        )
+        super().__init__()
         self._debug: bool = True if os.getenv("DEBUG") else False
 
         if not config:
@@ -65,7 +59,7 @@ class MystbinApp(FastAPI):
 
         with open(config) as f:
             self.config: dict[str, dict[str, Any]] = ujson.load(f)
-        self.should_close = False
+
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
         self.add_event_handler("startup", func=self.app_startup)
 
@@ -131,12 +125,8 @@ class MystbinApp(FastAPI):
 
 
 app = MystbinApp()
-
-app.include_router(admin.router)
-app.include_router(apps.router)
-app.include_router(pastes.router)
-app.include_router(user.router)
-
+doc.router.add_to_app(app)
+admin.router.add_to_app(app)
 
 try:
     sentry_dsn = app.config["sentry"]["dsn"]
@@ -147,6 +137,3 @@ else:
     sentry_sdk.init(dsn=sentry_dsn, traces_sample_rate=traces_sample_rate, attach_stacktrace=True)
 
     app.add_middleware(SentryAsgiMiddleware)
-
-# app.add_middleware(PrometheusMiddleware)
-# app.add_route("/metrics/", metrics)

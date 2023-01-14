@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pydantic import BaseModel
+from attrs import define
 
 
 __all__ = (
@@ -27,8 +27,8 @@ __all__ = (
     "BadRequest",
 )
 
-
-class Unauthorized(BaseModel):
+@define()
+class Unauthorized:
     error: str = "Unauthorized"
     notice: str
 
@@ -36,14 +36,17 @@ class Unauthorized(BaseModel):
         schema_extras = {"example": {"error": "Unauthorized", "notice": "You must be signed in to use this route"}}
 
 
-class Forbidden(BaseModel):
+@define()
+class Forbidden:
     error: str = "Forbidden"
 
 
-class NotFound(BaseModel):
+@define()
+class NotFound:
     error: str = "Not Found"
 
 
-class BadRequest(BaseModel):
+@define()
+class BadRequest:
     error: str = "Bad Request"
     reason: str | None = None

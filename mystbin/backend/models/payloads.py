@@ -20,13 +20,13 @@ from __future__ import annotations
 
 import datetime
 
-from pydantic import BaseModel
+from attrs import define
 
 
 __all__ = (
     "PasteFile",
     "RichPasteFile",
-    "PastePut",
+    "PastePost",
     "RichPastePost",
     "PastePatch",
     "PasteDelete",
@@ -34,7 +34,8 @@ __all__ = (
 )
 
 
-class PasteFile(BaseModel):
+@define()
+class PasteFile:
     content: str
     filename: str
 
@@ -42,6 +43,7 @@ class PasteFile(BaseModel):
         schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt"}}
 
 
+@define()
 class RichPasteFile(PasteFile):
     attachment: str | None
 
@@ -51,10 +53,11 @@ class RichPasteFile(PasteFile):
         }
 
 
-class PastePut(BaseModel):
+@define()
+class PastePost:
+    files: list[PasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
-    files: list[PasteFile]
 
     class Config:
         schema_extra = {
@@ -72,8 +75,11 @@ class PastePut(BaseModel):
         }
 
 
-class RichPastePost(PastePut):
+@define()
+class RichPastePost:
     files: list[RichPasteFile]
+    expires: datetime.datetime | None = None
+    password: str | None = None
 
     class Config:
         schema_extra = {
@@ -88,15 +94,18 @@ class RichPastePost(PastePut):
         }
 
 
-class PastePatch(BaseModel):
+@define()
+class PastePatch:
+    new_files: list[PasteFile]
     new_expires: datetime.datetime | None = None
     new_password: str | None = None
-    new_files: list[PasteFile]
 
 
-class PasteDelete(BaseModel):
+@define()
+class PasteDelete:
     pastes: list[str]
 
 
-class BookmarkPutDelete(BaseModel):
+@define()
+class BookmarkPutDelete:
     paste_id: str
