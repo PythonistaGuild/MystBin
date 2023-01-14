@@ -256,6 +256,7 @@ class Route:
         return resp
 
 UnauthorizedResponse = Response("Unauthorized", _Component("UnauthorizedComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Unauthorized"}))
+BadRequestResponse = Response("Bad Request", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Bad Request"}))
 
 # mystbin base models
 

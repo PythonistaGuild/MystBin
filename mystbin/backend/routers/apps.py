@@ -21,20 +21,36 @@ from __future__ import annotations
 import datetime
 
 import yarl
-from fastapi import APIRouter
-from fastapi.responses import Response, UJSONResponse
-from models import responses
 
 from mystbin_models import MystbinRequest
 from utils.embed import Embed
+from utils.responses import Response, UJSONResponse
 from utils.ratelimits import limit
+from utils.router import Router
+from utils import openapi
 
 
-router = APIRouter()
+router = Router()
 
+ConnectBody = openapi._Component("ConnectBody", [openapi.ComponentProperty("code", "Auth Code", "string", "OAuth", True)], example={"code": "akopfmk334b56jo"})
 
 @limit("apps")
-@router.post("/users/connect/discord", response_model=responses.TokenResponse, include_in_schema=False)
+@router.post("/users/connect/discord")
+@openapi.instance.route(openapi.Route(
+    "/users/connect/discord",
+    "POST",
+    "Connect Discord",
+    ["users"],
+    ConnectBody,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=True,
+    exclude_from_default_schema=True
+))
 async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | UJSONResponse:
     """Allows user to authenticate from Discord OAuth."""
     try:
@@ -87,7 +103,22 @@ async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | 
         return {"token": data["token"]}
 
 
-@router.post("/users/connect/google", response_model=responses.TokenResponse, include_in_schema=False)
+@router.post("/users/connect/google")
+@openapi.instance.route(openapi.Route(
+    "/users/connect/google",
+    "POST",
+    "Connect Google",
+    ["users"],
+    ConnectBody,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=True,
+    exclude_from_default_schema=True
+))
 @limit("apps")
 async def auth_from_google(request: MystbinRequest) -> dict[str, str] | UJSONResponse:
     """Allows user to authenticate from Google OAuth."""
@@ -141,7 +172,22 @@ async def auth_from_google(request: MystbinRequest) -> dict[str, str] | UJSONRes
         return UJSONResponse({"token": data["token"]})
 
 
-@router.post("/users/connect/github", response_model=responses.TokenResponse, include_in_schema=False)
+@router.post("/users/connect/github")
+@openapi.instance.route(openapi.Route(
+    "/users/connect/github",
+    "POST",
+    "Connect Github",
+    ["users"],
+    ConnectBody,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=True,
+    exclude_from_default_schema=True
+))
 @limit("apps")
 async def auth_from_github(request: MystbinRequest) -> Response | UJSONResponse:
     """Allows user to authenticate with GitHub OAuth."""
@@ -211,9 +257,26 @@ async def auth_from_github(request: MystbinRequest) -> Response | UJSONResponse:
         return UJSONResponse({"token": data["token"]})
 
 
-@router.delete("/users/connect/{app}", include_in_schema=False)
+@router.delete("/users/connect/{app}")
+@openapi.instance.route(openapi.Route(
+    "/users/connect/{app}",
+    "DELETE",
+    "Delete Connection",
+    ["users"],
+    ConnectBody,
+    [],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    is_body_required=False,
+    exclude_from_default_schema=True
+))
 @limit("apps")
-async def disconnect_app(request: MystbinRequest, app: str):
+async def disconnect_app(request: MystbinRequest):
+    app: str = request.path_params["app"]
+    
     if app not in ("github", "discord", "google"):
         return Response(status_code=404)
 
@@ -226,7 +289,7 @@ async def disconnect_app(request: MystbinRequest, app: str):
     return Response(status_code=204)
 
 
-@router.post("/callbacks/sentry", include_in_schema=False)
+@router.post("/callbacks/sentry")
 @limit("sentry")
 async def sentry_callback(request: MystbinRequest):
     data = await request.json()
