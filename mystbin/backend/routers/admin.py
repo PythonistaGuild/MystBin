@@ -85,7 +85,7 @@ _BanRouteSuccess = openapi._Component("BanRouteSuccess", [openapi.ComponentPrope
     None,
     [
         openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
-        openapi.RouteParameter("IP", "string", "ip", False, "query"),
+        openapi.RouteParameter("IP Address", "string", "ip", False, "query"),
         openapi.RouteParameter("Reason", "string", "reason", False, "query"),
     ],
     {
@@ -122,7 +122,7 @@ async def ban_user(request: MystbinRequest) -> UJSONResponse:
     None,
     [
         openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
-        openapi.RouteParameter("IP", "string", "ip", False, "query")
+        openapi.RouteParameter("IP Address", "string", "ip", False, "query")
     ],
     {
         200: openapi.Response("Success", _BanRouteSuccess),
@@ -319,7 +319,7 @@ async def search_bans(request: MystbinRequest) -> UJSONResponse:
     None,
     [
         openapi.RouteParameter("User ID", "integer", "userid", False, "query"),
-        openapi.RouteParameter("IP", "string", "ip", False, "query"),
+        openapi.RouteParameter("IP Address", "string", "ip", False, "query"),
         openapi.RouteParameter("Reason", "string", "reason", True, "query")
     ],
     {
@@ -364,7 +364,7 @@ async def post_ban(request: MystbinRequest) -> UJSONResponse:
     None,
     [
         openapi.RouteParameter("User ID", "integer", "userid", False, "query"),
-        openapi.RouteParameter("IP", "string", "ip", False, "query")
+        openapi.RouteParameter("IP Address", "string", "ip", False, "query")
     ],
     {
         204: openapi.Response("Success", None),
