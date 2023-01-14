@@ -396,25 +396,6 @@ async def remove_ban(request: MystbinRequest) -> UJSONResponse | Response:
 
     return UJSONResponse({"error": "Ban not found"}, status_code=400)
 
-
-@router.get("/admin/stats")
-@limit("admin")
-async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
-    if not request.state.user or not request.state.user["admin"]:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    data = {
-        "memory": PROC.memory_full_info().uss / 1024**2,
-        "memory_percent": PROC.memory_percent(memtype="uss"),
-        "cpu_percent": PROC.cpu_percent(),
-        "uptime": (datetime.datetime.utcnow() - START_TIME).total_seconds(),
-        "total_pastes": await request.app.state.db.get_paste_count(),
-        "requests": request.app.state.request_stats["total"],
-        "latest_request": request.app.state.request_stats["latest"].isoformat(),
-    }
-
-    return UJSONResponse(data, status_code=200)
-
 @router.get("/admin/pastes/{paste_id:str}")
 @openapi.instance.route(openapi.Route(
     "/admin/pastes/{paste_id}",
@@ -435,7 +416,7 @@ async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
 ))
 @limit("admin")
 async def get_paste(request: MystbinRequest, paste_id: str) -> Response:
-    """Get a paste from MystBin."""
+    """Get a paste from MystBin (admin)."""
     if not request.state.user or not request.state.user["admin"]:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -469,6 +450,9 @@ async def get_paste(request: MystbinRequest, paste_id: str) -> Response:
 ))
 @limit("admin")
 async def get_all_pastes(request: MystbinRequest):
+    """
+    Get a short version of all pastes in the system
+    """
     try:
         count: int = int(request.query_params["count"])
     except:
