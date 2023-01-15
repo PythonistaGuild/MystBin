@@ -19,6 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 import pathlib
 import json
 from models import payloads, responses
+import msgspec
 
 from mystbin_models import MystbinRequest
 from utils.ratelimits import limit
@@ -61,12 +62,12 @@ The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
 @limit("self")
 async def get_self(
     request: MystbinRequest,
-) -> UJSONResponse | responses.User:
+) -> Response:
     user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return responses.create_struct(user, responses.User)
+    return Response(msgspec.json.encode(responses.create_struct(user, responses.User)))
 
 
 desc = f"""Regenerates your token.
@@ -93,7 +94,7 @@ The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
     is_body_required=False
 ))
 @limit("tokengen")
-async def regen_token(request: MystbinRequest) -> UJSONResponse | dict[str, str]:
+async def regen_token(request: MystbinRequest) -> UJSONResponse:
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -203,7 +204,7 @@ The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
     description=desc
 ))
 @limit("bookmarks")
-async def get_bookmarks(request: MystbinRequest):
+async def get_bookmarks(request: MystbinRequest) -> Response:
     """Fetches all of the authorized users bookmarks
     * Requires authentication
     """
