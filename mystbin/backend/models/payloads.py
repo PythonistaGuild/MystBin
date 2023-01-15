@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import TypeVar, Type, Optional
+from typing import TypeVar, Type
 from msgspec import Struct
 import msgspec
 
@@ -51,7 +51,7 @@ class PasteFile(Struct):
 class RichPasteFile(Struct):
     content: str
     filename: str
-    attachment: Optional[str]
+    attachment: str | None = None
 
     class Config:
         schema_extra = {
