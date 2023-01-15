@@ -11,3 +11,4 @@ venv
 .pytest_cache/
 notes.txt
 poetry.lock
+test.*
