@@ -261,15 +261,17 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
+                resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
                 resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
+                resp = await self._transform_and_log(request, resp)
             except:
                 resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
-                raise
-            finally:
                 resp = await self._transform_and_log(request, resp)
+                raise
 
             return resp
 
@@ -288,15 +290,17 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
+                resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
                 resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
+                resp = await self._transform_and_log(request, resp)
             except:
                 resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
-                raise
-            finally:
                 resp = await self._transform_and_log(request, resp)
+                raise
 
             return resp
 
