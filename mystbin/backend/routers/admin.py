@@ -24,9 +24,9 @@ import psutil
 from asyncpg import Record
 from utils.responses import Response, UJSONResponse
 from models import responses
+import msgspec
 
 from mystbin_models import MystbinRequest
-from utils.db import _recursive_hook as recursive_hook
 from utils.ratelimits import limit
 from utils.router import Router
 from utils import openapi
@@ -59,7 +59,7 @@ usernotfound = openapi._Component("ErrorUserNotFound", [openapi.ComponentPropert
     exclude_from_default_schema=True
 ))
 @limit("admin")
-async def get_any_user(request: MystbinRequest) -> UJSONResponse | dict[str, str]:
+async def get_any_user(request: MystbinRequest) -> UJSONResponse:
     """Returns the User object of the passed user_id.
     * Requires admin authentication.
     """
@@ -228,7 +228,7 @@ async def unsubscribe_user(request: MystbinRequest) -> UJSONResponse:
     exclude_from_default_schema=True
 ))
 @limit("admin")
-async def get_admin_userlist(request: MystbinRequest, page: int = 1):
+async def get_admin_userlist(request: MystbinRequest, page: int = 1) -> UJSONResponse:
     """
     Returns a list of smaller user objects
     * Requires admin authentication.
@@ -424,7 +424,7 @@ async def get_paste(request: MystbinRequest, paste_id: str) -> Response:
         return Response(status_code=404)
 
     resp = responses.PasteGetResponse(**paste)
-    return UJSONResponse(recursive_hook(cattrs.unstructure(resp)))
+    return Response(msgspec.json.encode(resp))
 
 
 @router.get("/admin/pastes")
@@ -448,7 +448,7 @@ async def get_paste(request: MystbinRequest, paste_id: str) -> Response:
     exclude_from_default_schema=True
 ))
 @limit("admin")
-async def get_all_pastes(request: MystbinRequest):
+async def get_all_pastes(request: MystbinRequest) -> Response:
     """
     Get a short version of all pastes in the system
     """

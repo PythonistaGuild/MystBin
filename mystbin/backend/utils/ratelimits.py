@@ -5,8 +5,10 @@ import time
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import StreamingResponse
 from starlette.routing import Match
+from utils.responses import Response, UJSONResponse
+import msgspec
 
 from . import tokens
 
@@ -259,6 +261,10 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
+            except msgspec.ValidationError as e:
+                resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+            except msgspec.DecodeError as e:
+                resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
             except:
                 resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
                 raise
@@ -282,6 +288,10 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
+            except msgspec.ValidationError as e:
+                resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+            except msgspec.DecodeError as e:
+                resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
             except:
                 resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
                 raise
@@ -317,7 +327,7 @@ async def _get_redis_ip_key(request: MystbinRequest, key: str) -> str | None:
 
 
 async def _fetch_user(request: MystbinRequest):
-    host = request.headers.get("X-Forwarded-For") or request.client.host
+    host = request.headers.get("X-Forwarded-For") or request.client.host # type: ignore
 
     auth = request.headers.get("Authorization", None)
 
@@ -398,11 +408,11 @@ async def get_zone(zone: str, request: MystbinRequest) -> str:
 def ratelimit_id_key(request: Request) -> str:
     auth = request.headers.get("Authorization", None)
     if not auth:
-        return request.headers.get("X-Forwarded-For", None) or request.client.host
+        return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
 
     userid = tokens.get_user_id(auth.replace("Bearer ", ""))
     if not userid:  # must be a fake token, so just ignore it and go by ip
-        return request.headers.get("X-Forwarded-For", None) or request.client.host
+        return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
 
     return str(userid)
 

@@ -263,8 +263,8 @@ BadRequestResponse = Response("Bad Request", _Component("BadRequestComponent", [
 NotFoundResponse = Response("Not Found", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Paste Not Found"}))
 
 ValidationErrorResponse = Response("Validation Error", _Component("ValidationErrorComponent", [
-    ComponentProperty("error", "Error", "string"),
-    ComponentProperty("location", "Location", "string", required=True)
+    ComponentProperty("error", "Error", "string", required=True),
+    ComponentProperty("location", "Location", "string", required=False)
     ],
     example={"error": "Expected `str`, got `bool`", "location": "$.files[0].content"}))
 

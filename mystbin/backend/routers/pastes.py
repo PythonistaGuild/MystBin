@@ -27,6 +27,7 @@ from random import sample
 from typing import Coroutine
 
 from asyncpg import Record
+import msgspec
 from starlette.datastructures import UploadFile
 
 from models import payloads, responses
@@ -163,9 +164,7 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     description=desc
 ))
 @limit("postpastes")
-async def put_pastes(
-    request: MystbinRequest,
-) -> Response | responses.PastePostResponse:
+async def put_pastes(request: MystbinRequest) -> Response:
     author_: Record | None = request.state.user
 
     try:
@@ -197,12 +196,12 @@ async def put_pastes(
 
     paste["notice"] = notice
     response = responses.PastePostResponse(**paste) # type: ignore
-    return response
+    return Response(msgspec.json.encode(response))
 
 
 @router.post("/rich-paste")
 @limit("postpastes")
-async def post_rich_paste(request: MystbinRequest) -> UJSONResponse | responses.PastePostResponse:
+async def post_rich_paste(request: MystbinRequest) -> Response:
     form = await request.form()
 
     reads: str | None = form.get("data") # type: ignore
@@ -268,7 +267,7 @@ async def post_rich_paste(request: MystbinRequest) -> UJSONResponse | responses.
 
     paste["notice"] = notice
     resp = responses.PastePostResponse(**paste)  # type: ignore
-    return UJSONResponse(resp, status_code=201)
+    return Response(msgspec.json.encode(resp), status_code=201)
 
 
 desc = f"""Get a paste by ID.
@@ -298,7 +297,7 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     description=desc
 ))
 @limit("getpaste")
-async def get_paste(request: MystbinRequest) -> responses.PasteGetResponse | UJSONResponse:
+async def get_paste(request: MystbinRequest) -> Response | UJSONResponse:
     paste_id: str = request.path_params["paste_id"]
     password: str | None = request.query_params.get("password")
 
@@ -310,7 +309,7 @@ async def get_paste(request: MystbinRequest) -> responses.PasteGetResponse | UJS
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     resp = responses.create_struct(paste, responses.PasteGetResponse)
-    return resp
+    return Response(msgspec.json.encode(resp))
 
 
 desc = f"""Get metadata for all pastes for the user you are signed in as via the Authorization header.
@@ -549,7 +548,7 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     deprecated=True
 ))
 @limit("postpastes")
-async def compat_create_paste(request: MystbinRequest):
+async def compat_create_paste(request: MystbinRequest) -> UJSONResponse:
     content = await request.body()
     limit = request.app.config["paste"]["character_limit"]
     if len(content) > limit:
