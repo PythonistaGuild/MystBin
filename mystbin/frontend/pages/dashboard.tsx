@@ -33,7 +33,6 @@ export default function Dashboard(props) {
   const {
     admin,
     _token,
-    analytics,
     initialAdminPastes,
     subscriber,
     id,
@@ -57,7 +56,6 @@ export default function Dashboard(props) {
   const [pageLoading, setPageLoading] = useState(false);
   const [window, setWindow] = useState(null);
   const adminTotalUsers = users["user_count"];
-  const adminTotalPastes = analytics["total_pastes"];
 
   const standardPasteColumns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 250 },
@@ -540,7 +538,7 @@ export default function Dashboard(props) {
                 pagination={true}
                 rowsPerPageOptions={[25, 50, 100]}
                 pageSize={100}
-                rowCount={adminTotalPastes}
+                rowCount={100}
                 paginationMode={"server"}
                 filterMode={"server"}
                 loading={pageLoading}
@@ -615,21 +613,21 @@ export default function Dashboard(props) {
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Memory:</h5>
-                  {analytics["memory"].toFixed(2)} MiB
+                  REMOVED MiB
                 </div>
               </div>
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Memory %:</h5>
-                  {analytics["memory_percent"].toFixed(2)} %
+                  REMOVED %
                 </div>
               </div>
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>CPU %:</h5>
-                  {analytics["cpu_percent"].toFixed(2)} %
+                  REMOVED %
                 </div>
               </div>
 
@@ -638,21 +636,21 @@ export default function Dashboard(props) {
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Total Pastes:</h5>
-                  {analytics["total_pastes"]}
+                  REMOVED
                 </div>
               </div>
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Requests since Up:</h5>
-                  {analytics["requests"]}
+                  REMOVED
                 </div>
               </div>
 
               <div className={styles.embededData}>
                 <div className={styles.innerEmbedFlexCol}>
                   <h5>Uptime:</h5>
-                  <PrettySeconds seconds={analytics["uptime"]} />
+                  <PrettySeconds seconds={0} />
                 </div>
               </div>
 
@@ -669,7 +667,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const cookies = new Cookies(req, res);
   const token = cookies.get("auth");
 
-  let analytics = {};
   let initialAdminPastes = {};
   let users = {};
 
@@ -709,14 +706,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
   const bookmarks = data["bookmarks"];
 
   if (!!admin) {
-    const analyticsResp = await fetch(
-      `${config["site"]["backend_site"]}/admin/stats`,
-      {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
     const initialPastes = await fetch(
       `${config["site"]["backend_site"]}/admin/pastes?count=100&page=0`,
       {
@@ -735,7 +724,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
     users = await initialUsers.json();
 
     initialAdminPastes = await initialPastes.json();
-    analytics = await analyticsResp.json();
   }
 
   const _token = token;
@@ -744,7 +732,6 @@ export const getServerSideProps = async ({ req, res, query }) => {
     props: {
       admin,
       _token,
-      analytics,
       initialAdminPastes,
       subscriber,
       id,
