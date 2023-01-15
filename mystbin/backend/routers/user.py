@@ -16,60 +16,84 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
-from fastapi import APIRouter
-from fastapi.responses import Response, UJSONResponse
-from models import errors, payloads, responses
+import pathlib
+import json
+from models import payloads, responses
 
 from mystbin_models import MystbinRequest
 from utils.ratelimits import limit
+from utils.responses import Response, UJSONResponse
+from utils.router import Router
+from utils import openapi
 
 
-router = APIRouter()
+router = Router()
 
+__p = pathlib.Path("./config.json")
+if not __p.exists():
+    __p = pathlib.Path("../../config.json")
 
-@router.get(
+with __p.open() as __f:
+    __config = json.load(__f)
+
+desc = f"""Gets the User object of the currently logged in user.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+"""
+
+@router.get("/users/@me")
+@openapi.instance.route(openapi.Route(
     "/users/@me",
-    tags=["users"],
-    response_model=responses.User,
-    responses={
-        200: {"model": responses.User},
-        401: {"model": errors.Unauthorized},
-        403: {"model": errors.Forbidden},
+    "GET",
+    "Get Self",
+    ["users"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi.User),
+        401: openapi.UnauthorizedResponse
     },
-    name="Get current user",
-)
+    description=desc,
+    is_body_required=False
+))
 @limit("self")
 async def get_self(
     request: MystbinRequest,
-) -> UJSONResponse | dict[str, str | int | bool]:
-    """Gets the User object of the currently logged in user.
-    * Requires authentication.
-    """
-
+) -> UJSONResponse | responses.User:
     user = request.state.user
     if not user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    data = responses.User(**user).dict()
-    return UJSONResponse(data)
+    return responses.create_struct(user, responses.User)
 
 
-@router.post(
+desc = f"""Regenerates your token.
+* Required authentication.
+
+This endpoint falls under the `tokengen` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+"""
+
+
+@router.post("/users/regenerate")
+@openapi.instance.route(openapi.Route(
     "/users/regenerate",
-    tags=["users"],
-    response_model=responses.TokenResponse,
-    responses={
-        200: {"model": responses.TokenResponse},
-        401: {"model": errors.Unauthorized},
-        403: {"model": errors.Forbidden},
+    "POST",
+    "Regenerate Token",
+    ["users"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenResponse),
+        401: openapi.UnauthorizedResponse
     },
-    name="Regenerate your token",
-)
+    description=desc,
+    is_body_required=False
+))
 @limit("tokengen")
 async def regen_token(request: MystbinRequest) -> UJSONResponse | dict[str, str]:
-    """Regens the user's token.
-    * Requires authentication.
-    """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -80,46 +104,73 @@ async def regen_token(request: MystbinRequest) -> UJSONResponse | dict[str, str]
     return UJSONResponse({"token": token})
 
 
-@router.put(
+desc = f"""Creates a bookmark on the authorized user's account.
+* Required authentication.
+
+This endpoint falls under the `bookmarks` ratelimit bucket.
+The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
+"""
+
+
+@router.put("/users/bookmarks")
+@openapi.instance.route(openapi.Route(
     "/users/bookmarks",
-    tags=["users"],
-    responses={
-        201: {"description": "Created bookmark"},
-        400: {"model": errors.BadRequest},
-        401: {"model": errors.Unauthorized},
-        403: {"model": errors.Forbidden},
+    "PUT",
+    "Create Bookmark",
+    ["users"],
+    openapi.BookmarkPutDelete,
+    [],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
     },
-)
+    description=desc
+))
 @limit("bookmarks")
-async def create_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPutDelete) -> Response:
-    """Creates a bookmark on the authorized user's account
-    * Requires authentication.
-    """
+async def create_bookmark(request: MystbinRequest) -> Response:
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        _data = await request.body()
+    except:
+        return UJSONResponse({"error": "Bad body"}, status_code=400)
+    
+    bookmark = payloads.create_struct_from_payload(_data, payloads.BookmarkPutDelete)
 
     try:
         await request.app.state.db.create_bookmark(request.state.user["id"], bookmark.paste_id)
-        return Response(status_code=201)
+        return Response(status_code=204)
     except ValueError as e:
         return UJSONResponse({"error": e.args[0]}, status_code=400)
 
 
-@router.delete(
+desc = f"""Deletes a bookmark from the authorized user's account.
+* Required authentication.
+
+This endpoint falls under the `bookmarks` ratelimit bucket.
+The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
+"""
+
+
+@router.delete("/users/bookmarks")
+@openapi.instance.route(openapi.Route(
     "/users/bookmarks",
-    tags=["users"],
-    responses={
-        204: {"description": "Deleted bookmark"},
-        400: {"model": errors.BadRequest},
-        401: {"model": errors.Unauthorized},
-        403: {"model": errors.Forbidden},
+    "DELETE",
+    "Delete Bookmark",
+    ["users"],
+    openapi.BookmarkPutDelete,
+    [],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
     },
-)
+    description=desc
+))
 @limit("bookmarks")
 async def delete_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPutDelete) -> Response:
-    """Deletes a bookmark on the authorized user's account
-    * Requires authentication.
-    """
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -129,17 +180,28 @@ async def delete_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPu
         return Response(status_code=204)
 
 
-@router.get(
+desc = f"""Deletes a bookmark from the authorized user's account.
+* Required authentication.
+
+This endpoint falls under the `bookmarks` ratelimit bucket.
+The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
+"""
+
+
+@router.get("/users/bookmarks")
+@openapi.instance.route(openapi.Route(
     "/users/bookmarks",
-    tags=["users"],
-    response_model=responses.Bookmarks,
-    responses={
-        200: {"model": responses.Bookmarks},
-        400: {"model": errors.BadRequest},
-        401: {"model": errors.Unauthorized},
-        403: {"model": errors.Forbidden},
+    "GET",
+    "Get Bookmarks",
+    ["users"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi.BookmarkResponse),
+        401: openapi.UnauthorizedResponse
     },
-)
+    description=desc
+))
 @limit("bookmarks")
 async def get_bookmarks(request: MystbinRequest):
     """Fetches all of the authorized users bookmarks

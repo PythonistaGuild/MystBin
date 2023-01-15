@@ -32,7 +32,7 @@ from starlette.applications import Starlette
 from starlette.responses import Response
 
 from mystbin_models import MystbinRequest, MystbinState
-from routers import admin, doc, apps, pastes#, user
+from routers import admin, doc, apps, pastes, user
 from utils import cli as _cli, ratelimits
 from utils.db import Database
 
@@ -129,6 +129,7 @@ doc.router.add_to_app(app)
 admin.router.add_to_app(app)
 apps.router.add_to_app(app)
 pastes.router.add_to_app(app)
+user.router.add_to_app(app)
 
 try:
     sentry_dsn = app.config["sentry"]["dsn"]
