@@ -66,7 +66,7 @@ async def get_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "openapi", None)
     if spec is None:
         request.app.state.openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the public useable endpoints", "4", True)
+        "Documentation pertaining to the public useable endpoints", "4.0a", True)
     
     return UJSONResponse(request.app.state.openapi)
 
@@ -75,6 +75,6 @@ async def get_admin_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "admin_openapi", None)
     if spec is None:
         request.app.state.admin_openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the ALL useable endpoints (including admin endpoints)", "4", False)
+        "Documentation pertaining to the ALL useable endpoints (including admin endpoints)", "4.0a", False)
     
     return UJSONResponse(request.app.state.admin_openapi)
