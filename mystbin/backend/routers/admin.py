@@ -24,7 +24,6 @@ import psutil
 from asyncpg import Record
 from utils.responses import Response, UJSONResponse
 from models import responses
-import cattrs
 
 from mystbin_models import MystbinRequest
 from utils.db import _recursive_hook as recursive_hook
