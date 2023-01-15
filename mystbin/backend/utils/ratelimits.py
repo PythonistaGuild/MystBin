@@ -263,7 +263,7 @@ class Limiter:
                 resp.headers.update(headers)
                 resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
-                resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
@@ -292,7 +292,7 @@ class Limiter:
                 resp.headers.update(headers)
                 resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
-                resp = UJSONResponse({"error": e, "location": e}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
