@@ -60,7 +60,6 @@ class MystbinApp(Starlette):
         with open(config) as f:
             self.config: dict[str, dict[str, Any]] = ujson.load(f)
 
-        self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
         self.add_event_handler("startup", func=self.app_startup)
 
     async def cors_middleware(
@@ -83,15 +82,6 @@ class MystbinApp(Starlette):
         resp.headers.update(headers)
         return resp
 
-    async def request_stats(self, request: MystbinRequest, call_next):
-        request.app.state.request_stats["total"] += 1
-
-        if request.url.path != "/admin/stats":
-            request.app.state.request_stats["latest"] = datetime.datetime.utcnow()
-
-        response = await call_next(request)
-        return response
-
     async def app_startup(self) -> None:
         """Async app startup."""
         self.state.db = await Database(self.config).__ainit__()
@@ -112,7 +102,7 @@ class MystbinApp(Starlette):
 
         ratelimits.limiter.startup(self)
         self.middleware("http")(ratelimits.limiter.middleware)
-        self.middleware("http")(self.cors_middleware)
+        self.add_middleware(BaseHTTPMiddleware, dispatch=self.cors_middleware)
 
         nocli = pathlib.Path(".nocli")
         if nocli.exists():
