@@ -19,11 +19,13 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-
-from attrs import define
+from typing import TypeVar, Type
+from msgspec import Struct
+import msgspec
 
 
 __all__ = (
+    "create_struct_from_payload",
     "PasteFile",
     "RichPasteFile",
     "PastePost",
@@ -33,9 +35,12 @@ __all__ = (
     "BookmarkPutDelete",
 )
 
+T = TypeVar("T", bound=Struct)
 
-@define()
-class PasteFile:
+def create_struct_from_payload(data: str | bytes, struct: Type[T]) -> T:
+    return msgspec.json.decode(data, type=struct)
+
+class PasteFile(Struct):
     content: str
     filename: str
 
@@ -43,8 +48,9 @@ class PasteFile:
         schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt"}}
 
 
-@define()
-class RichPasteFile(PasteFile):
+class RichPasteFile(Struct):
+    content: str
+    filename: str
     attachment: str | None
 
     class Config:
@@ -52,9 +58,7 @@ class RichPasteFile(PasteFile):
             "example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}
         }
 
-
-@define()
-class PastePost:
+class PastePost(Struct):
     files: list[PasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
@@ -75,8 +79,7 @@ class PastePost:
         }
 
 
-@define()
-class RichPastePost:
+class RichPastePost(Struct):
     files: list[RichPasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
@@ -94,18 +97,15 @@ class RichPastePost:
         }
 
 
-@define()
-class PastePatch:
+class PastePatch(Struct):
     new_files: list[PasteFile]
     new_expires: datetime.datetime | None = None
     new_password: str | None = None
 
 
-@define()
-class PasteDelete:
+class PasteDelete(Struct):
     pastes: list[str]
 
 
-@define()
-class BookmarkPutDelete:
+class BookmarkPutDelete(Struct):
     paste_id: str

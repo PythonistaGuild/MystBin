@@ -30,7 +30,7 @@ import asyncpg
 from asyncpg import Record
 from starlette.requests import Request
 from starlette.responses import Response
-from models import payloads
+from models import payloads, responses
 
 from . import tokens
 
@@ -183,7 +183,7 @@ class Database:
                 """
                 contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
-                resp["files"] = [{a: b and str(b) for a, b in x.items()} for x in contents]
+                resp["files"] = [responses.create_struct(x, responses.File) for x in contents]  # type: ignore
                 return resp
             else:
                 return None
@@ -289,7 +289,7 @@ class Database:
 
             formatted_resp = dict(resp)
             del formatted_resp["origin_ip"]
-            formatted_resp["files"] = [dict(file) for file in inserted]
+            formatted_resp["files"] = [responses.create_struct(file, responses.File) for file in inserted]
 
             return formatted_resp
 

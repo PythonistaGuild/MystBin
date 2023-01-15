@@ -17,11 +17,12 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
-
-from attrs import define
+from typing import TypeVar, Type
+from msgspec import Struct
 
 
 __all__ = (
+    "create_struct",
     "File",
     "PastePostResponse",
     "PasteGetResponse",
@@ -36,9 +37,15 @@ __all__ = (
     "Bookmarks",
 )
 
+T = TypeVar("T", bound=Struct)
 
-@define()
-class File:
+
+def create_struct(data: dict, struct: Type[T]) -> T:
+    keys = struct.__struct_fields__
+    return struct(**{k: v for k, v in data.items() if k in keys})
+
+
+class File(Struct):
     filename: str
     content: str
     loc: int
@@ -56,8 +63,7 @@ class File:
             }
         }
 
-@define()
-class PastePostResponse:
+class PastePostResponse(Struct):
     created_at: datetime
     files: list[File]
     id: str
@@ -86,8 +92,7 @@ class PastePostResponse:
         }
 
 
-@define
-class PasteGetResponse:
+class PasteGetResponse(Struct):
     id: str
     views: int
     files: list[File]
@@ -118,8 +123,7 @@ class PasteGetResponse:
         }
 
 
-@define()
-class PasteGetAll:
+class PasteGetAll(Struct):
     id: str
     author_id: int
     created_at: datetime
@@ -128,16 +132,13 @@ class PasteGetAll:
     expires: datetime | None = None
 
 
-@define()
-class PasteGetAllResponse:
+class PasteGetAllResponse(Struct):
     pastes: list[PasteGetAll]
 
-@define()
-class TokenResponse:
+class TokenResponse(Struct):
     token: str
 
-@define()
-class User:
+class User(Struct):
     id: int
     username: str
     token: str
@@ -150,8 +151,7 @@ class User:
     subscriber: bool
 
 
-@define()
-class SmallUser:
+class SmallUser(Struct):
     id: int
     username: str
     authorizations: list[str]
@@ -163,26 +163,22 @@ class SmallUser:
     paste_count: int
 
 
-@define()
-class UserCount:
+class UserCount(Struct):
     count: int
 
 
-@define()
-class UserList:
+class UserList(Struct):
     users: list[SmallUser]
     page: int
     page_count: int
 
 
-@define()
-class Bookmark:
+class Bookmark(Struct):
     id: str
     created_at: datetime
     expires: datetime
     views: int
 
 
-@define()
-class Bookmarks:
+class Bookmarks(Struct):
     bookmarks: list[Bookmark]
