@@ -51,7 +51,7 @@ ConnectBody = openapi._Component("ConnectBody", [openapi.ComponentProperty("code
     is_body_required=True,
     exclude_from_default_schema=True
 ))
-async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | UJSONResponse:
+async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate from Discord OAuth."""
     try:
         data = await request.json()
@@ -92,15 +92,15 @@ async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | 
 
     if request.state.user is not None:
         token = await request.app.state.db.update_user(request.state.user["id"], discord_id=userid, emails=email)
-        return {"token": token}
+        return UJSONResponse({"token": token})
 
     elif _id := await request.app.state.db.check_email(email):
         token = await request.app.state.db.update_user(_id, discord_id=userid, emails=email)
-        return {"token": token}
+        return UJSONResponse({"token": token})
 
     else:
         data = await request.app.state.db.new_user(email, username, userid)
-        return {"token": data["token"]}
+        return UJSONResponse({"token": data["token"]})
 
 
 @router.post("/users/connect/google")
@@ -120,7 +120,7 @@ async def auth_from_discord(request: MystbinRequest) -> dict[str, str | None] | 
     exclude_from_default_schema=True
 ))
 @limit("apps")
-async def auth_from_google(request: MystbinRequest) -> dict[str, str] | UJSONResponse:
+async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate from Google OAuth."""
     try:
         data = await request.json()
@@ -189,7 +189,7 @@ async def auth_from_google(request: MystbinRequest) -> dict[str, str] | UJSONRes
     exclude_from_default_schema=True
 ))
 @limit("apps")
-async def auth_from_github(request: MystbinRequest) -> Response | UJSONResponse:
+async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate with GitHub OAuth."""
     try:
         data = await request.json()
