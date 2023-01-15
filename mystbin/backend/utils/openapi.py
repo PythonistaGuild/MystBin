@@ -200,7 +200,7 @@ class RouteParameter:
 
 
 class Route:
-    __slots__ = ("route", "method", "summary", "description", "tags", "request_body", "body_content_type", "is_body_required", "responses", "parameters", "exclude_from_default_schema")
+    __slots__ = ("route", "method", "summary", "description", "tags", "request_body", "body_content_type", "is_body_required", "responses", "deprecated", "parameters", "exclude_from_default_schema")
 
     def __init__(
         self,
@@ -214,7 +214,8 @@ class Route:
         description: str | None = None,
         body_content_type: str = "application/json",
         is_body_required: bool = True,
-        exclude_from_default_schema: bool = False
+        exclude_from_default_schema: bool = False,
+        deprecated: bool = False
     ) -> None:
         self.route = route
         self.method = method
@@ -226,10 +227,12 @@ class Route:
         self.is_body_required = is_body_required
         self.responses = responses
         self.parameters = parameters
-        self.exclude_from_default_schema: bool = exclude_from_default_schema
+        self.exclude_from_default_schema = exclude_from_default_schema
+        self.deprecated = deprecated
     
     def render(self) -> dict:
         resp: dict[str, Any] = {
+            "deprecated": self.deprecated,
             "summary": self.summary,
             "description": self.description,
             "operationId": f"{self.method}_{self.route.strip('/').replace('/', '_')}",
@@ -257,6 +260,13 @@ class Route:
 
 UnauthorizedResponse = Response("Unauthorized", _Component("UnauthorizedComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Unauthorized"}))
 BadRequestResponse = Response("Bad Request", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Bad Request"}))
+NotFoundResponse = Response("Not Found", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Paste Not Found"}))
+
+ValidationErrorResponse = Response("Validation Error", _Component("ValidationErrorComponent", [
+    ComponentProperty("error", "Error", "string"),
+    ComponentProperty("location", "Location", "string", required=True)
+    ],
+    example={"error": "Expected `str`, got `bool`", "location": "$.files[0].content"}))
 
 # mystbin base models
 
@@ -363,6 +373,11 @@ PastePatch = _Component("PastePatch", properties=[
 PasteDelete = _Component("PasteDelete", properties=[
     ComponentArrayProperty("pastes", "Paste IDs", required=True, items={"type": "string"})
 ], example={"pastes": ["ThreeRandomWords"]})
+
+PasteDeleteResponse = Response("Success", _Component("PasteDeleteResponseComponent", [
+    ComponentArrayProperty("succeeded", "Succeeded", True, {"type": "string"}),
+    ComponentArrayProperty("failed", "Failed", True, {"type": "string"})
+], example={"succeded": ["foo"], "failed": ["bar"]}))
 
 BookmarkPutDelete = _Component("BookmarkPutDelete", properties=[
     ComponentProperty("paste_id", "Paste ID", "string", required=True)

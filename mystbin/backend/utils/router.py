@@ -49,5 +49,8 @@ class Router:
     def put(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["PUT"])
     
+    def patch(self, path: str) -> Callable[[T], T]:
+        return self.route(path, ["PATCH"])
+    
     def add_to_app(self, app: MystbinApp) -> None:
         app.router.routes.extend(self._routes)
