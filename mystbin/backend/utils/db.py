@@ -23,6 +23,7 @@ import datetime
 import difflib
 import functools
 import os
+import uuid
 import pathlib
 from typing import Any, Literal, cast
 
@@ -225,6 +226,7 @@ class Database:
         paste_id: str,
         origin_ip: str | None,
         pages: list[payloads.RichPasteFile] | list[payloads.PasteFile],
+        token_id: uuid.UUID | None,
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
@@ -244,6 +246,8 @@ class Database:
             The ID of the author, if present.
         password: Optioanl[:class:`str`]
             The password used to encrypt the paste, if present.
+        token_id: Optional[:class:`uuid.UUID`]
+            The token that created this paste. Used for token analytics.
 
         Returns
         ---------
@@ -254,13 +258,13 @@ class Database:
 
         async with self.pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, expires, password, origin_ip)
-                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5)
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id)
+                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6)
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
             resp: list[asyncpg.Record] = await self._do_query(
-                query, paste_id, author, expires, password, origin_ip, conn=conn
+                query, paste_id, author, expires, password, origin_ip, token_id, conn=conn
             )
 
             resp = resp[0]
@@ -486,9 +490,11 @@ class Database:
             raise ValueError("Expected id or token, not both")
 
         if token:
-            user_id = tokens.get_user_id(token)
-            if not user_id:
+            t = tokens.get_user_id(token)
+            if not t:
                 return 400
+            
+            user_id = t[0]
 
         query = """
                 SELECT * FROM users WHERE id = $1
@@ -503,6 +509,19 @@ class Database:
             return 401
 
         return data
+    
+    async def _create_default_token(self, user_id, token_key, conn: asyncpg.Connection | None = None) -> int:
+        query = """
+                INSERT INTO
+                tokens
+                (user_id, token_name, token_key, is_main)
+                VALUES
+                ($1, 'Default Token', $2, true)
+                RETURNING id
+                """
+        
+        resp = await self._do_query(query, user_id, token_key, conn=conn)
+        return resp[0]["id"]
 
     @wrapped_hook_callback
     async def new_user(
@@ -512,7 +531,7 @@ class Database:
         discord_id: str | None = None,
         github_id: str | None = None,
         google_id: str | None = None,
-    ) -> asyncpg.Record:
+    ) -> tuple[dict, str]:
         """Creates a new User record.
 
         Parameters
@@ -528,30 +547,34 @@ class Database:
 
         Returns
         ---------
-        :class:`asyncpg.Record`
-            The record created for the registering User.
+        :class:`asyncpg.Record`, :class:`str`
+            The record created for the registering User, and the token accompanying it.
         """
 
         userid = int((datetime.datetime.utcnow().timestamp() * 1000) - EPOCH)
-        token = tokens.generate(userid)
+        token_key = uuid.uuid4()
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, $6, false, DEFAULT, false, $7)
+                VALUES ($1, $2, $3, $4, $5, false, DEFAULT, false, $6)
                 RETURNING *;
                 """
 
-        data = await self._do_query(
-            query,
-            userid,
-            token,
-            emails,
-            discord_id and str(discord_id),
-            github_id and str(github_id),
-            google_id and str(google_id) or None,
-            username,
-        )
-        return data[0]
+        async with self.pool.acquire() as conn:
+            data = await self._do_query(
+                query,
+                userid,
+                emails,
+                discord_id and str(discord_id),
+                github_id and str(github_id),
+                google_id and str(google_id) or None,
+                username,
+                conn=conn
+            )
+            token_id = await self._create_default_token(userid, token_key, conn=conn)
+
+            token = tokens.generate(userid, token_key, token_id)
+            return data[0], token
 
     async def update_user(
         self,
@@ -588,7 +611,10 @@ class Database:
                 github_id = COALESCE($2, github_id),
                 google_id = COALESCE($3, google_id)
                 WHERE id = $4
-                RETURNING token, emails;
+                RETURNING
+                    (SELECT tokens.id FROM tokens WHERE tokens.user_id = $4 AND tokens.is_main = true) as token_id,
+                    (SELECT tokens.token_key FROM tokens WHERE tokens.user_id = $4 AND tokens.is_main = true) as token_key,
+                    emails;
                 """
 
         data = await self._do_query(
@@ -601,7 +627,13 @@ class Database:
         if not data:
             return None
 
-        token, _emails = data[0]
+        token_id, token_key, _emails = data[0]
+
+        if not token_id:
+            token_key = uuid.uuid4()
+            token_id = await self._create_default_token(user_id, token_key)
+
+        token = tokens.generate(user_id, token_key, token_id)
 
         if not emails:
             return token
@@ -719,36 +751,30 @@ class Database:
         return len(val) > 0
 
     @wrapped_hook_callback
-    async def regen_token(self, *, userid: int, token: str | None = None) -> str | None:
-        """Generates a new token for the given user id or token.
-        Returns the new token, or None if the user does not exist.
+    async def regen_token(self, *, userid: int, token_id: int) -> str | None:
+        """Generates a new token for the given user id and token id.
+        Returns the new token, or None if the user/token does not exist.
         """
         if not self._pool:
             await self.__ainit__()
 
-        if not userid and not token:
-            raise ValueError("Expected either userid or token argument")
-
         async with self.pool.acquire() as conn:
-            if token:
-                query = """
-                        SELECT id from users WHERE token = $1
-                        """
-                data = await self._do_query(query, token, conn=conn)
-                if not data:
-                    return None
+            new_token_key = uuid.uuid4()
+            new_token = tokens.generate(userid, new_token_key, token_id)
 
-                userid = data[0]["id"]
-
-            new_token = tokens.generate(userid)
             query = """
-                    UPDATE users SET token = $1 WHERE id = $2 RETURNING id
+                    UPDATE tokens
+                    SET
+                    token_key = $1
+                    WHERE id = $2 AND user_id = $3
+                    RETURNING id
                     """
-            data = await self._do_query(query, new_token, userid, conn=conn)
-            if not data:
-                return None
-
-            return new_token
+            
+            resp = await conn.fetchval(query, new_token_key, token_id, userid)
+            if resp:
+                return new_token
+            
+            return None
 
     @wrapped_hook_callback
     async def get_bookmarks(self, userid: int) -> list[dict[str, Any]]:
@@ -789,32 +815,20 @@ class Database:
         return bool(data)
 
     @wrapped_hook_callback
-    async def ensure_authorization(self, token: str) -> bool:
-        """Quick query against a passed token."""
-        if not token:
-            return False
-
-        query = """
-                SELECT id FROM users WHERE token = $1
-                """
-
-        data = await self._do_query(query, token)
-        if not data:
-            return False
-
-        return data[0]["id"]
-
-    @wrapped_hook_callback
-    async def ensure_admin(self, token: str) -> bool:
+    async def ensure_admin(self, token_id: uuid.UUID) -> bool:
         """Quick query against a token to return if admin or not."""
-        if not token:
+        if not token_id:
             return False
 
         query = """
-                SELECT admin FROM users WHERE token = $1
+                SELECT users.admin
+                FROM tokens
+                INNER JOIN users
+                ON users.id = tokens.user_id
+                WHERE token_id = $1
                 """
 
-        data = await self._do_query(query, token)
+        data = await self._do_query(query, token_id)
         if not data:
             return False
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import uuid
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
@@ -37,9 +37,14 @@ class MystbinState(State):
     """Only for db typing."""
 
     db: Database
-    user: _StateUser | None
     session: aiohttp.ClientSession
 
+class RequestState(State):
+    user: _StateUser | None
+    token_key: uuid.UUID | None
+    token_id: int | None
+    user_id: int | None
 
 class MystbinRequest(Request):
     app: MystbinApp
+    state: RequestState

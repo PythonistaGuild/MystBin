@@ -3,7 +3,6 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
-    token TEXT NOT NULL,
     emails TEXT[] NOT NULL DEFAULT '{}',
     discord_id TEXT,
     github_id TEXT,
@@ -14,6 +13,17 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS tokens (
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    token_name VARCHAR(32) NOT NULL,
+    token_description VARCHAR(256),
+    token_key UUID NOT NULL,
+    UNIQUE (user_id, token_name),
+    is_main BOOLEAN NOT NULL DEFAULT FALSE,
+    uses INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS pastes (
     id TEXT PRIMARY KEY,
     author_id BIGINT REFERENCES users(id),
@@ -22,7 +32,8 @@ CREATE TABLE IF NOT EXISTS pastes (
     last_edited TIMESTAMP WITH TIME ZONE,
     password TEXT,
     views INTEGER DEFAULT 0,
-    origin_ip TEXT
+    origin_ip TEXT,
+    token_id INTEGER REFERENCES (tokens.id)
 );
 
 CREATE TABLE IF NOT EXISTS files (

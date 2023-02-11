@@ -67,7 +67,7 @@ async def get_self(
     if not user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    return Response(msgspec.json.encode(responses.create_struct(user, responses.User)))
+    return Response(msgspec.json.encode(responses.create_struct(user, responses.User))) # type: ignore
 
 
 desc = f"""Regenerates your token.
@@ -85,9 +85,12 @@ The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
     "Regenerate Token",
     ["users"],
     None,
-    [],
+    [
+        openapi.RouteParameter("Token ID", "integer", "token_id", True, "query")
+    ],
     {
         200: openapi.Response("Success", openapi.TokenResponse),
+        400: openapi.BadRequestResponse,
         401: openapi.UnauthorizedResponse
     },
     description=desc,
@@ -97,8 +100,13 @@ The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
 async def regen_token(request: MystbinRequest) -> UJSONResponse:
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        token_id = int(request.query_params["token_id"])
+    except:
+        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
 
-    token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"])
+    token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"], token_id=token_id)
     if not token:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 

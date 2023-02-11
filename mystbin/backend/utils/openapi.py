@@ -273,7 +273,6 @@ ValidationErrorResponse = Response("Validation Error", _Component("ValidationErr
 User = _Component("User", properties=[
     ComponentProperty("id", "ID", "integer", required=True),
     ComponentProperty("username", "Username", "string", required=True),
-    ComponentProperty("token", "Token", "string", required=True),
     ComponentProperty("discord_id", "Discord ID", "string", "Linked Account", required=False),
     ComponentProperty("github_id", "Github ID", "string", "Linked Account", required=False),
     ComponentProperty("google_id", "Google ID", "string", "Linked Account", required=False),

@@ -100,7 +100,7 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
 
     else:
         data = await request.app.state.db.new_user(email, username, userid)
-        return UJSONResponse({"token": data["token"]})
+        return UJSONResponse({"token": data[1]})
 
 
 @router.post("/users/connect/google")
@@ -169,7 +169,7 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
 
     else:
         data = await request.app.state.db.new_user(email, username, google_id=userid)
-        return UJSONResponse({"token": data["token"]})
+        return UJSONResponse({"token": data[1]})
 
 
 @router.post("/users/connect/github")
@@ -254,7 +254,7 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
 
     else:
         data = await request.app.state.db.new_user(email, username, github_id=userid)
-        return UJSONResponse({"token": data["token"]})
+        return UJSONResponse({"token": data[1]})
 
 
 @router.delete("/users/connect/{app}")

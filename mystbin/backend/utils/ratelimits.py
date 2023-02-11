@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+import ujson
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from starlette.requests import Request
@@ -168,8 +169,8 @@ class Limiter:
             self.bucket_cls = RedisLimitBucket
 
     async def get_key(self, zone: str, request: MystbinRequest) -> str:
-        zone = await ratelimit_zone_key(zone, request)
-        key = ratelimit_id_key(request)
+        zone = ratelimit_zone_key(zone, request)
+        key = await ratelimit_id_key(request)
         return f"{zone}%{key}"
 
     async def _transform_and_log(self, request: Request, response: Response) -> Response:
@@ -199,7 +200,7 @@ class Limiter:
 
         lims = self._zone_cache.get(zone)
         if not lims:
-            lims = parse_ratelimit(await get_zone(zone, request))
+            lims = parse_ratelimit(get_zone(zone, request))
 
         bucket = self.bucket_cls(self.app, key, lims[0], lims[1])
         self._keys[key] = bucket
@@ -318,7 +319,7 @@ async def _set_redis_ip_key(request: MystbinRequest, key: str, value: str) -> No
     if not redis:
         return
 
-    await redis.set(key, value, ex=120)
+    await redis.set(key, value)
 
 
 async def _get_redis_ip_key(request: MystbinRequest, key: str) -> str | None:
@@ -328,22 +329,42 @@ async def _get_redis_ip_key(request: MystbinRequest, key: str) -> str | None:
 
     bans: bytes | None = await redis.get(key)  # speed up ban checking by redis caching
     return None if bans is None else bans.decode()
-
+    
 
 async def _fetch_user(request: MystbinRequest):
     host = request.headers.get("X-Forwarded-For") or request.client.host # type: ignore
-
     auth = request.headers.get("Authorization", None)
+
+    if auth:
+        uid = tokens.get_user_id(auth.removeprefix("Bearer "))
+
+        if not uid: # invalid token
+            auth = None
+            request.state.user_id = None
+            request.state.token_id = None
+            request.state.token_key = None
+        else:
+            request.state.user_id = uid[0]
+            request.state.token_id = uid[1]
+            request.state.token_key = uid[2]
 
     if request.app.redis:
         bans = await _get_redis_ip_key(request, f"ban-ip-{host}")  # speed up ban checking by redis caching
         if bans:
             raise IPBanned(bans)
         elif bans == "":
-            asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
             if not auth:
                 request.state.user = None
                 return  # quick path: no db requests
+        
+        if auth:
+            user = await _get_redis_ip_key(request, f"token-{request.state.token_key}")
+            if user and user.startswith("BANNED:"):
+                raise IPBanned(user.removeprefix("BANNED:"))
+            
+            elif user is not None:
+                request.state.user = ujson.loads(user)
+                return
 
     if not auth:
         query = "SELECT * FROM bans WHERE ip = $1"
@@ -357,17 +378,25 @@ async def _fetch_user(request: MystbinRequest):
 
         asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
         return
-
+    
     query = """
-            SELECT users.*, bans.ip as _is_ip_banned , bans.userid as _is_user_banned, bans.reason as _ban_reason
-            FROM users
+            SELECT
+                users.*,
+                bans.ip as _is_ip_banned,
+                bans.userid as _is_user_banned,
+                bans.reason as _ban_reason,
+                tokens.token_key as _token_key,
+                tokens.id as _token_id
+            FROM tokens
+            INNER JOIN users
+            ON users.id = tokens.user_id
             FULL OUTER JOIN bans
             ON ip = $2
-            OR userid = users.id
-            WHERE token = $1;
+            OR bans.userid = users.id
+            WHERE tokens.token_key = $1
             """
 
-    user = await request.app.state.db._do_query(query, auth.replace("Bearer ", ""), host)
+    user = await request.app.state.db._do_query(query, request.state.token_key, host)
     if not user:
         return
 
@@ -377,12 +406,20 @@ async def _fetch_user(request: MystbinRequest):
             asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", user["_ban_reason"]))
 
         raise IPBanned(user["_ban_reason"])
+    
+    elif request.app.redis:
+        asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
 
     elif user["_is_user_banned"]:
+        if request.app.redis:
+            asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", f"BANNED:{user['_ban_reason']}"))
+
         raise IPBanned(user["_ban_reason"])
 
+    if request.app.redis:
+        asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(user)))
+    
     request.state.user = user
-
 
 async def _ignores_ratelimits(request: MystbinRequest):
     if request.state.user and request.state.user["admin"]:
@@ -391,7 +428,7 @@ async def _ignores_ratelimits(request: MystbinRequest):
     return False
 
 
-async def ratelimit_zone_key(zone: str, request: MystbinRequest) -> str:
+def ratelimit_zone_key(zone: str, request: MystbinRequest) -> str:
     _zone = zone
     user = request.state.user
 
@@ -401,15 +438,15 @@ async def ratelimit_zone_key(zone: str, request: MystbinRequest) -> str:
     return _zone
 
 
-async def get_zone(zone: str, request: MystbinRequest) -> str:
-    zone = await ratelimit_zone_key(zone, request)
+def get_zone(zone: str, request: MystbinRequest) -> str:
+    zone = ratelimit_zone_key(zone, request)
     try:
         return request.app.config["ratelimits"][zone]
     except:
-        return request.app.config["ratelimits"][zone.replace("authed_", "").replace("premium_", "")]
+        return request.app.config["ratelimits"][zone.removeprefix("authed_").removeprefix("premium_")]
 
 
-def ratelimit_id_key(request: Request) -> str:
+async def ratelimit_id_key(request: Request) -> str:
     auth = request.headers.get("Authorization", None)
     if not auth:
         return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
@@ -418,7 +455,9 @@ def ratelimit_id_key(request: Request) -> str:
     if not userid:  # must be a fake token, so just ignore it and go by ip
         return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
 
-    return str(userid)
+    request.state._userid = userid[0]
+    request.state._token_uuid = userid[1]
+    return str(userid[0])
 
 
 def limit(zone: str | None = None) -> Callable[[Any], Callable[[Any], Any]]:
