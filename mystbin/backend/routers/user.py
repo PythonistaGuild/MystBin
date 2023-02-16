@@ -70,49 +70,6 @@ async def get_self(
     return Response(msgspec.json.encode(responses.create_struct(user, responses.User))) # type: ignore
 
 
-desc = f"""Regenerates your token.
-* Required authentication.
-
-This endpoint falls under the `tokengen` ratelimit bucket.
-The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
-"""
-
-
-@router.post("/users/regenerate")
-@openapi.instance.route(openapi.Route(
-    "/users/regenerate",
-    "POST",
-    "Regenerate Token",
-    ["users"],
-    None,
-    [
-        openapi.RouteParameter("Token ID", "integer", "token_id", True, "query")
-    ],
-    {
-        200: openapi.Response("Success", openapi.TokenResponse),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
-    },
-    description=desc,
-    is_body_required=False
-))
-@limit("tokengen")
-async def regen_token(request: MystbinRequest) -> UJSONResponse:
-    if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-    
-    try:
-        token_id = int(request.query_params["token_id"])
-    except:
-        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
-
-    token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"], token_id=token_id)
-    if not token:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    return UJSONResponse({"token": token})
-
-
 desc = f"""Creates a bookmark on the authorized user's account.
 * Required authentication.
 
@@ -179,9 +136,16 @@ The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
     description=desc
 ))
 @limit("bookmarks")
-async def delete_bookmark(request: MystbinRequest, bookmark: payloads.BookmarkPutDelete) -> Response:
+async def delete_bookmark(request: MystbinRequest) -> Response:
     if not request.state.user:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    payload = await request.body()
+
+    try:
+        bookmark = payloads.create_struct_from_payload(payload, payloads.BookmarkPutDelete)
+    except (msgspec.DecodeError, msgspec.ValidationError) as e:
+        return UJSONResponse({"error": e.args[0]}, status_code=400)
 
     if not await request.app.state.db.delete_bookmark(request.state.user["id"], bookmark.paste_id):
         return UJSONResponse({"error": "Bookmark does not exist"}, status_code=400)
@@ -221,3 +185,178 @@ async def get_bookmarks(request: MystbinRequest) -> Response:
 
     data = await request.app.state.db.get_bookmarks(request.state.user["id"])
     return UJSONResponse({"bookmarks": data})
+
+
+desc = f"""Lists tokens available on your account.
+This does NOT return actual tokens or authentication data, only metadata about tokens you've created.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version added: 4.0
+"""
+
+@router.get("/users/tokens")
+@openapi.instance.route(openapi.Route(
+    "/users/tokens",
+    "GET",
+    "Get Tokens",
+    ["users"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenListResponse),
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("self")
+async def get_tokens(request: MystbinRequest):
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    data = await request.app.state.db.get_tokens(request.state.user["id"])
+    return UJSONResponse(responses.TokenList([responses.TokenListItem(
+        id=x["id"],
+        name=x["token_name"],
+        description=x["token_description"],
+        is_web_token=x["is_main"])
+        for x in data]
+    ))
+
+
+desc = f"""Regenerates a token under your account.
+* Required authentication.
+
+This endpoint falls under the `tokengen` ratelimit bucket.
+The `tokengen` bucket has a ratelimit of {__config['ratelimits']['tokengen']}
+
+Version changed: 4.0
+
+Changed in version 4.0:
+- endpoint moved from /users/regenerate to users/tokens
+- endpoint now has a required token_id query param
+- endpoint changed from POST to PATCH
+"""
+
+@router.patch("/users/tokens")
+@openapi.instance.route(openapi.Route(
+    "/users/tokens",
+    "PATCH",
+    "Regenerate Token",
+    ["users"],
+    None,
+    [
+        openapi.RouteParameter("Token ID", "integer", "token_id", True, "query")
+    ],
+    {
+        200: openapi.Response("Success", openapi.TokenResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("tokengen")
+async def regen_token(request: MystbinRequest) -> UJSONResponse:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        token_id = int(request.query_params["token_id"])
+    except:
+        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+
+    token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"], token_id=token_id)
+    if not token:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    return UJSONResponse({"token": token})
+
+
+desc = f"""Creates a new token under your account.
+* Required authentication.
+
+This endpoint falls under the `tokengen` ratelimit bucket.
+The `tokengen` bucket has a ratelimit of {__config['ratelimits']['tokengen']}
+
+Version added: 4.0
+"""
+
+@router.post("/users/tokens")
+@openapi.instance.route(openapi.Route(
+    "/users/tokens",
+    "POST",
+    "Create Token",
+    ["users"],
+    openapi.TokenPost,
+    [],
+    {
+        200: openapi.Response("Success", openapi.TokenPostResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+))
+@limit("tokengen")
+async def delete_token(request: MystbinRequest) -> UJSONResponse:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        _body = await request.body()
+        data = payloads.create_struct_from_payload(_body, payloads.TokenPost)
+    except (msgspec.DecodeError, msgspec.ValidationError) as e:
+        return UJSONResponse({"error": e.args[0]}, status_code=400)
+    except:
+        return UJSONResponse({"error": "bad body passed"}, status_code=400)
+
+    resp = await request.app.state.db.create_token(request.state.user["id"], data.name, data.description)
+    if resp is None:
+        return UJSONResponse({"error": "Name or description are not within permitted lengths"}, status_code=400)
+    
+    return UJSONResponse({"name": data.name, "id": resp[1], "token": resp[0]})
+
+
+desc = f"""Deletes a token from your account.
+* Required authentication.
+
+This endpoint falls under the `tokengen` ratelimit bucket.
+The `tokengen` bucket has a ratelimit of {__config['ratelimits']['tokengen']}
+
+Version added: 4.0
+"""
+
+@router.delete("/users/tokens")
+@openapi.instance.route(openapi.Route(
+    "/users/tokens",
+    "DELETE",
+    "Delete Token",
+    ["users"],
+    None,
+    [
+        openapi.RouteParameter("Token ID", "integer", "token_id", True, "query")
+    ],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+))
+@limit("tokengen")
+async def new_token(request: MystbinRequest) -> Response:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        token_id = int(request.query_params["token_id"])
+    except:
+        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+
+    if await request.app.state.db.delete_token(request.state.user["id"], token_id=token_id):
+        return Response(status_code=204)
+    
+    return UJSONResponse({"error": "Unauthorized"}, status_code=401)

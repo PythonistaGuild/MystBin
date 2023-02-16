@@ -3,7 +3,7 @@ ALTER TABLE users DROP COLUMN token;
 CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id),
-    token_name VARCHAR(32) NOT NULL,
+    token_name VARCHAR(32) NOT NULL CHECK (LENGTH(token_name) > 2),
     token_description VARCHAR(256),
     token_key UUID NOT NULL,
     UNIQUE (user_id, token_name),

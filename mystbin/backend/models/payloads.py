@@ -109,3 +109,7 @@ class PasteDelete(Struct):
 
 class BookmarkPutDelete(Struct):
     paste_id: str
+
+class TokenPost(Struct):
+    name: str
+    description: str

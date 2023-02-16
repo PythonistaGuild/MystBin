@@ -445,6 +445,25 @@ PasteGetAllResponse = _Component("PasteGetAll", properties=[
 ])
 
 TokenResponse = _Component("TokenResponse", properties=[ComponentProperty("token", "Token", "string", required=True)])
+TokenListResponseTokens = ComponentArrayProperty("tokens", "Tokens", True,
+    _Component("TokenListResponseTokens", [
+        ComponentProperty("id", "Token ID", "integer", required=True),
+        ComponentProperty("name", "Token Name", "string", required=True),
+        ComponentProperty("description", "Token Description", "string", required=True),
+        ComponentProperty("is_web_token", "Is token used on website", "boolean", required=True)
+    ]
+))
+TokenListResponse = _Component("TokenListResponse", properties=[TokenListResponseTokens])
+
+TokenPost = _Component("TokenPost", properties=[
+    ComponentProperty("name", "Name", "string", "3-32", required=True),
+    ComponentProperty("description", "Description", "string", "0-256")
+])
+TokenPostResponse = _Component("TokenPostResponse", properties=[
+    ComponentProperty("name", "Name", "string", required=True),
+    ComponentProperty("id", "ID", "integer", required=True),
+    ComponentProperty("token", "Token", "string", required=True)
+])
 
 Bookmark = _Component("Bookmark", properties=[
     ComponentProperty("id", "Paste ID", "string", required=True),

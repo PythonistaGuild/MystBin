@@ -19,10 +19,14 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any
 from starlette.responses import Response as Response, JSONResponse
 
+import msgspec
 import ujson
 
 class UJSONResponse(JSONResponse):
     def render(self, content: Any) -> bytes:
+        if isinstance(content, msgspec.Struct):
+            return msgspec.json.encode(content)
+        
         return ujson.dumps(
             content,
             ensure_ascii=False

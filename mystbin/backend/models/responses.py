@@ -138,10 +138,27 @@ class PasteGetAllResponse(Struct):
 class TokenResponse(Struct):
     token: str
 
+_tokenlistitem_renamer = {
+    "token_name": "name",
+    "token_description": "description",
+    "is_main": "is_web_token"
+}
+
+def _tokenlistitem_rename_fn(name: str) -> str | None:
+    return _tokenlistitem_renamer.get(name, None)
+
+class TokenListItem(Struct, rename=_tokenlistitem_rename_fn):
+    id: int
+    name: str
+    description: str
+    is_web_token: bool
+
+class TokenList(Struct):
+    tokens: list[TokenListItem]
+
 class User(Struct):
     id: int
     username: str
-    token: str
     emails: list[str]
     discord_id: str | None
     github_id: str | None

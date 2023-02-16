@@ -192,11 +192,12 @@ async def put_pastes(request: MystbinRequest) -> Response:
         author=author,
         password=payload.password,
         origin_ip=respect_dnt(request),
+        token_id=request.state.token_id
     )
 
     paste["notice"] = notice
     response = responses.PastePostResponse(**paste) # type: ignore
-    return Response(msgspec.json.encode(response))
+    return UJSONResponse(response)
 
 
 @router.post("/rich-paste")
@@ -263,6 +264,7 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         author=author,
         password=payload.password,
         origin_ip=respect_dnt(request),
+        token_id=request.state.token_id
     )
 
     paste["notice"] = notice
@@ -558,5 +560,6 @@ async def compat_create_paste(request: MystbinRequest) -> UJSONResponse:
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
         origin_ip=respect_dnt(request),
+        token_id=None
     )
     return UJSONResponse({"key": paste["id"]})

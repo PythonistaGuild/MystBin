@@ -108,7 +108,7 @@ class Database:
         #    await self._pool.execute(schema.read())
         return self
 
-    async def _do_query(self, query: str, *args, conn: asyncpg.Connection | None = None) -> list[Any]:
+    async def _do_query(self, query: str, *args, conn: asyncpg.Connection | None = None) -> list[asyncpg.Record]:
         if self._pool is None:
             await self.__ainit__()
 
@@ -184,7 +184,7 @@ class Database:
                 """
                 contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
-                resp["files"] = [responses.create_struct(x, responses.File) for x in contents]  # type: ignore
+                resp["files"] = [responses.create_struct(x, responses.File) for x in contents]
                 return resp
             else:
                 return None
@@ -226,7 +226,7 @@ class Database:
         paste_id: str,
         origin_ip: str | None,
         pages: list[payloads.RichPasteFile] | list[payloads.PasteFile],
-        token_id: uuid.UUID | None,
+        token_id: int | None,
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
@@ -775,6 +775,52 @@ class Database:
                 return new_token
             
             return None
+    
+    @wrapped_hook_callback
+    async def get_tokens(self, userid: int) -> list[dict]:
+        """
+        Gets token metadata for a user.
+        """
+
+        query = "SELECT id, token_name, token_description, is_main FROM tokens where user_id = $1"
+
+        data = await self._do_query(query, userid)
+        return data
+    
+    @wrapped_hook_callback
+    async def create_token(self, user_id: int, name: str, description: str) -> tuple[str, int] | None:
+        query = """
+                INSERT INTO
+                tokens
+                (user_id, token_name, token_description, token_key, is_main)
+                VALUES
+                ($1, $2, $3, $4, false)
+                RETURNING id
+                """
+        
+        token_key = uuid.uuid4()
+        try:
+            resp = await self._do_query(query, user_id, name, description, token_key)
+        except (asyncpg.CheckViolationError, asyncpg.StringDataRightTruncationError):
+            return None
+
+        token = tokens.generate(user_id, token_key, resp[0]['id'])
+        return token, resp[0]["id"]
+    
+    async def delete_token(self, user_id: int, token_id: int) -> bool:
+        query = """
+                DELETE FROM
+                tokens
+                WHERE
+                id = $1
+                AND
+                user_id = $2
+                RETURNING id
+                """
+        
+        resp = await self._do_query(query, token_id, user_id)
+        return bool(resp)
+
 
     @wrapped_hook_callback
     async def get_bookmarks(self, userid: int) -> list[dict[str, Any]]:
