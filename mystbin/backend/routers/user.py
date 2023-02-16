@@ -42,6 +42,11 @@ desc = f"""Gets the User object of the currently logged in user.
 
 This endpoint falls under the `self` ratelimit bucket.
 The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version changed: 4.0
+
+Changed in version 4.0
+- Removed the `token` attribute from the response payload
 """
 
 @router.get("/users/@me")
