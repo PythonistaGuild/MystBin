@@ -417,7 +417,7 @@ async def _fetch_user(request: MystbinRequest):
         raise IPBanned(user["_ban_reason"])
 
     if request.app.redis:
-        asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(user)))
+        asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(dict(user))))
     
     request.state.user = user
 
