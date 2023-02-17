@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 import time
 import ujson
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
@@ -364,6 +365,7 @@ async def _fetch_user(request: MystbinRequest):
             
             elif user is not None:
                 request.state.user = ujson.loads(user)
+                request.state.user["_token_key"] = uuid.UUID(int=request.state.user["_token_key"])
                 return
 
     if not auth:
@@ -417,7 +419,9 @@ async def _fetch_user(request: MystbinRequest):
         raise IPBanned(user["_ban_reason"])
 
     if request.app.redis:
-        asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(dict(user))))
+        d = dict(user)
+        d["_token_key"] = d["_token_key"].int
+        asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(d)))
     
     request.state.user = user
 
