@@ -206,7 +206,7 @@ class Database:
 
             if resp:
                 query = """
-                SELECT content, syntax FROM files WHERE parent_id = $1 LIMIT 1
+                SELECT content FROM files WHERE parent_id = $1 LIMIT 1
                 """
                 contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 ret = {
@@ -262,6 +262,48 @@ class Database:
 
             resp = await self._do_query(query, token_id, conn=conn)
             return [responses.PasteGetAll(**record) for record in resp]
+    
+    @wrapped_hook_callback
+    async def get_raw_paste_info(self, paste_id: str, password: str | None) -> dict[str, Any] | None:
+        query = """
+                SELECT
+                    filename,
+                    charcount,
+                    content,
+                    pastes.author_id,
+                    pastes.created_at,
+                    pastes.views,
+                    CASE WHEN pastes.password IS NOT NULL THEN true
+                    ELSE false END AS has_password,
+                    CASE WHEN pastes.password = CRYPT($2, password) THEN true
+                    ELSE false END AS password_ok
+                FROM files
+                INNER JOIN pastes
+                ON pastes.id = files.parent_id
+                WHERE
+                    parent_id = $1
+                ORDER BY
+                    index
+        """
+        resp = await self._do_query(query, paste_id, password)
+        if not resp:
+            return None
+
+        r0 = resp[0]
+        return {
+            "views": r0["views"],
+            "created_at": r0["created_at"],
+            "author_id": r0["author_id"],
+            "has_password": r0["has_password"],
+            "password_ok": r0["password_ok"],
+            "files": [{
+                "filename": x["filename"],
+                "content": x["content"],
+                "charcount": x["charcount"],
+                "n": i}
+            for i, x in enumerate(resp)]
+        }
+
 
     @wrapped_hook_callback
     async def put_paste(

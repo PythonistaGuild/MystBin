@@ -524,6 +524,100 @@ async def delete_pastes(request: MystbinRequest) -> UJSONResponse:
 
 
 desc = f"""
+Fetches a raw paste overview.
+
+This endpoint falls under the `getpaste` ratelimit bucket.
+The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
+"""
+
+@router.get("/raw/{paste_id}")
+@openapi.instance.route(openapi.Route(
+    "/raw/{paste_id}",
+    "GET",
+    "Get raw overview",
+    ["pastes"],
+    None,
+    [
+        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
+        openapi.RouteParameter("Password", "string", "password", False, "query")
+    ],
+    {
+        200: openapi.Response("Success", None, "text/plain"),
+        401: openapi.Response("Unauthorized", None, "text/plain")
+    },
+    description=desc
+))
+@limit("getpaste")
+async def get_raw_paste_overview(request: MystbinRequest) -> Response:
+    paste_id = request.path_params["paste_id"]
+    password: str | None = request.query_params.get("password")
+
+    paste = await request.app.state.db.get_raw_paste_info(paste_id, password)
+    if paste is None:
+        return Response("Not Found", status_code=404)
+
+    if paste["has_password"] and not paste["password_ok"]:
+        return Response("Password: failed", status_code=401)
+    
+    files = [f"File-Index: {f['n']}\nFile-Name: {f['filename']}\nFile-Chars: {f['charcount']}\n\n" for f in paste["files"]]
+
+    response = f"""Password: {'OK' if paste['has_password'] else 'NA'}
+Paste-Id: {paste_id}
+Paste-Author: {paste['author_id']}
+Paste-Created-At: {paste['created_at']}
+Paste-Views: {paste['views']}
+
+{''.join(files)}"""
+
+    return Response(response)
+
+
+desc = f"""
+Fetches raw paste text.
+
+This endpoint falls under the `getpaste` ratelimit bucket.
+The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
+"""
+
+@router.get("/raw/{paste_id}/{file_index:int}")
+@openapi.instance.route(openapi.Route(
+    "/raw/{paste_id}/{file_index}",
+    "GET",
+    "Get raw content",
+    ["pastes"],
+    None,
+    [
+        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
+        openapi.RouteParameter("File Index (0-indexed)", "integer", "file_index", True, "path"),
+        openapi.RouteParameter("Password", "string", "password", False, "query")
+    ],
+    {
+        200: openapi.Response("Success", None, "text/plain"),
+        401: openapi.Response("Unauthorized", None, "text/plain")
+    },
+    description=desc
+))
+@limit("getpaste")
+async def get_raw_paste_file(request: MystbinRequest) -> Response:
+    paste_id = request.path_params["paste_id"]
+    file_index = int(request.path_params["file_index"])
+    
+    password: str | None = request.query_params.get("password")
+
+    paste = await request.app.state.db.get_raw_paste_info(paste_id, password)
+    if paste is None:
+        return Response("Not Found", status_code=404)
+
+    if paste["has_password"] and not paste["password_ok"]:
+        return Response("Password: failed", status_code=401)
+    
+    try:
+        return Response(paste["files"][file_index]["content"])
+    except IndexError:
+        return Response("File index not found", status_code=404)
+
+
+desc = f"""
 A compatibility endpoint to maintain hastbin compatibility. Simply pass the paste body as the request body.
 Depreciated in favour of /paste.
 This endpoint does not allow for syntax highlighting, multi-file, password protection, expiry, etc. Use the /paste endpoint for these features
