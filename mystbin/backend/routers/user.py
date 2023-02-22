@@ -241,7 +241,7 @@ The `tokengen` bucket has a ratelimit of {__config['ratelimits']['tokengen']}
 Version changed: 4.0
 
 Changed in version 4.0:
-- endpoint moved from /users/regenerate to users/tokens
+- endpoint moved from /users/regenerate to /users/tokens
 - endpoint now has a required token_id query param
 - endpoint changed from POST to PATCH
 """
@@ -365,3 +365,47 @@ async def new_token(request: MystbinRequest) -> Response:
         return Response(status_code=204)
     
     return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+desc = f"""Gets all pastes associated with a token.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version added: 4.0
+"""
+
+@router.get("/users/@token")
+@openapi.instance.route(openapi.Route(
+    "/users/@token",
+    "GET",
+    "Get Token Pastes",
+    ["users", "pastes"],
+    None,
+    [
+        openapi.RouteParameter("Token ID", "integer", "token_id", True, "query")
+    ],
+    {
+        200: openapi.Response("Success", openapi.PasteGetAllResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse,
+        403: openapi.ForbiddenResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("getpaste")
+async def get_pastes_for_token(request: MystbinRequest) -> UJSONResponse:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        token_id = int(request.query_params["token_id"])
+    except:
+        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+    
+    pastes = await request.app.state.db.get_token_pastes(request.state.user["id"], token_id)
+    if pastes is None:
+        return UJSONResponse({"error": "Token ID was not created by the requesting user"}, status_code=403)
+    
+    return UJSONResponse(responses.PasteGetAllResponse(pastes=pastes))

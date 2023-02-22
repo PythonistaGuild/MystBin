@@ -259,6 +259,7 @@ class Route:
         return resp
 
 UnauthorizedResponse = Response("Unauthorized", _Component("UnauthorizedComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Unauthorized"}))
+ForbiddenResponse = Response("Forbidden", _Component("ForbiddenComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Forbidden"}))
 BadRequestResponse = Response("Bad Request", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Bad Request"}))
 NotFoundResponse = Response("Not Found", _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Paste Not Found"}))
 

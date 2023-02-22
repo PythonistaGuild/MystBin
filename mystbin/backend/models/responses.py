@@ -127,6 +127,7 @@ class PasteGetAll(Struct):
     id: str
     author_id: int
     created_at: datetime
+    edited_at: datetime
     views: int
     has_password: bool
     expires: datetime | None = None

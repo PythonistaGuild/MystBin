@@ -218,6 +218,50 @@ class Database:
                 return ret
             else:
                 return None
+    
+    @wrapped_hook_callback
+    async def get_token_pastes(self, user_id: int | None, token_id: int, verify_user: bool = True) -> list[responses.PasteGetAll] | None:
+        """Fetches all pastes that are generated with a specific token.
+        If verify_user is True, the user_id must match the user that generated the token.
+        
+        Parameters
+        -----------
+        user_id: class:`int` | None
+            The user that is making the request
+        token_id: :class:`int`
+            The token to fetch pastes for
+        verify_user: :class:`bool` = True
+            Whether to verify if the user_id matches that of the token_id
+        
+        Returns
+        --------
+        list[PasteGetAll] | None
+        """
+        if not self._pool:
+            await self.__ainit__()
+        
+        async with self.pool.acquire() as conn:
+            if verify_user:
+                query = "SELECT 1 FROM tokens WHERE id = $1 AND user_id = $2"
+                if not await conn.fetchval(query, token_id, user_id):
+                    return None
+            
+            query = """
+                    SELECT
+                        id,
+                        author_id,
+                        created_at,
+                        last_edited AS edited_at,
+                        (SELECT password IS NOT NULL) AS has_password,
+                        expires,
+                        views
+                    FROM pastes
+                    WHERE
+                        token_id = $1
+                    """
+
+            resp = await self._do_query(query, token_id, conn=conn)
+            return [responses.PasteGetAll(**record) for record in resp]
 
     @wrapped_hook_callback
     async def put_paste(
