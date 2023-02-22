@@ -31,6 +31,13 @@ The API docs are available at [api.mystb.in/docs](https://api.mystb.in/docs).
 The ratelimits are decently strict when not signed in by default, you can elevate those by using an API token.
 To get an API token, log in with any oauth provider and enter the dashboard. Copy your API token into the `Authorization` header.
 
+# Migrating
+If you are migrating from V3 to V4, you'll need to follow the following steps:
+- `git fetch && git checkout <v4 unified branch here>`
+- `psql -d (your db name) -f mystbin/database/migrate_v4.sql`
+
+It is important to note that this will invalidate all tokens.
+
 ### Ratelimits
 The way ratelimits work differs based on whether redis is being used or not.
 If redis is in use, the window method is used, where you have X requests available in a certain timeframe.
