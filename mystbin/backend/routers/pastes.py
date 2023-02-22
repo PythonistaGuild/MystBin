@@ -299,7 +299,7 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     description=desc
 ))
 @limit("getpaste")
-async def get_paste(request: MystbinRequest) -> Response | UJSONResponse:
+async def get_paste(request: MystbinRequest) -> UJSONResponse:
     paste_id: str = request.path_params["paste_id"]
     password: str | None = request.query_params.get("password")
 
@@ -311,7 +311,7 @@ async def get_paste(request: MystbinRequest) -> Response | UJSONResponse:
         return UJSONResponse({"error": "Unauthorized"}, status_code=401)
 
     resp = responses.create_struct(paste, responses.PasteGetResponse)
-    return Response(msgspec.json.encode(resp))
+    return UJSONResponse(resp)
 
 
 desc = f"""Get metadata for all pastes for the user you are signed in as via the Authorization header.
@@ -324,7 +324,7 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 
 @router.get("/pastes/@me")
 @openapi.instance.route(openapi.Route(
-    "/paste/@me",
+    "/pastes/@me",
     "GET",
     "Get User Pastes",
     ["pastes"],
