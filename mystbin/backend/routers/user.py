@@ -409,3 +409,80 @@ async def get_pastes_for_token(request: MystbinRequest) -> UJSONResponse:
         return UJSONResponse({"error": "Token ID was not created by the requesting user"}, status_code=403)
     
     return UJSONResponse(responses.PasteGetAllResponse(pastes=pastes))
+
+
+
+desc = f"""Gets the custom style the user has set.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version added: 4.0
+"""
+
+@router.get("/users/style")
+@openapi.instance.route(openapi.Route(
+    "/users/style",
+    "GET",
+    "Get Custom Styles",
+    ["users"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi.Style),
+        204: openapi.Response("No Style", None),
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("self")
+async def get_user_style(request: MystbinRequest) -> Response | UJSONResponse:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    style = await request.app.state.db.get_user_style(request.state.user["id"])
+    if style is None:
+        return Response(status_code=204)
+    
+    return UJSONResponse(style)
+
+
+desc = f"""Allows the user to set a custom style that will show up on the frontend.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version added: 4.0
+"""
+
+@router.post("/users/style")
+@openapi.instance.route(openapi.Route(
+    "/users/style",
+    "POST",
+    "Set Custom Style",
+    ["users"],
+    openapi.Style,
+    [],
+    {
+        204: openapi.Response("Success", None),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("self")
+async def set_user_style(request: MystbinRequest) -> Response | UJSONResponse:
+    if not request.state.user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:    
+        style = payloads.create_struct_from_payload(await request.body(), responses.Style)
+    except msgspec.DecodeError as e:
+        return UJSONResponse({"error": e.args[0]}, status_code=400)
+    
+    style = await request.app.state.db.set_user_style(request.state.user["id"], style)
+    return Response(status_code=204)

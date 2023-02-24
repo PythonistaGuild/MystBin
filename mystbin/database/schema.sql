@@ -60,6 +60,16 @@ CREATE TABLE IF NOT EXISTS bans (
     reason TEXT
 );
 
+CREATE TABLE styles (
+    userid BIGINT PRIMARY KEY REFERENCES users(id),
+    primary_bg CHAR(6),
+    secondary_bg CHAR(6),
+    primary_font VARCHAR(16),
+    secondary_font VARCHAR(16),
+    accent CHAR(6),
+    prism_theme VARCHAR(16)
+);
+
 CREATE TABLE IF NOT EXISTS logs (
     ip TEXT NOT NULL,
     userid BIGINT REFERENCES users(id),

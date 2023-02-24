@@ -200,3 +200,11 @@ class Bookmark(Struct):
 
 class Bookmarks(Struct):
     bookmarks: list[Bookmark]
+
+class Style(Struct):
+    primary_bg: str
+    secondary_bg: str
+    primary_font: str
+    secondary_font: str
+    accent: str
+    prism_theme: str

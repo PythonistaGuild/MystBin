@@ -907,6 +907,52 @@ class Database:
         resp = await self._do_query(query, token_id, user_id)
         return bool(resp)
 
+    async def get_user_style(self, userid: int) -> responses.Style | None:
+        """
+        Gets the style the user set, or None if they didn't set any
+        """
+        query = """
+                SELECT
+                    primary_bg,
+                    secondary_bg,
+                    primary_font,
+                    secondary_font,
+                    accent,
+                    prism_theme
+                FROM styles
+                WHERE userid = $1
+                """
+
+        data = await self._do_query(query, userid)
+        if data:
+            return responses.Style(**data[0])
+
+    async def set_user_style(self, userid: int, style: responses.Style) -> None:
+        query = """
+                INSERT INTO styles
+                    (userid, primary_bg, secondary_bg, primary_font, secondary_font, accent, prism_theme)
+                VALUES
+                    ($1,$2,$3,$4,$5,$6,$7)
+                ON CONFLICT (userid)
+                DO UPDATE SET
+                    primary_bg = $2,
+                    secondary_bg = $3,
+                    primary_font = $4,
+                    secondary_font = $5,
+                    accent = $6,
+                    prism_theme = $7
+                """
+        
+        await self._do_query(
+            query,
+            userid,
+            style.primary_bg,
+            style.secondary_bg,
+            style.primary_font,
+            style.secondary_font,
+            style.accent,
+            style.prism_theme
+        )
 
     @wrapped_hook_callback
     async def get_bookmarks(self, userid: int) -> list[dict[str, Any]]:

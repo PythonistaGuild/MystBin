@@ -10,5 +10,14 @@ CREATE TABLE tokens (
     is_main BOOLEAN NOT NULL DEFAULT FALSE,
     uses INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE styles (
+    userid BIGINT PRIMARY KEY REFERENCES users(id),
+    primary_bg CHAR(6),
+    secondary_bg CHAR(6),
+    primary_font VARCHAR(16),
+    secondary_font VARCHAR(16),
+    accent CHAR(6),
+    prism_theme VARCHAR(16)
+);
 
 ALTER TABLE pastes ADD COLUMN token_id INTEGER REFERENCES tokens(id);

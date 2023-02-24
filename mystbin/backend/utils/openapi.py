@@ -475,3 +475,12 @@ Bookmark = _Component("Bookmark", properties=[
 BookmarkResponse = _Component("Bookmarks", properties=[
     ComponentArrayProperty("bookmarks", "Bookmarks", True, items=Bookmark)
 ])
+
+Style = _Component("Style", properties=[
+    ComponentProperty("primary_bg", "Primary Background", "string", "hex", True),
+    ComponentProperty("secondary_bg", "Secondary Background", "string", "hex", True),
+    ComponentProperty("primary_font", "Primary Font", "string", required=True),
+    ComponentProperty("secondary_font", "Secondary Font", "string", required=True),
+    ComponentProperty("accent", "Accent", "string", "hex", True),
+    ComponentProperty("prism_theme", "Prism Theme", "string", required=True),
+])
