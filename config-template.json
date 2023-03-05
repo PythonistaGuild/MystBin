@@ -1,4 +1,6 @@
 {
+    "maintenance": false,
+    "_comment_maintenance": "set this to True to tell the fallback that the server is under maintenance, and not randomly down.",
     "database": {
         "dsn": "postgresql://<user>:<password>@<IPAddress>:<Port>/<Database>"
     },
@@ -28,7 +30,8 @@
         "frontend_site": "https://mysite.com",
         "backend_site": "https://api.mysite.com",
         "frontend_port": 4340,
-        "backend_port": 4341
+        "backend_port": 4341,
+        "fallback_port": 4342
     },
     "paste": {
         "character_limit": 300000,
