@@ -33,11 +33,11 @@ async def _router_reload(request: web.Request) -> web.Response: # type: ignore
 
 
 @router.get("/")
-@router.get("/{pth}")
+@router.get("/{pth:.*}")
 @router.post("/")
-@router.post("/{pth}")
+@router.post("/{pth:.*}")
 @router.patch("/")
-@router.patch("/{pth}")
+@router.patch("/{pth:.*}")
 async def fallback_route(request: web.Request) -> web.Response | web.FileResponse:
     if app.config.get("maintenance", False): # type: ignore
         return web.FileResponse("maintenance.html")
