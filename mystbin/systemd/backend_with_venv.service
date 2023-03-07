@@ -1,0 +1,9 @@
+[Unit]
+Description=MystBin BackEnd - Start
+
+[Service]
+WorkingDirectory=/home/mystbin/mystbin/mystbin/backend
+ExecStart=/bin/bash -c '. venv/bin/activate && python3.10 main.py --no-cli'
+
+[Install]
+WantedBy=multi-user.target
