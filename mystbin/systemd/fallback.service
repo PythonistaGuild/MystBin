@@ -1,0 +1,10 @@
+[Unit]
+Description=MystBin Fallback
+
+[Service]
+WorkingDirectory=/home/mystbin/mystbin/mystbin/fallback
+ExecStart=/bin/bash -c '. venv/bin/activate && python fallback.py'
+ExecReload=/bin/curl -X 'POST' http://127.0.0.1:4342/reload
+
+[Install]
+WantedBy=multi-user.target
