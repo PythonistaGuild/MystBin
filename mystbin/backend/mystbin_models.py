@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
 from starlette.requests import Request
+from starlette.websockets import WebSocket
 from starlette.datastructures import State
 
 from utils.db import Database
@@ -46,5 +47,9 @@ class RequestState(State):
     user_id: int | None
 
 class MystbinRequest(Request):
+    app: MystbinApp
+    state: RequestState
+
+class MystbinWebsocket(WebSocket):
     app: MystbinApp
     state: RequestState

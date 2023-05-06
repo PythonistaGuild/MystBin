@@ -19,7 +19,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 from typing import Callable, TypeVar, Literal, Any, TYPE_CHECKING
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
 
 if TYPE_CHECKING:
     from app import MystbinApp
@@ -28,7 +28,7 @@ T = TypeVar("T", bound=Callable[..., Any])
 
 class Router:
     def __init__(self) -> None:
-        self._routes: list[Route] = []
+        self._routes: list[Route | WebSocketRoute] = []
     
     def route(self, path: str, methods: list[Literal["GET", "POST", "PATCH", "DELETE", "PUT"]]) -> Callable[[T], T]:
         def wraps(fn: T) -> T:
@@ -51,6 +51,13 @@ class Router:
     
     def patch(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["PATCH"])
+    
+    def ws(self, path: str) -> Callable[[T], T]:
+        def wraps(fn: T) -> T:
+            self._routes.append(WebSocketRoute(path, fn))
+            return fn
+        
+        return wraps
     
     def add_to_app(self, app: MystbinApp) -> None:
         app.router.routes.extend(self._routes)
