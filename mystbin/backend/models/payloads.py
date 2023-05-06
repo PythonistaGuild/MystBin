@@ -44,57 +44,21 @@ class PasteFile(Struct):
     content: str
     filename: str
 
-    class Config:
-        schema_extra = {"example": {"content": "explosions everywhere", "filename": "kaboom.txt"}}
-
-
 class RichPasteFile(Struct):
     content: str
     filename: str
     attachment: str | None = None
-
-    class Config:
-        schema_extra = {
-            "example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}
-        }
 
 class PastePost(Struct):
     files: list[PasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "expires": "2020-11-16T13:46:49.215Z",
-                "password": None,
-                "files": [
-                    {"content": "import this", "filename": "foo.py"},
-                    {
-                        "filename": "doc.md",
-                        "content": "**do not use this in production**",
-                    },
-                ],
-            }
-        }
-
 
 class RichPastePost(Struct):
     files: list[RichPasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "expires": "2020-11-16T13:46:49.215Z",
-                "password": None,
-                "files": [
-                    {"content": "import this", "filename": "foo.py", "attachment": None},
-                    {"filename": "doc.md", "content": "**do not use this in production**", "attachment": "image2.jpeg"},
-                ],
-            }
-        }
 
 
 class PastePatch(Struct):

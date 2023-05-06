@@ -52,17 +52,6 @@ class File(Struct):
     charcount: int
     attachment: str | None
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "filename": "foo.py",
-                "content": "import datetime\\nprint(datetime.datetime.utcnow())",
-                "loc": 2,
-                "charcount": 49,
-                "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
-            }
-        }
-
 class PastePostResponse(Struct):
     created_at: datetime
     files: list[File]
@@ -70,26 +59,6 @@ class PastePostResponse(Struct):
     notice: str | None = None
     author_id: int | None = None
     expires: datetime | None = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "id": "FlyingHighKites",
-                "author_id": None,
-                "created_at": "2020-11-16T13:46:49.215Z",
-                "expires": None,
-                "files": [
-                    {
-                        "filename": "foo.py",
-                        "content": "import datetime\\nprint(datetime.datetime.utcnow())",
-                        "loc": 2,
-                        "charcount": 49,
-                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
-                    }
-                ],
-                "notice": "Found discord tokens and sent them to https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6 to be invalidated",
-            }
-        }
 
 
 class PasteGetResponse(Struct):
@@ -100,27 +69,6 @@ class PasteGetResponse(Struct):
     created_at: datetime
     expires: datetime | None = None
     last_edited: datetime | None = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "id": "FlyingHighKites",
-                "author_id": None,
-                "created_at": "2020-11-16T13:46:49.215Z",
-                "expires": None,
-                "last_edited": "2020-11-20T0:46:0.215Z",
-                "views": 48,
-                "files": [
-                    {
-                        "filename": "foo.py",
-                        "content": "import datetime\\nprint(datetime.datetime.utcnow())",
-                        "loc": 2,
-                        "charcount": 49,
-                        "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
-                    }
-                ]
-            }
-        }
 
 
 class PasteGetAll(Struct):
