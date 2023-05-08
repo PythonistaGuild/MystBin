@@ -5,7 +5,7 @@
     <br>
     <p>The stable release of this can be found at <a href="https://mystb.in">mystb.in</a></p>
     <br>
-    <p>The unstable version (up to date with the master branch) of this can be found at <a href="https://beta.mystb.in">beta.mystb.in</a></p>
+    <p>The unstable version (up to date with the <strike>master</strike> api-v4 branch) of this can be found at <a href="https://beta.mystb.in">beta.mystb.in</a></p>
     <br>
     <a href="https://www.python.org">
         <img src="https://img.shields.io/badge/Python-3.8%20%7C%203.9-blue.svg" />
