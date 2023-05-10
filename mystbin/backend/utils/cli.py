@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 import aioconsole
 import tabulate
 
+from utils.version import VERSION
+
 
 if TYPE_CHECKING:
     from utils.db import Database
@@ -31,7 +33,7 @@ class CLIHandler:
             usage="",
             add_help=False,
         )
-        self.parser.add_argument("--version", "-v", action="version", version="%(prog)s V3")
+        self.parser.add_argument("--version", "-v", action="version", version=f"%(prog)s Version {VERSION}")
 
         self.subparsers = self.parser.add_subparsers(dest="command")
         self.subparsers.add_parser("help", help="send this menu")
@@ -87,7 +89,6 @@ class CLIHandler:
         except argparse.ArgumentError as e:
             print(e.message)
         else:
-            print(ns)
             if not ns.command:
                 return
 

@@ -20,6 +20,7 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from utils import openapi
 from utils.router import Router
 from utils.responses import Response, UJSONResponse
+from utils.version import VERSION
 from mystbin_models import MystbinRequest
 
 html = """
@@ -66,7 +67,7 @@ async def get_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "openapi", None)
     if spec is None:
         request.app.state.openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the public useable endpoints", "4.0a", True)
+        "Documentation pertaining to the public useable endpoints", VERSION, True)
     
     return UJSONResponse(request.app.state.openapi)
 
@@ -75,6 +76,6 @@ async def get_admin_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "admin_openapi", None)
     if spec is None:
         request.app.state.admin_openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the ALL useable endpoints (including admin endpoints)", "4.0a", False)
+        "Documentation pertaining to the ALL useable endpoints (including admin endpoints)", VERSION, False)
     
     return UJSONResponse(request.app.state.admin_openapi)
