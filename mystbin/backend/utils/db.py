@@ -25,9 +25,10 @@ import functools
 import os
 import uuid
 import pathlib
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, Callable, Awaitable
 
 import asyncpg
+import msgspec
 from asyncpg import Record
 from starlette.requests import Request
 from starlette.responses import Response
@@ -102,8 +103,11 @@ class Database:
     async def __ainit__(self):
         await asyncio.sleep(5)
         self._pool = await asyncpg.create_pool(
-            self._config["dsn"], max_inactive_connection_lifetime=0, max_size=3, min_size=0
+            self._config["dsn"], max_inactive_connection_lifetime=3, max_size=3, min_size=0
         )
+        self._listener_pool = cast(asyncpg.Pool, await asyncpg.create_pool(
+            self._config["dsn"], max_inactive_connection_lifetime=0, max_size=9999, min_size=0
+        ))
         # with open(self._db_schema) as schema:
         #    await self._pool.execute(schema.read())
         return self
@@ -122,6 +126,15 @@ class Database:
         finally:
             if not conn:
                 await self.pool.release(_conn)
+    
+    async def create_listener(self, fn: Callable[[str, str, str, str], Awaitable[None]]) -> asyncpg.Connection:
+        conn: asyncpg.Connection = await self._listener_pool.acquire()
+        await conn.add_listener("paste_requests", fn)
+        return conn
+    
+    async def release_listener(self, conn: asyncpg.Connection, fn: Callable[[str, str, str, str], Awaitable[None]]) -> None:
+        await conn.remove_listener("paste_requests", fn)
+        await self._listener_pool.release(conn)
 
     @wrapped_hook_callback
     async def get_all_pastes(self, page: int, count: int, reverse=False) -> list[dict[str, Any]]:
@@ -551,6 +564,86 @@ class Database:
         response = await self._do_query(query, paste_id, author_id, admin)
 
         return response[0] if response else None
+    
+    async def put_paste_request(self, slug: str, author_id: int, expiry: datetime.datetime) -> str:
+        """Creates a paste request
+
+        Parameters
+        -----------
+        slug: :class:`str`
+            The request slug. Usually 3 random words.
+        author_id: :class:`int`
+            The user who made the request for the paste.
+        
+        Returns
+        --------
+        :class:`datetime.datetime`
+            When this request expires.
+        """
+
+        query = """
+        INSERT INTO
+            requested_pastes
+        VALUES
+            ($1, $2, $3)
+        RETURNING
+            expires_at
+        """
+
+        try:
+            resp = await self._do_query(query, slug, author_id, expiry)
+        except asyncpg.IntegrityConstraintViolationError as e:
+            raise ValueError("slug is taken") from e
+
+        return resp[0]['expires_at'].isoformat()
+    
+    async def get_paste_request(self, slug: str, user_id: int, conn: asyncpg.Connection | None = None) -> datetime.datetime | None:
+        """
+        Determines if a paste request exists.
+
+        Parameters
+        -----------
+        slug: :class:`str`
+            The request slug. Usually 3 random words.
+        user_id: :class:`int`
+            The user who made the request for the paste.
+        
+        Returns
+        --------
+        :class:`datetime.datetime`
+            Returns when the paste expires.
+        """
+
+        query = """
+        SELECT
+            expires_at
+        FROM requested_pastes
+        WHERE
+            requester = $1 AND id = $2
+        """
+
+        resp = await self._do_query(query, user_id, slug, conn=conn)
+        if not resp:
+            return None
+        
+        return resp[0]['expires_at']
+    
+    async def fulfill_paste_request(self, slug: str, user_id: int, paste_slug: str) -> None:
+        if not self._pool:
+            await self.__ainit__()
+        
+        async with cast(asyncpg.Pool, self._pool).acquire() as conn:
+            conn: asyncpg.Connection
+            await conn.execute(
+                "SELECT pg_notify('paste_requests', $1);",
+                msgspec.json.encode({
+                    "slug": slug,
+                    "user_id": user_id,
+                    "paste_slug": paste_slug
+                }).decode()
+                )
+            await conn.execute("DELETE FROM requested_pastes WHERE requester = $1 AND id = $2", user_id, slug)
+        
 
     @wrapped_hook_callback
     async def get_user(self, *, user_id: int | None = None, token: str | None = None) -> asyncpg.Record | int | None:

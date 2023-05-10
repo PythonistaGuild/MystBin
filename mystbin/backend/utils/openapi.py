@@ -338,7 +338,10 @@ UploadPasteFile = _Component("UploadPasteFile", properties=[
 PastePost = _Component("PastePost", properties=[
     ComponentProperty("expires", "Expires", "date-time", required=False),
     ComponentProperty("password", "Password", "string", required=False),
-    ComponentArrayProperty("files", "Files", required=True, items=UploadPasteFile)
+    ComponentArrayProperty("files", "Files", required=True, items=UploadPasteFile),
+    ComponentProperty("requester_id", "Requester ID", "integer", required=False),
+    ComponentProperty("requester_slug", "Requester Slug", "string", required=False),
+
 ], example={
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": None,
@@ -354,7 +357,9 @@ PastePost = _Component("PastePost", properties=[
 RichPastePost = _Component("RichPastePost", properties=[
     ComponentProperty("expires", "Expires", "date-time", required=False),
     ComponentProperty("password", "Password", "string", required=False),
-    ComponentArrayProperty("files", "Files", required=True, items=UploadRichPasteFile)
+    ComponentArrayProperty("files", "Files", required=True, items=UploadRichPasteFile),
+    ComponentProperty("requester_id", "Requester ID", "integer", required=False),
+    ComponentProperty("requester_slug", "Requester Slug", "string", required=False),
 ], example={
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": None,

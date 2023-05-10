@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from starlette.routing import Match
 from utils.responses import Response, UJSONResponse
+from sse_starlette import EventSourceResponse
 import msgspec
 
 from . import tokens
@@ -191,6 +192,10 @@ class Limiter:
 
             resp_.body = body
             response = resp_
+        
+        elif isinstance(response, EventSourceResponse):
+            await self.app.state.db.put_log(request, Response("<SSE EVENT>", status_code=response.status_code))
+            return response
 
         await self.app.state.db.put_log(request, response)
         return response
@@ -336,14 +341,15 @@ async def _fetch_user(request: MystbinRequest):
     host = request.headers.get("X-Forwarded-For") or request.client.host # type: ignore
     auth = request.headers.get("Authorization", None)
 
+    request.state.user_id = None
+    request.state.token_id = None
+    request.state.token_key = None
+
     if auth:
         uid = tokens.get_user_id(auth.removeprefix("Bearer "))
 
         if not uid: # invalid token
             auth = None
-            request.state.user_id = None
-            request.state.token_id = None
-            request.state.token_key = None
         else:
             request.state.user_id = uid[0]
             request.state.token_id = uid[1]

@@ -54,11 +54,17 @@ class PastePost(Struct):
     expires: datetime.datetime | None = None
     password: str | None = None
 
+    requester_id: int | None = None
+    requester_slug: str | None = None
+
 
 class RichPastePost(Struct):
     files: list[RichPasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
+
+    requester_id: int | None = None
+    requester_slug: str | None = None
 
 
 class PastePatch(Struct):

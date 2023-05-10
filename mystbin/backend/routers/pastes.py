@@ -23,15 +23,19 @@ import json
 import pathlib
 import re
 import uuid
+import datetime
 from random import sample
 from typing import Coroutine
 
 from asyncpg import Record
 import msgspec
+import yarl
+from starlette import status as HTTPStatus
 from starlette.datastructures import UploadFile
+from sse_starlette import EventSourceResponse
 
 from models import payloads, responses
-from mystbin_models import MystbinRequest
+from mystbin_models import MystbinRequest, MystbinWebsocket
 from utils.ratelimits import limit
 from utils.responses import UJSONResponse, Response
 from utils.router import Router
@@ -140,6 +144,13 @@ def respect_dnt(request: MystbinRequest):
 
     return None
 
+async def handle_paste_requests(request: MystbinRequest, payload: payloads.RichPastePost | payloads.PastePost, new_paste_id: str) -> str | None:
+    if payload.requester_id is not None and payload.requester_slug is not None:
+        if await request.app.state.db.get_paste_request(payload.requester_slug, payload.requester_id) is not None:
+            await request.app.state.db.fulfill_paste_request(payload.requester_slug, payload.requester_id, new_paste_id)
+        else:
+            return "\nInvalid requester ID/Slug, ignored."
+
 
 desc = f"""Post a paste.
 
@@ -184,9 +195,10 @@ async def put_pastes(request: MystbinRequest) -> Response:
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
     author: int | None = author_["id"] if author_ else None
+    paste_id: str = generate_paste_id()
 
     paste = await request.app.state.db.put_paste(
-        paste_id=generate_paste_id(),
+        paste_id=paste_id,
         pages=payload.files,
         expires=payload.expires,
         author=author,
@@ -194,6 +206,14 @@ async def put_pastes(request: MystbinRequest) -> Response:
         origin_ip=respect_dnt(request),
         token_id=request.state.token_id
     )
+
+
+    _request_notice = await handle_paste_requests(request, payload, paste_id)
+    if _request_notice is not None:
+        if notice is not None:
+            notice += "\n" + _request_notice
+        else:
+            notice = _request_notice
 
     paste["notice"] = notice
     response = responses.PastePostResponse(**paste) # type: ignore
@@ -266,6 +286,13 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         origin_ip=respect_dnt(request),
         token_id=request.state.token_id
     )
+
+    _request_notice = await handle_paste_requests(request, payload, paste_id)
+    if _request_notice is not None:
+        if notice is not None:
+            notice += "\n" + _request_notice
+        else:
+            notice = _request_notice
 
     paste["notice"] = notice
     resp = responses.PastePostResponse(**paste)  # type: ignore
@@ -657,3 +684,169 @@ async def compat_create_paste(request: MystbinRequest) -> UJSONResponse:
         token_id=None
     )
     return UJSONResponse({"key": paste["id"]})
+
+
+### The following handles paste requests
+
+desc = f"""
+Create a paste request.
+This will create a url that can be passed to an end user.
+Additionally, you will receive a websocket URL that will wait for the user to complete the paste, and then will provide you with a paste slug for the created paste.
+
+The generated link expires after 15 minutes.
+
+* Requires authorization
+
+This endpoint falls under the `postpastes` ratelimit bucket.
+The `postpastes` bucket has a ratelimit of {__config['ratelimits']['authed_postpastes']} when signed in
+"""
+
+@router.post("/paste/request")
+@openapi.instance.route(openapi.Route(
+    "/pastes/request",
+    "POST",
+    "Create Request",
+    ["pastes"],
+    None,
+    [],
+    {
+        200: openapi.Response("Success", openapi._Component("PasteRequestSuccessComponent", [
+            openapi.ComponentProperty("edit_url", "Edit URL", "string", required=True),
+            openapi.ComponentProperty("websocket_url", "Websocket URL", "string", required=True),
+            openapi.ComponentProperty("expiry", "Expires At", "string", required=True)
+        ]))
+    },
+    desc,
+    is_body_required=False
+))
+@limit("postpastes")
+async def request_paste(request: MystbinRequest) -> Response:
+    author = request.state.user
+    if not author:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    slug = generate_paste_id(n=2)
+    expiry = None
+
+    for _ in range(3):
+        try:
+            expiry: str | None = await request.app.state.db.put_paste_request(
+                slug,
+                author["id"],
+                datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)
+            )
+            break
+        except ValueError:
+            continue
+    
+    if expiry is None:
+        return UJSONResponse({"error": "Something fucked up. This is a bug"}, status_code=500)
+    
+    edit_url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(f"/request/{author['id']}/{slug}")
+    websocket_url = yarl.URL(request.app.config["site"]["backend_site"]).with_path(f"/request/{author['id']}/{slug}")
+
+    return UJSONResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url), "expires": expiry})
+
+desc = f"""
+Open a websocket that sends an event once the paste request has been fulfilled.
+This websocket will send a HELLO message: `{{"event": "HELLO"}}`, and then will remain silent until the paste has been fulfilled or expired.
+
+If the paste has been fulfilled, you will receive the following payload: `{{"event": "FULFILLED", "url": "{__config['site']['frontend_site']}/SomeRandomPaste"}}`.
+If the paste has timed out, you will receive the following payload: `{{"event": "TIMEOUT"}}`.
+If the user/slug you pass is invalid, you will receive `{{"event": "INVALID"}}` directly after HELLO.
+
+This endpoint falls under the `postpastes` ratelimit bucket.
+The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
+"""
+
+@router.ws("/request/{user_id:int}/{slug:str}")
+@openapi.instance.route(openapi.Route(
+    "/request/@{user_id}/{slug}",
+    "GET",
+    "Request WS",
+    ["pastes"],
+    None,
+    [
+        openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
+        openapi.RouteParameter("Slug", "string", "slug", True, "path")
+    ],
+    {
+        101: openapi.Response("SWITCHING PROTOCOLS", None, "TODO")
+    },
+    desc,
+    is_body_required=False
+    ))
+@limit("getpaste")
+async def request_ws(websocket: MystbinWebsocket):
+    slug = websocket.path_params["slug"]
+    user_id = int(websocket.path_params["user_id"])
+    expiry = await websocket.app.state.db.get_paste_request(slug, user_id)
+
+    await websocket.accept()
+    await websocket.send_json({"event": "HELLO"})
+
+    if not expiry:
+        await websocket.send_json({"event": "INVALID"})
+        await websocket.close(code=HTTPStatus.WS_1000_NORMAL_CLOSURE, reason="Invalid")
+        return
+    
+    event = asyncio.Future[str]()
+
+    async def wait_for_event(_, __, ___, payload: str) -> None:
+        decoded = msgspec.json.decode(payload)
+        if decoded["slug"] == slug and decoded["user_id"] == user_id:
+            event.set_result(decoded["paste_slug"])
+
+    conn = await websocket.app.state.db.create_listener(wait_for_event)
+
+    try:
+        result = await asyncio.wait_for(event, (expiry - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
+    except asyncio.TimeoutError:
+        response = {"event": "TIMEOUT"}
+    else:
+        url = yarl.URL(websocket.app.config["site"]["frontend_site"]).with_path(result)
+        response = {"event": "FULFILLED", "url": str(url)}
+    
+    try:
+        await websocket.send(response)
+        await websocket.close(
+            code=HTTPStatus.WS_1000_NORMAL_CLOSURE,
+            reason="https://media.discordapp.net/attachments/336642776609456130/816774571772477500/1006_socket_disconnected-s.png"
+        ) # we'll see how long until someone notices this
+    except:
+        pass
+    await websocket.app.state.db.release_listener(conn, wait_for_event)
+
+
+@router.get("/request/{user_id:int}/{slug:str}/sse") # this needs some debugging, seems like uvicorn doesnt like it
+@limit("getpaste")
+async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse:
+    slug = request.path_params["slug"]
+    user_id = int(request.path_params["user_id"])
+    expiry = await request.app.state.db.get_paste_request(slug, user_id)
+
+    if expiry is None:
+        return Response(status_code=404)
+    
+    event = asyncio.Future[str]()
+
+    async def wait_for_event(_, __, ___, payload: str) -> None:
+        decoded = msgspec.json.decode(payload)
+        if decoded["slug"] == slug and decoded["user_id"] == user_id:
+            event.set_result(decoded["paste_slug"])
+    
+    async def generate_send_event():
+        try:
+            slug = await asyncio.wait_for(event, timeout=(expiry - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
+        except asyncio.TimeoutError:
+            resp = "TIMEOUT"
+        else:
+            resp = "FULFILLED:" + slug
+        
+        try:
+            yield resp
+        finally:
+            await request.app.state.db.release_listener(conn, wait_for_event)
+
+    conn = await request.app.state.db.create_listener(wait_for_event)
+    return EventSourceResponse(generate_send_event())

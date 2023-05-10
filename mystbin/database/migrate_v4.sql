@@ -21,3 +21,23 @@ CREATE TABLE styles (
 );
 
 ALTER TABLE pastes ADD COLUMN token_id INTEGER REFERENCES tokens(id);
+
+CREATE TABLE requested_pastes (
+    id TEXT,
+    requester BIGINT NOT NULL REFERENCES users(id),
+    PRIMARY KEY (id, requester),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() AT TIME ZONE 'utc') + INTERVAL '15 minutes')
+);
+
+CREATE FUNCTION deleteOldPasteRequests() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM requested_pastes WHERE expires_at < now() AT TIME ZONE 'utc';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER oldRequestPasteExpiry
+    AFTER INSERT OR UPDATE
+    ON requested_pastes
+    FOR STATEMENT
+    EXECUTE PROCEDURE deleteOldPasteRequests();
