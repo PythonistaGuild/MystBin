@@ -31,13 +31,14 @@ from asyncpg import Record
 import msgspec
 import yarl
 from starlette import status as HTTPStatus
+from starlette.requests import Request
 from starlette.datastructures import UploadFile
 from sse_starlette import EventSourceResponse
 
 from models import payloads, responses
 from mystbin_models import MystbinRequest, MystbinWebsocket
 from utils.ratelimits import limit
-from utils.responses import UJSONResponse, Response
+from utils.responses import VariableResponse, Response
 from utils.router import Router
 from utils import openapi
 
@@ -71,35 +72,37 @@ def generate_paste_id(n: int = 3):
     return "".join(word_samples).replace("\n", "")
 
 
-def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile, n=1):
+def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile, request: Request, n=1):
     charlim = app.config["paste"]["character_limit"]
     if len(paste.content) > charlim:
-        return UJSONResponse(
+        return VariableResponse(
             {
                 "error": f"files.{n}.content ({paste.filename}): maximum length per file is {charlim} characters. "
                 f"You are {len(paste.content)-charlim} characters over the limit"
             },
+            request,
             status_code=400,
         )
 
     return None
 
 
-def enforce_multipaste_limit(app, pastes: payloads.PastePost | payloads.RichPastePost):
+def enforce_multipaste_limit(app, pastes: payloads.PastePost | payloads.RichPastePost, request: Request):
     filelim = app.config["paste"]["character_limit"]
     if len(pastes.files) < 1:
-        return UJSONResponse({"error": "files.length: you have not provided any files"}, status_code=400)
+        return VariableResponse({"error": "files.length: you have not provided any files"}, request, status_code=400)
     if len(pastes.files) > filelim:
-        return UJSONResponse(
+        return VariableResponse(
             {
                 "error": f"files.length: maximum file count is {filelim} files. You are "
                 f"{len(pastes.files) - filelim} files over the limit"
             },
+            request,
             status_code=400,
         )
 
     for n, file in enumerate(pastes.files):
-        if err := enforce_paste_limit(app, file, n):
+        if err := enforce_paste_limit(app, file, request, n):
             return err
 
     return None
@@ -181,11 +184,11 @@ async def put_pastes(request: MystbinRequest) -> Response:
     try:
         _data = await request.body()
     except:
-        return UJSONResponse({"error": "Bad body"}, status_code=400)
+        return VariableResponse({"error": "Bad body"}, request, status_code=400)
     
     payload = payloads.create_struct_from_payload(_data, payloads.PastePost)
 
-    if err := enforce_multipaste_limit(request.app, payload):
+    if err := enforce_multipaste_limit(request.app, payload, request):
         return err
 
     notice = None
@@ -215,9 +218,9 @@ async def put_pastes(request: MystbinRequest) -> Response:
         else:
             notice = _request_notice
 
-    paste["notice"] = notice
+    paste["notice"] = notice and notice.strip()
     response = responses.PastePostResponse(**paste) # type: ignore
-    return UJSONResponse(response)
+    return VariableResponse(response, request)
 
 
 @router.post("/rich-paste")
@@ -228,7 +231,7 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
     reads: str | None = form.get("data") # type: ignore
     images: list[UploadFile] | None = form.getlist("images") # type: ignore
     if not reads:
-        return UJSONResponse({"error": "multipart.data: `data` field not given"}, status_code=400)
+        return VariableResponse({"error": "multipart.data: `data` field not given"}, request, status_code=400)
     
     payload = payloads.create_struct_from_payload(reads, payloads.RichPastePost)
 
@@ -248,7 +251,7 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
 
         for index, image in enumerate(images):  # TODO honour config filesize limit
             if not isinstance(image, UploadFile):
-                return UJSONResponse({"error", f"multipart.images.{index}: Expected an image"})
+                return VariableResponse({"error", f"multipart.images.{index}: Expected an image"}, request)
             
             origin = image.filename.split(".")[-1]
             new_name = f"{('%032x' % uuid.uuid4().int)[:8]}-{paste_id}.{origin}"
@@ -260,13 +263,13 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         for n, file in enumerate(payload.files):
             if file.attachment is not None:
                 if file.attachment not in image_idx:
-                    return UJSONResponse({"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"})
+                    return VariableResponse({"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"}, request)
 
                 file.attachment = image_idx[file.attachment]
 
         await asyncio.wait(partials, return_when=asyncio.ALL_COMPLETED)
 
-    if err := enforce_multipaste_limit(request.app, payload):
+    if err := enforce_multipaste_limit(request.app, payload, request):
         return err
 
     notice = None
@@ -326,19 +329,19 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     description=desc
 ))
 @limit("getpaste")
-async def get_paste(request: MystbinRequest) -> UJSONResponse:
+async def get_paste(request: MystbinRequest) -> VariableResponse:
     paste_id: str = request.path_params["paste_id"]
     password: str | None = request.query_params.get("password")
 
     paste = await request.app.state.db.get_paste(paste_id, password)
     if paste is None:
-        return UJSONResponse({"error": "Not Found"}, status_code=404)
+        return VariableResponse({"error": "Not Found"}, request, status_code=404)
 
     if paste["has_password"] and not paste["password_ok"]:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
     resp = responses.create_struct(paste, responses.PasteGetResponse)
-    return UJSONResponse(resp)
+    return VariableResponse(resp, request)
 
 
 desc = f"""Get metadata for all pastes for the user you are signed in as via the Authorization header.
@@ -368,24 +371,24 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
     description=desc
 ))
 @limit("getpaste")
-async def get_all_pastes(request: MystbinRequest) -> UJSONResponse:
+async def get_all_pastes(request: MystbinRequest) -> VariableResponse:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
 
     try:
         limit = int(request.query_params.get("limit", 50))
         page = int(request.query_params.get("page", 1))
     except:
-        return UJSONResponse({"error": "Bad query parameter passed"}, status_code=400)
+        return VariableResponse({"error": "Bad query parameter passed"}, request, status_code=400)
 
     if limit < 1 or page < 1:
-        return UJSONResponse({"error": "limit and page must be greater than 1"}, status_code=400)
+        return VariableResponse({"error": "limit and page must be greater than 1"}, request, status_code=400)
 
     pastes = await request.app.state.db.get_all_user_pastes(user["id"], limit, page)
     pastes = [dict(entry) for entry in pastes]
 
-    return UJSONResponse({"pastes": pastes})
+    return VariableResponse({"pastes": pastes}, request)
 
 
 desc = f"""Edit a paste.
@@ -418,17 +421,17 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     description=desc
 ))
 @limit("postpastes")
-async def edit_paste(request: MystbinRequest) -> UJSONResponse | Response:
+async def edit_paste(request: MystbinRequest) -> VariableResponse | Response:
     author = request.state.user
     if not author:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
     
     paste_id: str = request.path_params["paste_id"]
     
     try:
         _body = await request.body()
     except:
-        return UJSONResponse({"error": "Bad body given"}, status_code=400)
+        return VariableResponse({"error": "Bad body given"}, request, status_code=400)
 
     payload = payloads.create_struct_from_payload(_body, payloads.PastePatch)
 
@@ -440,8 +443,9 @@ async def edit_paste(request: MystbinRequest) -> UJSONResponse | Response:
         files=payload.new_files,
     )
     if paste == 404:
-        return UJSONResponse(
+        return VariableResponse(
             {"error": "Paste was not found or you are not it's author"},
+            request,
             status_code=404,
         )
 
@@ -476,24 +480,24 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     description=desc
 ))
 @limit("deletepaste")
-async def delete_paste(request: MystbinRequest) -> Response | UJSONResponse:
+async def delete_paste(request: MystbinRequest) -> Response | VariableResponse:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, status_code=401)
+        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
 
     paste_id: str = request.path_params["paste_id"]
 
     if not user["admin"]:
         is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
         if not is_owner:
-            return UJSONResponse({"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, status_code=401)
+            return VariableResponse({"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, request, status_code=401)
 
     deleted: Record = await request.app.state.db.delete_paste(paste_id, user["id"], admin=user["admin"])
 
     if deleted:
         return Response(status_code=204)
     else:
-        return UJSONResponse({"error": "Something went wrong"}, status_code=500)
+        return VariableResponse({"error": "Something went wrong"}, request, status_code=500)
 
 
 desc = f"""Deletes pastes.
@@ -523,18 +527,18 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
     description=desc
 ))
 @limit("deletepaste")
-async def delete_pastes(request: MystbinRequest) -> UJSONResponse:
+async def delete_pastes(request: MystbinRequest) -> VariableResponse:
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response
     response = {"succeeded": [], "failed": []}
 
     author: Record = request.state.user
     if not author:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         _body = await request.body()
     except:
-        return UJSONResponse({"error": "Bad body given"}, status_code=400)
+        return VariableResponse({"error": "Bad body given"}, request, status_code=400)
 
     payload = payloads.create_struct_from_payload(_body, payloads.PasteDelete)
 
@@ -547,14 +551,14 @@ async def delete_pastes(request: MystbinRequest) -> UJSONResponse:
     for paste in response["succeeded"]:
         await request.app.state.db.delete_paste(paste, author["id"], admin=False)
 
-    return UJSONResponse(response, status_code=200)
+    return VariableResponse(response, request, status_code=200)
 
 
 desc = f"""
 Fetches a raw paste overview.
 
 This endpoint falls under the `getpaste` ratelimit bucket.
-The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
+The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
 
 @router.get("/raw/{paste_id}")
@@ -603,7 +607,7 @@ desc = f"""
 Fetches raw paste text.
 
 This endpoint falls under the `getpaste` ratelimit bucket.
-The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
+The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
 
 @router.get("/raw/{paste_id}/{file_index:int}")
@@ -671,11 +675,11 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
     deprecated=True
 ))
 @limit("postpastes")
-async def compat_create_paste(request: MystbinRequest) -> UJSONResponse:
+async def compat_create_paste(request: MystbinRequest) -> VariableResponse:
     content = await request.body()
     limit = request.app.config["paste"]["character_limit"]
     if len(content) > limit:
-        return UJSONResponse({"error": f"body: file size exceeds character limit of {limit}"}, status_code=400)
+        return VariableResponse({"error": f"body: file size exceeds character limit of {limit}"}, request, status_code=400)
 
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
@@ -683,7 +687,7 @@ async def compat_create_paste(request: MystbinRequest) -> UJSONResponse:
         origin_ip=respect_dnt(request),
         token_id=None
     )
-    return UJSONResponse({"key": paste["id"]})
+    return VariableResponse({"key": paste["id"]}, request)
 
 
 ### The following handles paste requests
@@ -723,7 +727,7 @@ The `postpastes` bucket has a ratelimit of {__config['ratelimits']['authed_postp
 async def request_paste(request: MystbinRequest) -> Response:
     author = request.state.user
     if not author:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
     slug = generate_paste_id(n=2)
     expiry = None
@@ -740,12 +744,12 @@ async def request_paste(request: MystbinRequest) -> Response:
             continue
     
     if expiry is None:
-        return UJSONResponse({"error": "Something fucked up. This is a bug"}, status_code=500)
+        return VariableResponse({"error": "Something fucked up. This is a bug"}, request, status_code=500)
     
     edit_url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(f"/request/{author['id']}/{slug}")
     websocket_url = yarl.URL(request.app.config["site"]["backend_site"]).with_path(f"/request/{author['id']}/{slug}")
 
-    return UJSONResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url), "expires": expiry})
+    return VariableResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url), "expires": expiry}, request)
 
 desc = f"""
 Open a websocket that sends an event once the paste request has been fulfilled.

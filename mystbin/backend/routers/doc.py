@@ -52,6 +52,15 @@ ReDoc doesn't change outer page styles
 </html>
 """
 
+description = """
+The following are valid values in the `Accept` Header for all endpoints that return application/json in the example.
+- `application/json`
+- `application/yaml`
+- `application/toml`
+
+Note that toml does not have NULL values, so `"NULL"` will be sent to represent them.
+"""
+
 router = Router()
 
 @router.get("/docs")
@@ -67,7 +76,7 @@ async def get_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "openapi", None)
     if spec is None:
         request.app.state.openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the public useable endpoints", VERSION, True)
+        f"Documentation pertaining to the public useable endpoints.\n{description}", VERSION, True)
     
     return UJSONResponse(request.app.state.openapi)
 
@@ -76,6 +85,6 @@ async def get_admin_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "admin_openapi", None)
     if spec is None:
         request.app.state.admin_openapi = openapi.instance.render_spec("Mystbin",
-        "Documentation pertaining to the ALL useable endpoints (including admin endpoints)", VERSION, False)
+        f"Documentation pertaining to the ALL useable endpoints (including admin endpoints)\n{description}", VERSION, False)
     
     return UJSONResponse(request.app.state.admin_openapi)
