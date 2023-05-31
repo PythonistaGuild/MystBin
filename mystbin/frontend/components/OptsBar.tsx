@@ -369,16 +369,6 @@ function OptsButton(obj: {
         <Popover id={`opt-${obj.title}`} className={styles.popoverBody}>
           <PopoverHeader className={styles.popoverHeader} as="h3">
             {obj.title}
-            {obj.hotKey && (
-              <span
-                style={{
-                  float: "right",
-                  color: "rgba(255, 255, 255, .6)",
-                }}
-              >
-                {obj.hotKey}
-              </span>
-            )}
           </PopoverHeader>
           <PopoverBody>
             {obj.content}
