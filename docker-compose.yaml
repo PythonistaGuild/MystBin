@@ -4,7 +4,7 @@ services:
   api:
     build: mystbin/backend
     ports:
-      - 5557:9000/tcp
+      - 127.0.0.1:5557:9000/tcp
     volumes:
       - ./mystbin/database/schema.sql:/etc/schema.sql:ro
       - ./config.json:/usr/src/app/config.json:ro
@@ -16,8 +16,6 @@ services:
 
   database:
     image: postgres:14-alpine
-    ports:
-      - 5558:5432
     container_name: "mystbin-database"
     volumes:
       - postgresdata:/var/lib/postgresql/data/pgdata
@@ -33,7 +31,7 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
     ports:
-      - 5559:3000
+      - 127.0.0.1:5559:3000
     container_name: "mystbin-frontend"
     build: ./mystbin/frontend
     depends_on:
