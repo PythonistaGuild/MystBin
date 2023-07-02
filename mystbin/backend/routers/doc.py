@@ -57,6 +57,7 @@ The following are valid values in the `Accept` Header for all endpoints that ret
 - `application/json`
 - `application/yaml`
 - `application/toml`
+- `application/msgpack`
 
 Note that toml does not have NULL values, so `"NULL"` will be sent to represent them.
 """
