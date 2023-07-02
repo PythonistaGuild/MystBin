@@ -40,6 +40,9 @@ class VariableResponse(Response):
 
     def render(self, content: Any) -> bytes:
         if self.accept_type not in self.encoders:
+            if "*/*" in self.accept_type:
+                return self._encode_json(content)
+            
             return f"'{self.accept_type}' is not a supported encoding. " \
                 f"try one of the following: {', '.join(self.encoders.keys())}".encode() # cant have fstrings and byte strings lol
         
