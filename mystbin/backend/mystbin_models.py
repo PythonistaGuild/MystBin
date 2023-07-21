@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
-from fastapi import Request
-from starlette.datastructures import State
+from fastapi import Request, Response
+from starlette.datastructures import MutableHeaders, State
 
 from utils.db import Database
 
@@ -44,4 +45,15 @@ class MystbinState(State):
 class MystbinRequest(Request):
     @property
     def app(self) -> MystbinApp:
+        ...
+
+
+class MystbinMutableHeaders(MutableHeaders):
+    def update(self, other: Mapping[str, str]) -> None:
+        ...
+
+
+class MystbinResponse(Response):
+    @property
+    def headers(self) -> MystbinMutableHeaders:
         ...

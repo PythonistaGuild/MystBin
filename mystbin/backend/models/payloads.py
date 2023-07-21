@@ -45,7 +45,7 @@ class PasteFile(BaseModel):
 class RichPasteFile(PasteFile):
     attachment: str | None
 
-    class Config:
+    class Config:  # type: ignore # this is technically incorrect but it's how FastAPI works...
         schema_extra = {
             "example": {"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image1.png"}
         }
@@ -73,9 +73,9 @@ class PastePut(BaseModel):
 
 
 class RichPastePost(PastePut):
-    files: list[RichPasteFile]
+    files: list[RichPasteFile]  # type: ignore # this is technically incorrect but it's how FastAPI works...
 
-    class Config:
+    class Config:  # type: ignore # this is technically incorrect but it's how FastAPI works...
         schema_extra = {
             "example": {
                 "expires": "2020-11-16T13:46:49.215Z",

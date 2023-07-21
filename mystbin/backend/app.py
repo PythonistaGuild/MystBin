@@ -26,12 +26,11 @@ import aiohttp
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
-from fastapi.middleware import Middleware
-from redis import asyncio as aioredis  # fuckin lol
+from redis import asyncio as aioredis
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from mystbin_models import MystbinRequest, MystbinState
+from mystbin_models import MystbinRequest, MystbinResponse, MystbinState
 from routers import admin, apps, pastes, user
 from utils import cli as _cli, ratelimits
 from utils.db import Database
@@ -43,7 +42,7 @@ METHODS: tuple[str, ...] = ("DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT")
 class MystbinApp(FastAPI):
     """Subclassed API for Mystbin."""
 
-    redis: aioredis.Redis | None
+    redis: aioredis.Redis | None  # type: ignore # generic redis...?
     cli: _cli.CLIHandler | None = None
     state: MystbinState
 
@@ -56,6 +55,7 @@ class MystbinApp(FastAPI):
             loop=self.loop,
             redoc_url="/docs",
             docs_url=None,
+            on_startup=[self.app_startup],
         )
         self._debug: bool = True if os.getenv("DEBUG") else False
 
@@ -70,12 +70,11 @@ class MystbinApp(FastAPI):
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.cors_middleware)
         self.add_middleware(BaseHTTPMiddleware, dispatch=ratelimits.limiter.middleware)
-        self.add_event_handler("startup", func=self.app_startup)
 
     async def cors_middleware(
         self,
         request: MystbinRequest,
-        call_next: Callable[[MystbinRequest], Coroutine[Any, Any, Response]],
+        call_next: Callable[[MystbinRequest], Coroutine[Any, Any, MystbinResponse]],
     ):
         headers = {
             "Access-Control-Allow-Headers": request.headers.get("Access-Control-Request-Headers", ""),

@@ -77,3 +77,4 @@ exclude = ["**/__pycache__", "**/build", "**/dist"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 pythonVersion = "3.11"
+reportMissingTypeStubs = false  # beyond our control

@@ -255,7 +255,6 @@ async def get_server_stats(request: MystbinRequest) -> UJSONResponse:
 @router.post("/admin/release_hook", tags=["admin"], include_in_schema=False)
 @limit("admin")
 async def release_hook(request: MystbinRequest) -> UJSONResponse | Response:
-
     config = pathlib.Path("config.json")
     if not config.exists():
         config = pathlib.Path("../../config.json")

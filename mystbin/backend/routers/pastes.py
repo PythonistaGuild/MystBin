@@ -221,7 +221,6 @@ async def post_rich_paste(
     data: bytes = File(None, max_length=(__config["paste"]["character_limit"] * __config["paste"]["file_limit"]) + 500),
     images: list[UploadFile] = File(None),
 ) -> UJSONResponse:
-
     reads = data
     try:
         payload = payloads.RichPastePost.parse_raw(reads, content_type="application/json")
