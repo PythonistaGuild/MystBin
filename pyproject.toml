@@ -1,6 +1,65 @@
+[tool.poetry]
+name = "Mystbin"
+version = "3.0.0"
+description = "A user friendly, ergonomic and freakin' cool paste service!"
+authors = ["..."]
+
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/PythonistaGuild/MystBin"
+
+keywords = ["paste"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet",
+    "Typing :: Typed",
+]
+include = ["LICENSE"]
+packages = [
+    { include = "mystbin/backend/" },
+    { include = "mystbin/backend/**/*.py" },
+    { include = "mystbin/backend/py.typed" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiohttp = [
+    { version = "^3.8" },
+    { version = "^3.8", markers = "extra == 'speed'", extras = ["speedups"] }
+]
+asyncpg = "^0.26"
+fastapi = "^0.81"
+prometheus-client = "^0.12"
+psutil = "^5.9"
+pycryptodome = "^3.16"
+pydantic = "^1.10"
+pyjwt = "^2.6"
+sentry-sdk = "^1.11"
+starlette-prometheus = "^0.9"
+typing-extensions = "^4.4"
+ujson = "^5.6"
+uvicorn = {version = "^0.18", extras = ["standard"]}
+yarl = "^1.8"
+aioconsole = "^0.5"
+tabulate = "^0.9"
+python-multipart = "*"
+redis = { version = "^4.4", optional=true }
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+typing_extensions = "*"
+
+[tool.poetry.extras]
+redis = ["redis"]
+
 [tool.black]
 line-length = 125
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
@@ -16,18 +75,5 @@ include = ["mystbin/backend/**/*.py"]
 exclude = ["**/__pycache__", "**/build", "**/dist"]
 
 useLibraryCodeForTypes = true
-typeCheckingMode = "basic"
-pythonVersion = "3.10"
-strictListInference = true
-strictDictionaryInference = true
-strictSetInference = true
-strictParameterNoneValue = true
-reportMissingImports = "error"
-reportUnusedImport = "error"
-reportUnusedClass = "error"
-reportUnusedFunction = "error"
-reportUnusedVariable = "error"
-reportGeneralTypeIssues = "error"
-reportDuplicateImport = "error"
-reportUntypedFunctionDecorator = "error"
-reportUnnecessaryTypeIgnoreComment = "warning"
+typeCheckingMode = "strict"
+pythonVersion = "3.11"

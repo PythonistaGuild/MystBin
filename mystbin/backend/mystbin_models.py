@@ -42,4 +42,6 @@ class MystbinState(State):
 
 
 class MystbinRequest(Request):
-    app: MystbinApp
+    @property
+    def app(self) -> MystbinApp:
+        ...

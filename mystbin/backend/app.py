@@ -26,6 +26,7 @@ import aiohttp
 import sentry_sdk
 import ujson
 from fastapi import FastAPI, Response
+from fastapi.middleware import Middleware
 from redis import asyncio as aioredis  # fuckin lol
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -67,6 +68,8 @@ class MystbinApp(FastAPI):
             self.config: dict[str, dict[str, Any]] = ujson.load(f)
         self.should_close = False
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.request_stats)
+        self.add_middleware(BaseHTTPMiddleware, dispatch=self.cors_middleware)
+        self.add_middleware(BaseHTTPMiddleware, dispatch=ratelimits.limiter.middleware)
         self.add_event_handler("startup", func=self.app_startup)
 
     async def cors_middleware(
@@ -89,7 +92,9 @@ class MystbinApp(FastAPI):
         resp.headers.update(headers)
         return resp
 
-    async def request_stats(self, request: MystbinRequest, call_next):
+    async def request_stats(
+        self, request: MystbinRequest, call_next: Callable[[MystbinRequest], Coroutine[Any, Any, Response]]
+    ):
         request.app.state.request_stats["total"] += 1
 
         if request.url.path != "/admin/stats":
@@ -117,8 +122,6 @@ class MystbinApp(FastAPI):
             self.redis = None
 
         ratelimits.limiter.startup(self)
-        self.middleware("http")(ratelimits.limiter.middleware)
-        self.middleware("http")(self.cors_middleware)
 
         nocli = pathlib.Path(".nocli")
         if nocli.exists():
