@@ -125,3 +125,7 @@ If using the default port, it'd look like `yarn run start --port 4340`.
 
 ## Other things
 This guide does not cover using a reverse proxy, if you need assistance with that, google "reverse proxy nginx tutorial".
+
+### Token signing
+As of v4 tokens are signed and no longer stored in the database. This means that if you have multiple instances of mystbin running, they all need to share the same signing key.
+By default, mystbin will generate a signing key if one is not found. It will save this signing key to `./mystbin/backend/.signing-key`. You must ensure that all instances have the same signing key, using this file.
