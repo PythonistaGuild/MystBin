@@ -70,7 +70,7 @@ class MystbinApp(Starlette):
         headers = {
             "Access-Control-Allow-Headers": request.headers.get("Access-Control-Request-Headers", ""),
             "Access-Control-Allow-Methods": ", ".join(METHODS),
-            "Access-Control-Allow-Origin": self.config["site"]["frontend_site"],
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Max-Age": "600",
             "Vary": "Origin",
         }
