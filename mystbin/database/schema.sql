@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS tokens (
     id SERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id),
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_name VARCHAR(32) NOT NULL CHECK (LENGTH(token_name) > 2),
     token_description VARCHAR(256),
     token_key UUID NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 CREATE TABLE IF NOT EXISTS pastes (
     id TEXT PRIMARY KEY,
-    author_id BIGINT REFERENCES users(id),
+    author_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
     expires TIMESTAMP WITH TIME ZONE,
     last_edited TIMESTAMP WITH TIME ZONE,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS bans (
 );
 
 CREATE TABLE styles (
-    userid BIGINT PRIMARY KEY REFERENCES users(id),
+    userid BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     primary_bg CHAR(6),
     secondary_bg CHAR(6),
     primary_font VARCHAR(16),
@@ -72,7 +72,7 @@ CREATE TABLE styles (
 
 CREATE TABLE IF NOT EXISTS logs (
     ip TEXT NOT NULL,
-    userid BIGINT REFERENCES users(id),
+    userid BIGINT REFERENCES users(id) ON DELETE SET NULL,
     accessed TIMESTAMP,
     cf_ray TEXT,
     cf_country TEXT,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS logs (
 
 CREATE TABLE requested_pastes (
     id TEXT,
-    requester BIGINT NOT NULL REFERENCES users(id),
+    requester BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (id, requester),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() AT TIME ZONE 'utc') + INTERVAL '15 minutes')
 );
@@ -116,3 +116,19 @@ CREATE TRIGGER oldRequestPasteExpiry
     ON requested_pastes
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldPasteRequests();
+
+CREATE OR REPLACE FUNCTION deleteUserAccount(delete_user_id BIGINT, keep_pastes BOOLEAN)
+RETURNS BOOLEAN
+AS $$
+BEGIN
+    IF (keep_pastes IS TRUE) THEN
+        UPDATE pastes SET author_id = NULL WHERE author_id = delete_user_id;
+    ELSE
+        DELETE FROM pastes WHERE author_id = delete_user_id;
+    END IF;
+    
+    UPDATE logs SET userid = NULL WHERE userid = delete_user_id;
+    DELETE FROM users WHERE id = delete_user_id;
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;

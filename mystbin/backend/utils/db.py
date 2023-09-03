@@ -101,7 +101,7 @@ class Database:
         return self._pool
 
     async def __ainit__(self):
-        await asyncio.sleep(5)
+
         self._pool = await asyncpg.create_pool(
             self._config["dsn"], max_inactive_connection_lifetime=3, max_size=3, min_size=0
         )
@@ -1246,20 +1246,36 @@ class Database:
             body = request._body
         except:
             body = None
-
+        
         try:
             resp = str(response.body)
         except AttributeError:
             resp = None
+        
+        user_id: int | None = request.state.user and request.state.user["id"]
+        route = f"{request.method.upper()} {request.url.path}{'?' + request.url.query if request.url.query else ''}"
+
+        if route == "DELETE /users/@me":
+            user_id = None # fix foreign key violation when the account has been deleted
+
         await self._do_query(
             query,
             request.headers.get("X-Forwarded-For", request.client.host if request.client else "IP unknown"),
-            request.state.user and request.state.user["id"],
+            user_id,
             datetime.datetime.utcnow(),
             request.headers.get("CF-RAY"),
             request.headers.get("CF-IPCOUNTRY"),
-            f"{request.method.upper()} {request.url.include_query_params()}",
+            route,
             body,
             response.status_code,
             resp,
         )
+    
+    async def delete_user(self, user_id: int, keep_pastes: bool) -> None:
+        """
+        Deletes a user's account.
+        This simply calls the underlying SQL function created in the schema,
+        refer to the SQL function for implementation details.
+        """
+        query = "SELECT public.deleteUserAccount($1::bigint, $2::boolean) AS pain"
+        await self._do_query(query, user_id, keep_pastes)

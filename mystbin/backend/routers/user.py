@@ -75,6 +75,40 @@ async def get_self(
     return Response(msgspec.json.encode(responses.create_struct(user, responses.User))) # type: ignore
 
 
+desc = f"""Deletes the authorized user's account.
+* Required authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}.
+Not that it matters after deleting your account.
+"""
+
+@router.delete("/users/@me")
+@openapi.instance.route(openapi.Route(
+    "/users/@me",
+    "DELETE",
+    "Delete Self",
+    ["users"],
+    None,
+    [],
+    {
+        204: openapi.Response("Deleted", None),
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("self")
+async def delete_self(request: MystbinRequest) -> Response:
+    user = request.state.user
+    if not user:
+        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    await request.app.state.db.delete_user(user["id"], True) # TODO: do we want to allow deletion of all pastes tied to account?
+    return Response(status_code=204)
+    
+
+
 desc = f"""Creates a bookmark on the authorized user's account.
 * Required authentication.
 
