@@ -83,10 +83,10 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 CREATE TABLE requested_pastes (
-    id TEXT,
+    id TEXT UNIQUE,
     requester BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (id, requester),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() AT TIME ZONE 'utc') + INTERVAL '15 minutes')
+    fulfilled_slug TEXT
 );
 
 CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
@@ -102,20 +102,6 @@ CREATE TRIGGER oldPastesExpiry
     ON pastes
     FOR STATEMENT
     EXECUTE PROCEDURE deleteOldPastes();
-
-CREATE OR REPLACE FUNCTION deleteOldPasteRequests() RETURNS TRIGGER AS $$
-BEGIN
-    DELETE FROM requested_pastes WHERE expires_at < now() AT TIME ZONE 'utc';
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS oldRequestPasteExpiry on public.requested_pastes;
-CREATE TRIGGER oldRequestPasteExpiry
-    AFTER INSERT OR UPDATE
-    ON requested_pastes
-    FOR STATEMENT
-    EXECUTE PROCEDURE deleteOldPasteRequests();
 
 CREATE OR REPLACE FUNCTION deleteUserAccount(delete_user_id BIGINT, keep_pastes BOOLEAN)
 RETURNS BOOLEAN

@@ -35,28 +35,14 @@ CREATE TABLE styles (
     prism_theme VARCHAR(16)
 );
 
-ALTER TABLE users ADD COLUMN deletion_slate TIMESTAMP WITH TIME ZONE;
 ALTER TABLE pastes ADD COLUMN token_id INTEGER REFERENCES tokens(id);
 
 CREATE TABLE requested_pastes (
-    id TEXT,
+    id TEXT UNIQUE,
     requester BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (id, requester),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT ((NOW() AT TIME ZONE 'utc') + INTERVAL '15 minutes')
+    fulfilled_slug TEXT
 );
-
-CREATE FUNCTION deleteOldPasteRequests() RETURNS TRIGGER AS $$
-BEGIN
-    DELETE FROM requested_pastes WHERE expires_at < now() AT TIME ZONE 'utc';
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER oldRequestPasteExpiry
-    AFTER INSERT OR UPDATE
-    ON requested_pastes
-    FOR STATEMENT
-    EXECUTE PROCEDURE deleteOldPasteRequests();
 
 CREATE OR REPLACE FUNCTION deleteUserAccount(delete_user_id INTEGER, keep_pastes BOOLEAN)
 RETURNS BOOLEAN

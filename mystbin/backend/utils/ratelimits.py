@@ -215,6 +215,7 @@ class Limiter:
 
     async def middleware(self, request: MystbinRequest, call_next: _CT) -> Response:
         zone: str | None = None
+        handler: Callable | None = None
         request.state.user = None
 
         try:
@@ -268,7 +269,9 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
-                resp = await self._transform_and_log(request, resp)
+
+                if not getattr(handler, "SSE", None):
+                    resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
                 resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
@@ -297,7 +300,8 @@ class Limiter:
             try:
                 resp = await call_next(request)
                 resp.headers.update(headers)
-                resp = await self._transform_and_log(request, resp)
+                if not getattr(handler, "SSE", None):
+                    resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
                 resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)

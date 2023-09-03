@@ -565,7 +565,7 @@ class Database:
 
         return response[0] if response else None
     
-    async def put_paste_request(self, slug: str, author_id: int, expiry: datetime.datetime) -> str:
+    async def put_paste_request(self, slug: str, author_id: int) -> None:
         """Creates a paste request
 
         Parameters
@@ -575,29 +575,24 @@ class Database:
         author_id: :class:`int`
             The user who made the request for the paste.
         
-        Returns
-        --------
-        :class:`datetime.datetime`
-            When this request expires.
+        Raises
+        -------
+        ValueError: The slug is taken.
         """
 
         query = """
         INSERT INTO
             requested_pastes
         VALUES
-            ($1, $2, $3)
-        RETURNING
-            expires_at
+            ($1, $2)
         """
 
         try:
-            resp = await self._do_query(query, slug, author_id, expiry)
+            await self._do_query(query, slug, author_id)
         except asyncpg.IntegrityConstraintViolationError as e:
             raise ValueError("slug is taken") from e
 
-        return resp[0]['expires_at'].isoformat()
-    
-    async def get_paste_request(self, slug: str, user_id: int, conn: asyncpg.Connection | None = None) -> datetime.datetime | None:
+    async def get_paste_request(self, slug: str, user_id: int, conn: asyncpg.Connection | None = None) -> str | None:
         """
         Determines if a paste request exists.
 
@@ -610,13 +605,14 @@ class Database:
         
         Returns
         --------
-        :class:`datetime.datetime`
-            Returns when the paste expires.
+        :class:`str` | None
+            Returns the new slug, if the request has been fulfilled. Otherwise, returns an empty string. 
+            Returns None if the request does not exist.
         """
 
         query = """
         SELECT
-            expires_at
+            fulfilled_slug
         FROM requested_pastes
         WHERE
             requester = $1 AND id = $2
@@ -626,7 +622,7 @@ class Database:
         if not resp:
             return None
         
-        return resp[0]['expires_at']
+        return resp[0]['fulfilled_slug'] or ""
     
     async def fulfill_paste_request(self, slug: str, user_id: int, paste_slug: str) -> None:
         if not self._pool:
@@ -642,7 +638,7 @@ class Database:
                     "paste_slug": paste_slug
                 }).decode()
                 )
-            await conn.execute("DELETE FROM requested_pastes WHERE requester = $1 AND id = $2", user_id, slug)
+            await conn.execute("UPDATE requested_pastes SET fulfilled_slug = $3 WHERE requester = $1 AND id = $2", user_id, slug, paste_slug)
         
 
     @wrapped_hook_callback

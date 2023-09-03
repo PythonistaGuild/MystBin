@@ -23,7 +23,6 @@ import json
 import pathlib
 import re
 import uuid
-import datetime
 from random import sample
 from typing import Coroutine
 
@@ -716,9 +715,9 @@ The `postpastes` bucket has a ratelimit of {__config['ratelimits']['authed_postp
     {
         200: openapi.Response("Success", openapi._Component("PasteRequestSuccessComponent", [
             openapi.ComponentProperty("edit_url", "Edit URL", "string", required=True),
-            openapi.ComponentProperty("websocket_url", "Websocket URL", "string", required=True),
-            openapi.ComponentProperty("expiry", "Expires At", "string", required=True)
-        ]))
+            openapi.ComponentProperty("websocket_url", "Websocket URL", "string", required=True)
+        ])),
+        401: openapi.UnauthorizedResponse
     },
     desc,
     is_body_required=False
@@ -729,27 +728,27 @@ async def request_paste(request: MystbinRequest) -> Response:
     if not author:
         return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
-    slug = generate_paste_id(n=2)
-    expiry = None
+    slug = generate_paste_id(n=4)
+    success = False
 
     for _ in range(3):
         try:
-            expiry: str | None = await request.app.state.db.put_paste_request(
+            await request.app.state.db.put_paste_request(
                 slug,
-                author["id"],
-                datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)
+                author["id"]
             )
+            success = True
             break
         except ValueError:
             continue
     
-    if expiry is None:
-        return VariableResponse({"error": "Something fucked up. This is a bug"}, request, status_code=500)
+    if not success:
+        return VariableResponse({"error": "Unable to assign a slug. What have you done?"}, request, status_code=500)
     
     edit_url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(f"/request/{author['id']}/{slug}")
     websocket_url = yarl.URL(request.app.config["site"]["backend_site"]).with_path(f"/request/{author['id']}/{slug}")
 
-    return VariableResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url), "expires": expiry}, request)
+    return VariableResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url)}, request)
 
 desc = f"""
 Open a websocket that sends an event once the paste request has been fulfilled.
@@ -784,13 +783,14 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getp
 async def request_ws(websocket: MystbinWebsocket):
     slug = websocket.path_params["slug"]
     user_id = int(websocket.path_params["user_id"])
-    expiry = await websocket.app.state.db.get_paste_request(slug, user_id)
+    fulfilled: str | None = await websocket.app.state.db.get_paste_request(slug, user_id)
 
     await websocket.accept()
     await websocket.send_json({"event": "HELLO"})
 
-    if not expiry:
-        await websocket.send_json({"event": "INVALID"})
+    if fulfilled or fulfilled is None:
+        payload = {"event": "INVALID", "fulfilled": fulfilled}
+        await websocket.send_json(payload)
         await websocket.close(code=HTTPStatus.WS_1000_NORMAL_CLOSURE, reason="Invalid")
         return
     
@@ -803,13 +803,22 @@ async def request_ws(websocket: MystbinWebsocket):
 
     conn = await websocket.app.state.db.create_listener(wait_for_event)
 
-    try:
-        result = await asyncio.wait_for(event, (expiry - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
-    except asyncio.TimeoutError:
-        response = {"event": "TIMEOUT"}
-    else:
-        url = yarl.URL(websocket.app.config["site"]["frontend_site"]).with_path(result)
-        response = {"event": "FULFILLED", "url": str(url)}
+    while True:
+        if websocket.client_state is websocket.client_state.DISCONNECTED: # client disconnected, clean up and exit
+            await websocket.app.state.db.release_listener(conn, wait_for_event)
+            event.cancel()
+            return
+        
+        elif event.done():
+            await websocket.app.state.db.release_listener(conn, wait_for_event)
+            result = event.result()
+            break
+        
+        else:
+            await asyncio.sleep(1)
+    
+    url = yarl.URL(websocket.app.config["site"]["frontend_site"]).with_path(result)
+    response = {"event": "FULFILLED", "url": str(url)}
     
     try:
         await websocket.send(response)
@@ -819,7 +828,6 @@ async def request_ws(websocket: MystbinWebsocket):
         ) # we'll see how long until someone notices this
     except:
         pass
-    await websocket.app.state.db.release_listener(conn, wait_for_event)
 
 
 @router.get("/request/{user_id:int}/{slug:str}/sse") # this needs some debugging, seems like uvicorn doesnt like it
@@ -827,10 +835,12 @@ async def request_ws(websocket: MystbinWebsocket):
 async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse:
     slug = request.path_params["slug"]
     user_id = int(request.path_params["user_id"])
-    expiry = await request.app.state.db.get_paste_request(slug, user_id)
+    fulfilled = await request.app.state.db.get_paste_request(slug, user_id)
 
-    if expiry is None:
+    if fulfilled is None:
         return Response(status_code=404)
+    elif fulfilled:
+        return Response(f"FULFILLED:{fulfilled}", status_code=400)
     
     event = asyncio.Future[str]()
 
@@ -841,11 +851,15 @@ async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse
     
     async def generate_send_event():
         try:
-            slug = await asyncio.wait_for(event, timeout=(expiry - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
-        except asyncio.TimeoutError:
-            resp = "TIMEOUT"
+            slug = await asyncio.wait_for(event, None)
+        except asyncio.CancelledError:
+            await request.app.state.db.release_listener(conn, wait_for_event)
+            return
+        except:
+            resp = "ERROR"
         else:
-            resp = "FULFILLED:" + slug
+            url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(slug)
+            resp = "FULFILLED:" + str(url)
         
         try:
             yield resp
@@ -854,3 +868,6 @@ async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse
 
     conn = await request.app.state.db.create_listener(wait_for_event)
     return EventSourceResponse(generate_send_event())
+
+
+request_sse.SSE = True # SSE endpoints cant have logging applied (response unfurling), so this tells the ratelimiter not to log at all
