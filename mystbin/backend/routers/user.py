@@ -23,7 +23,7 @@ import msgspec
 
 from mystbin_models import MystbinRequest
 from utils.ratelimits import limit
-from utils.responses import Response, UJSONResponse
+from utils.responses import Response, VariableResponse
 from utils.router import Router
 from utils import openapi
 
@@ -38,7 +38,7 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 desc = f"""Gets the User object of the currently logged in user.
-* Required authentication.
+* Requires authentication.
 
 This endpoint falls under the `self` ratelimit bucket.
 The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
@@ -70,9 +70,44 @@ async def get_self(
 ) -> Response:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
-    return Response(msgspec.json.encode(responses.create_struct(user, responses.User))) # type: ignore
+    return VariableResponse(responses.create_struct(user, responses.User), request) # type: ignore
+
+
+desc = f"""Update the User object of the currently logged in user.
+* Requires authentication.
+
+This endpoint falls under the `self` ratelimit bucket.
+The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
+
+Version added: 4.0
+"""
+
+@router.put("/users/@me")
+@openapi.instance.route(openapi.Route(
+    "/users/@me",
+    "PUT",
+    "Update User",
+    ["users"],
+    None,
+    [],
+    {
+        204: openapi.Response("Success", None),
+        401: openapi.UnauthorizedResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("self")
+async def update_self(
+    request: MystbinRequest,
+) -> Response:
+    user = request.state.user
+    if not user:
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
+
+    return VariableResponse(responses.create_struct(user, responses.User), request) # type: ignore
 
 
 desc = f"""Deletes the authorized user's account.
@@ -102,7 +137,7 @@ Not that it matters after deleting your account.
 async def delete_self(request: MystbinRequest) -> Response:
     user = request.state.user
     if not user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
     await request.app.state.db.delete_user(user["id"], True) # TODO: do we want to allow deletion of all pastes tied to account?
     return Response(status_code=204)
@@ -135,12 +170,12 @@ The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
 @limit("bookmarks")
 async def create_bookmark(request: MystbinRequest) -> Response:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         _data = await request.body()
     except:
-        return UJSONResponse({"error": "Bad body"}, status_code=400)
+        return VariableResponse({"error": "Bad body"}, request, status_code=400)
     
     bookmark = payloads.create_struct_from_payload(_data, payloads.BookmarkPutDelete)
 
@@ -148,7 +183,7 @@ async def create_bookmark(request: MystbinRequest) -> Response:
         await request.app.state.db.create_bookmark(request.state.user["id"], bookmark.paste_id)
         return Response(status_code=204)
     except ValueError as e:
-        return UJSONResponse({"error": e.args[0]}, status_code=400)
+        return VariableResponse({"error": e.args[0]}, request, status_code=400)
 
 
 desc = f"""Deletes a bookmark from the authorized user's account.
@@ -177,17 +212,17 @@ The `bookmarks` bucket has a ratelimit of {__config['ratelimits']['bookmarks']}
 @limit("bookmarks")
 async def delete_bookmark(request: MystbinRequest) -> Response:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     payload = await request.body()
 
     try:
         bookmark = payloads.create_struct_from_payload(payload, payloads.BookmarkPutDelete)
     except (msgspec.DecodeError, msgspec.ValidationError) as e:
-        return UJSONResponse({"error": e.args[0]}, status_code=400)
+        return VariableResponse({"error": e.args[0]}, request, status_code=400)
 
     if not await request.app.state.db.delete_bookmark(request.state.user["id"], bookmark.paste_id):
-        return UJSONResponse({"error": "Bookmark does not exist"}, status_code=400)
+        return VariableResponse({"error": "Bookmark does not exist"}, request, status_code=400)
     else:
         return Response(status_code=204)
 
@@ -220,10 +255,10 @@ async def get_bookmarks(request: MystbinRequest) -> Response:
     * Requires authentication
     """
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
     data = await request.app.state.db.get_bookmarks(request.state.user["id"])
-    return UJSONResponse({"bookmarks": data})
+    return VariableResponse({"bookmarks": data}, request)
 
 
 desc = f"""Lists tokens available on your account.
@@ -254,16 +289,16 @@ Version added: 4.0
 @limit("self")
 async def get_tokens(request: MystbinRequest):
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     data = await request.app.state.db.get_tokens(request.state.user["id"])
-    return UJSONResponse(responses.TokenList([responses.TokenListItem(
+    return VariableResponse(responses.TokenList([responses.TokenListItem(
         id=x["id"],
         name=x["token_name"],
         description=x["token_description"],
         is_web_token=x["is_main"])
         for x in data]
-    ))
+    ), request)
 
 
 desc = f"""Regenerates a token under your account.
@@ -299,20 +334,20 @@ Changed in version 4.0:
     is_body_required=False
 ))
 @limit("tokengen")
-async def regen_token(request: MystbinRequest) -> UJSONResponse:
+async def regen_token(request: MystbinRequest) -> VariableResponse:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         token_id = int(request.query_params["token_id"])
     except:
-        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+        return VariableResponse({"error": "bad query parameter 'token_id'"}, request, status_code=400)
 
     token: str | None = await request.app.state.db.regen_token(userid=request.state.user["id"], token_id=token_id)
     if not token:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
-    return UJSONResponse({"token": token})
+    return VariableResponse({"token": token}, request)
 
 
 desc = f"""Creates a new token under your account.
@@ -340,23 +375,23 @@ Version added: 4.0
     description=desc,
 ))
 @limit("tokengen")
-async def delete_token(request: MystbinRequest) -> UJSONResponse:
+async def delete_token(request: MystbinRequest) -> VariableResponse:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         _body = await request.body()
         data = payloads.create_struct_from_payload(_body, payloads.TokenPost)
     except (msgspec.DecodeError, msgspec.ValidationError) as e:
-        return UJSONResponse({"error": e.args[0]}, status_code=400)
+        return VariableResponse({"error": e.args[0]}, request, status_code=400)
     except:
-        return UJSONResponse({"error": "bad body passed"}, status_code=400)
+        return VariableResponse({"error": "bad body passed"}, request, status_code=400)
 
     resp = await request.app.state.db.create_token(request.state.user["id"], data.name, data.description)
     if resp is None:
-        return UJSONResponse({"error": "Name or description are not within permitted lengths"}, status_code=400)
+        return VariableResponse({"error": "Name or description are not within permitted lengths"}, request, status_code=400)
     
-    return UJSONResponse({"name": data.name, "id": resp[1], "token": resp[0]})
+    return VariableResponse({"name": data.name, "id": resp[1], "token": resp[0]}, request)
 
 
 desc = f"""Deletes a token from your account.
@@ -388,17 +423,17 @@ Version added: 4.0
 @limit("tokengen")
 async def new_token(request: MystbinRequest) -> Response:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         token_id = int(request.query_params["token_id"])
     except:
-        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+        return VariableResponse({"error": "bad query parameter 'token_id'"}, request, status_code=400)
 
     if await request.app.state.db.delete_token(request.state.user["id"], token_id=token_id):
         return Response(status_code=204)
     
-    return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+    return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
 desc = f"""Gets all pastes associated with a token.
 * Required authentication.
@@ -428,22 +463,21 @@ Version added: 4.0
     description=desc,
     is_body_required=False
 ))
-@limit("getpaste")
-async def get_pastes_for_token(request: MystbinRequest) -> UJSONResponse:
+@limit("self")
+async def get_pastes_for_token(request: MystbinRequest) -> VariableResponse:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     try:
         token_id = int(request.query_params["token_id"])
     except:
-        return UJSONResponse({"error": "bad query parameter 'token_id'"}, status_code=400)
+        return VariableResponse({"error": "bad query parameter 'token_id'"}, request, status_code=400)
     
     pastes = await request.app.state.db.get_token_pastes(request.state.user["id"], token_id)
     if pastes is None:
-        return UJSONResponse({"error": "Token ID was not created by the requesting user"}, status_code=403)
+        return VariableResponse({"error": "Token ID was not created by the requesting user"}, request, status_code=403)
     
-    return UJSONResponse(responses.PasteGetAllResponse(pastes=pastes))
-
+    return VariableResponse(responses.PasteGetAllResponse(pastes=pastes), request)
 
 
 desc = f"""Gets the custom style the user has set.
@@ -472,15 +506,15 @@ Version added: 4.0
     is_body_required=False
 ))
 @limit("self")
-async def get_user_style(request: MystbinRequest) -> Response | UJSONResponse:
+async def get_user_style(request: MystbinRequest) -> Response | VariableResponse:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
     
     style = await request.app.state.db.get_user_style(request.state.user["id"])
     if style is None:
         return Response(status_code=204)
     
-    return UJSONResponse(style)
+    return VariableResponse(style, request)
 
 
 desc = f"""Allows the user to set a custom style that will show up on the frontend.
@@ -509,14 +543,14 @@ Version added: 4.0
     is_body_required=False
 ))
 @limit("self")
-async def set_user_style(request: MystbinRequest) -> Response | UJSONResponse:
+async def set_user_style(request: MystbinRequest) -> Response | VariableResponse:
     if not request.state.user:
-        return UJSONResponse({"error": "Unauthorized"}, status_code=401)
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
     try:    
         style = payloads.create_struct_from_payload(await request.body(), responses.Style)
     except msgspec.DecodeError as e:
-        return UJSONResponse({"error": e.args[0]}, status_code=400)
+        return VariableResponse({"error": e.args[0]}, request, status_code=400)
     
     style = await request.app.state.db.set_user_style(request.state.user["id"], style)
     return Response(status_code=204)
