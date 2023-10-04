@@ -441,6 +441,7 @@ async def edit_paste(request: MystbinRequest) -> VariableResponse | Response:
         new_expires=payload.new_expires,
         new_password=payload.new_password,
         files=payload.new_files,
+        private=payload.private
     )
     if paste == 404:
         return VariableResponse(

@@ -408,6 +408,7 @@ class Database:
         new_expires: datetime.datetime | None = None,
         new_password: str | None = None,
         files: list[payloads.PasteFile] | None = None,
+        private: bool | None = None
     ) -> Literal[404] | None:
         """Puts the specified paste.
         Parameters
@@ -436,12 +437,13 @@ class Database:
                     UPDATE pastes
                     SET last_edited = NOW() AT TIME ZONE 'UTC',
                     password = (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null),
-                    expires = $4
+                    expires = $4,
+                    private = COALESCE($5, private)
                     WHERE id = $1 AND author_id = $2
                     RETURNING *
                     """
 
-            resp = await self._do_query(query, paste_id, author, new_password, new_expires, conn=conn)
+            resp = await self._do_query(query, paste_id, author, new_password, new_expires, private, conn=conn)
             if not resp:
                 return 404
 

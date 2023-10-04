@@ -72,6 +72,7 @@ class PastePatch(Struct):
     new_files: list[PasteFile]
     new_expires: datetime.datetime | None = None
     new_password: str | None = None
+    private: bool | None = None
 
 
 class PasteDelete(Struct):
