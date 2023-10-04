@@ -53,6 +53,7 @@ class PastePost(Struct):
     files: list[PasteFile]
     expires: datetime.datetime | None = None
     password: str | None = None
+    private: bool = False
 
     requester_id: int | None = None
     requester_slug: str | None = None

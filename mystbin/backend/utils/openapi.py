@@ -341,10 +341,11 @@ PastePost = _Component("PastePost", properties=[
     ComponentArrayProperty("files", "Files", required=True, items=UploadPasteFile),
     ComponentProperty("requester_id", "Requester ID", "integer", required=False),
     ComponentProperty("requester_slug", "Requester Slug", "string", required=False),
-
+    ComponentProperty("private", "Private Paste", "boolean", required=False)
 ], example={
                 "expires": "2020-11-16T13:46:49.215Z",
                 "password": None,
+                "private": False,
                 "files": [
                     {"content": "import this", "filename": "foo.py"},
                     {
@@ -446,7 +447,8 @@ PasteGetAllResponse = _Component("PasteGetAll", properties=[
         ComponentProperty("created_at", "Created At", "date-time", required=True),
         ComponentProperty("views", "Views", "integer", required=True),
         ComponentProperty("has_password", "Has Password", "boolean", required=True),
-        ComponentProperty("expires", "Expires", "date-time", required=False)
+        ComponentProperty("expires", "Expires", "date-time", required=False),
+        ComponentProperty("private", "Private Paste", "boolean", required=True)
     ]))
 ])
 
@@ -460,6 +462,12 @@ TokenListResponseTokens = ComponentArrayProperty("tokens", "Tokens", True,
     ]
 ))
 TokenListResponse = _Component("TokenListResponse", properties=[TokenListResponseTokens])
+
+LoginTokenResponse = TokenResponse = _Component("LoginTokenResponse", properties=[
+    ComponentProperty("token", "Token", "string", required=True),
+    ComponentProperty("needs_handle_modal", "Needs Handle Modal", "boolean", required=True),
+    ComponentProperty("handle", "Current Handle", "string", required=True),
+    ])
 
 TokenPost = _Component("TokenPost", properties=[
     ComponentProperty("name", "Name", "string", "3-32", required=True),

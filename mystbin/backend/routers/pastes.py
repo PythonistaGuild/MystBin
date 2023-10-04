@@ -206,7 +206,8 @@ async def put_pastes(request: MystbinRequest) -> Response:
         author=author,
         password=payload.password,
         origin_ip=respect_dnt(request),
-        token_id=request.state.token_id
+        token_id=request.state.token_id,
+        private=payload.private
     )
 
 

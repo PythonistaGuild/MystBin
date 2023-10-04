@@ -531,12 +531,13 @@ Version added: 4.0
     ["users", "pastes"],
     None,
     [
-        openapi.RouteParameter("User's Handle", "string", "handle", True, "path")
+        openapi.RouteParameter("User's Handle", "string", "handle", True, "path"),
+        openapi.RouteParameter("Page", "integer", "page", True, "query"),
+        openapi.RouteParameter("Show private pastes", "boolean", "private", False, "query")
     ],
     {
         200: openapi.Response("Success", openapi.PasteGetAllResponse),
         400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse,
         403: openapi.ForbiddenResponse
     },
     description=desc,
@@ -544,14 +545,25 @@ Version added: 4.0
 ))
 @limit("getpaste")
 async def get_user_pastes(request: MystbinRequest) -> VariableResponse:
-    if not request.state.user:
-        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
-    
     handle = request.path_params["handle"]
+    try:
+        page = int(request.query_params["page"])
+    except KeyError:
+        page = 1
+    except:
+        return VariableResponse({"error": "Invalid 'page' parameter provided"}, request, status_code=400)
     
-    pastes = await request.app.state.db.get_token_pastes(request.state.user["id"], token_id)
-    if pastes is None:
-        return VariableResponse({"error": "Token ID was not created by the requesting user"}, request, status_code=403)
+    try:
+        private = request.query_params["private"] in ("1", "y", "true", "t", "yes")
+    except KeyError:
+        private = False
+    except:
+        return VariableResponse({"error": "Invalid 'private' parameter provided"}, request, status_code=400)
+    
+    if private and (not request.state.user or request.state.user["handle"] != handle):
+        return VariableResponse({"error": "Cannot fetch another user's private pastes"}, request, status_code=400)
+
+    pastes = await request.app.state.db.get_all_user_pastes(None, 50, page, author_handle=handle, public_only=not private)
     
     return VariableResponse(responses.PasteGetAllResponse(pastes=pastes), request)
 

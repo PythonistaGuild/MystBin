@@ -25,7 +25,8 @@ ALTER TABLE pastes
     ADD CONSTRAINT pastes_author_id_fkey
         FOREIGN KEY (author_id)
         REFERENCES users(id)
-        ON DELETE SET NULL;
+        ON DELETE SET NULL,
+    ADD COLUMN public BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,

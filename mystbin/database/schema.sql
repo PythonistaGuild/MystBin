@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS pastes (
     password TEXT,
     views INTEGER DEFAULT 0,
     origin_ip TEXT,
-    token_id INTEGER REFERENCES tokens(id)
+    token_id INTEGER REFERENCES tokens(id),
+    public BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS files (

@@ -329,6 +329,7 @@ class Database:
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
+        private: bool = False
     ) -> dict[str, str | int | None | list[dict[str, str | int]]]:
         """Puts the specified paste.
         Parameters
@@ -347,6 +348,8 @@ class Database:
             The password used to encrypt the paste, if present.
         token_id: Optional[:class:`uuid.UUID`]
             The token that created this paste. Used for token analytics.
+        private: :class:`bool`
+            Is this paste private? defaults to False.
 
         Returns
         ---------
@@ -357,13 +360,13 @@ class Database:
 
         async with self.pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id)
-                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6)
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, private)
+                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7)
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
             resp: list[asyncpg.Record] = await self._do_query(
-                query, paste_id, author, expires, password, origin_ip, token_id, conn=conn
+                query, paste_id, author, expires, password, origin_ip, token_id, private, conn=conn
             )
 
             resp = resp[0]
@@ -492,32 +495,62 @@ class Database:
         return None
 
     @wrapped_hook_callback
-    async def get_all_user_pastes(self, author_id: int | None, limit: int, page: int) -> list[asyncpg.Record]:
+    async def get_all_user_pastes(self, author_id: int | None, limit: int, page: int, author_handle: str | None = None, public_only: bool = False) -> list[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
-        author_id: Optional[:class:`int`]
+        author_id: :class:`int` | None
             The paste author id to query against.
-        limit: Optional[:class:`int`]
-            The limit to the amount of pastes to return. Defaults to ALL.
+        limit: :class:`int`
+            The limit to the amount of pastes to return.
+        page: :class:`int`
+            The page number. This is relative to the limit per page (eg changing the limit will change your offset)
+        author_handle: :class:`str`
+            The paste author handle to query against.
+        public_only: :class:`bool`
+            Whether to only return public pastes.
 
         Returns
         ---------
         Optional[List[:class:`asyncpg.Record`]]
             The potential list of pastes.
         """
-        query = """
-                SELECT id, author_id, created_at, views, expires,
-                CASE WHEN password IS NOT NULL THEN true ELSE false END AS has_password
+        query = f"""
+                WITH (
+                    SELECT COALESCE(CASE
+                        WHEN $1 IS NOT NULL THEN $1
+                        WHEN $4 IS NOT NULL THEN (
+                            SELECT id FROM users WHERE handle = $4
+                        )
+                        ELSE ''
+                        END,
+                        0)
+                ) AS true_author_id
+                SELECT 
+                    id,
+                    author_id,
+                    created_at,
+                    views,
+                    expires,
+                    CASE
+                        WHEN password IS NOT NULL
+                        THEN true
+                        ELSE false
+                        END
+                    AS has_password
                 FROM pastes
-                WHERE author_id = $1
+                WHERE
+                    author_id = (SELECT true_author_id)
+                    {'AND public = true' if public_only else ''}
                 ORDER BY created_at DESC
                 LIMIT $2
                 OFFSET $3
                 """
-
+        if not author_id and not author_handle:
+            raise ValueError("One of author_id or author_handle must be specified.")
+        
         assert page >= 1 and limit >= 1, ValueError("limit and page cannot be smaller than 1")
-        response = await self._do_query(query, author_id, limit, page - 1)
+        response = await self._do_query(query, author_id, limit, page - 1, author_handle)
         if not response:
             return []
 
