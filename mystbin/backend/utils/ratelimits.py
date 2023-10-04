@@ -447,7 +447,7 @@ def ratelimit_zone_key(zone: str, request: MystbinRequest) -> str:
     user = request.state.user
 
     if user:
-        _zone = ("authed_" if not user["subscriber"] else "premium_") + zone
+        _zone = "authed_" + zone
 
     return _zone
 
@@ -457,7 +457,7 @@ def get_zone(zone: str, request: MystbinRequest) -> str:
     try:
         return request.app.config["ratelimits"][zone]
     except:
-        return request.app.config["ratelimits"][zone.removeprefix("authed_").removeprefix("premium_")]
+        return request.app.config["ratelimits"][zone.removeprefix("authed_")]
 
 
 async def ratelimit_id_key(request: Request) -> str:

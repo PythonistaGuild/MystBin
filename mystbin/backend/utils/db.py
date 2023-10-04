@@ -679,11 +679,38 @@ class Database:
         if not data:
             return None
 
-        data = data[0]
-        if token and data["token"] != token:
-            return 401
+        return data[0]
 
-        return data
+    @wrapped_hook_callback
+    async def update_user_handle(self, user_id: int, handle: str) -> bool:
+        """
+        Updates a user's handle.
+
+        Parameters
+        ------------
+        user_id: :class:`int`
+            The user id to update.
+        handle: :class:`str`
+            The new handle.
+        
+        Returns
+        --------
+        :class:`bool`
+            was the update successful? if failed, validation failed or the handle is taken.
+        """
+        if len(handle) > 32 or handle.strip().replace(" ", "-").lower() != handle:
+            return False
+
+        query = """
+            UPDATE users SET handle = $1 WHERE id = $2
+        """
+
+        try:
+            await self._do_query(query, handle, user_id)
+            return True
+        except:
+            return False
+
     
     async def _create_default_token(self, user_id, token_key, conn: asyncpg.Connection | None = None) -> int:
         query = """
@@ -723,7 +750,7 @@ class Database:
         Returns
         ---------
         :class:`asyncpg.Record`, :class:`str`
-            The record created for the registering User, and the token accompanying it.
+            The record created for the registering User, and the token accompanying it, along with the user's current handle.
         """
 
         userid = int((datetime.datetime.utcnow().timestamp() * 1000) - EPOCH)
@@ -731,35 +758,49 @@ class Database:
 
         query = """
                 INSERT INTO users
-                VALUES ($1, $2, $3, $4, $5, false, DEFAULT, false, $6)
+                (id, emails, discord_id, github_id, google_id, handle)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *;
                 """
 
         async with self.pool.acquire() as conn:
-            data = await self._do_query(
-                query,
-                userid,
-                emails,
-                discord_id and str(discord_id),
-                github_id and str(github_id),
-                google_id and str(google_id) or None,
-                username,
-                conn=conn
-            )
+            try:
+                data = await self._do_query(
+                    query,
+                    userid,
+                    emails,
+                    discord_id and str(discord_id),
+                    github_id and str(github_id),
+                    google_id and str(google_id) or None,
+                    username.lower().replace(" ", "-")[:32],
+                    conn=conn
+                )
+            except asyncpg.UniqueViolationError: # the name is taken, so we default to the user id
+                data = await self._do_query(
+                    query,
+                    userid,
+                    emails,
+                    discord_id and str(discord_id),
+                    github_id and str(github_id),
+                    google_id and str(google_id) or None,
+                    str(userid),
+                    conn=conn
+                )
+            
             token_id = await self._create_default_token(userid, token_key, conn=conn)
 
             token = tokens.generate(userid, token_key, token_id)
             return data[0], token
 
-    async def update_user(
+    async def update_user_on_login(
         self,
         user_id: int,
         emails: list[str] | None = None,
         discord_id: str | None = None,
         github_id: str | None = None,
         google_id: str | None = None,
-    ) -> str | None:
-        """Updates an existing user account.
+    ) -> tuple[str | None, bool, str]:
+        """Updates an existing user account with the login provided.
 
         Parameters
         ------------
@@ -776,20 +817,28 @@ class Database:
 
         Returns
         ---------
-        Optional[:class:`str`]
-            Returns the updated user's token.
+        tuple[:class:`str` | None, bool, str]
+            Returns the updated user's token, and whether or not they need to be presented with a handle selection modal, and their current handle.
         """
 
         query = """
                 UPDATE users SET
-                discord_id = COALESCE($1, discord_id),
-                github_id = COALESCE($2, github_id),
-                google_id = COALESCE($3, google_id)
-                WHERE id = $4
+                    discord_id = COALESCE($1, discord_id),
+                    github_id = COALESCE($2, github_id),
+                    google_id = COALESCE($3, google_id),
+                    emails = CASE 
+                        WHEN $5::text[] IS NOT NULL THEN
+                            (ARRAY( SELECT DISTINCT unnest(emails || $5::text[]) ))
+                        ELSE
+                            emails
+                    END
+                WHERE
+                    id = $4
                 RETURNING
                     (SELECT tokens.id FROM tokens WHERE tokens.user_id = $4 AND tokens.is_main = true) as token_id,
                     (SELECT tokens.token_key FROM tokens WHERE tokens.user_id = $4 AND tokens.is_main = true) as token_key,
-                    emails;
+                    NOT user_has_selected_handle,
+                    handle;
                 """
 
         data = await self._do_query(
@@ -798,11 +847,12 @@ class Database:
             github_id and str(github_id),
             google_id and str(google_id),
             user_id,
+            emails
         )
         if not data:
-            return None
+            raise RuntimeError("attempted to update user that does not exist")
 
-        token_id, token_key, _emails = data[0]
+        token_id, token_key, user_needs_modal, handle = data[0]
 
         if not token_id:
             token_key = uuid.uuid4()
@@ -810,21 +860,7 @@ class Database:
 
         token = tokens.generate(user_id, token_key, token_id)
 
-        if not emails:
-            return token
-
-        new_emails = set(_emails)
-        new_emails.update(emails)
-        new_emails = list(new_emails)
-        if new_emails == emails:
-            return token
-
-        query = """
-                UPDATE users SET emails = $1 WHERE id = $2
-                """
-
-        await self._do_query(query, new_emails, user_id)
-        return token
+        return token, user_needs_modal, handle
 
     async def unlink_account(self, user_id: int, account: str) -> bool:
         """Unlinks an account. Doesnt do sanity checks."""
@@ -861,7 +897,7 @@ class Database:
 
     async def list_admin(self) -> list[asyncpg.Record]:
         query = """
-        SELECT id, username, discord_id, github_id, google_id FROM users WHERE admin = true
+        SELECT id, handle, discord_id, github_id, google_id FROM users WHERE admin = true
         """
         resp = await self._do_query(query)
         return resp or []
@@ -1122,7 +1158,7 @@ class Database:
         query = """
                 SELECT
                     id,
-                    username,
+                    handle,
                     github_id,
                     discord_id,
                     google_id,
@@ -1143,10 +1179,8 @@ class Database:
         users = [
             {
                 "id": x["id"],
-                "username": x["username"],
+                "handle": x["handle"],
                 "admin": x["admin"],
-                "theme": x["theme"],
-                "subscriber": x["subscriber"],
                 "paste_count": x["paste_count"],
                 "last_seen": None,  # TODO need something to track last seen timestamps
                 "authorizations": [

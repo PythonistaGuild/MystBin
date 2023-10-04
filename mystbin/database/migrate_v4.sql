@@ -1,8 +1,20 @@
 BEGIN TRANSACTION;
 
-ALTER TABLE users DROP token;
+ALTER TABLE users 
+    DROP token,
+    DROP subscriber,
+    DROP theme,
+    ADD COLUMN user_has_selected_handle BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN handle VARCHAR(32) GENERATED ALWAYS AS (left(lower(replace(username,' ', '-'))), 32) STORED;
+
+ALTER TABLE users
+    ALTER COLUMN handle DROP EXPRESSION,
+    ADD UNIQUE (handle),
+    ALTER COLUMN handle SET NOT NULL,
+    DROP username;
+
 ALTER TABLE logs
-    DROP CONSTRAINT logs_userid_fkey
+    DROP CONSTRAINT logs_userid_fkey,
     ADD CONSTRAINT logs_userid_fkey
         FOREIGN KEY (userid)
         REFERENCES users(id)
@@ -61,3 +73,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMIT TRANSACTION;
+VACUUM (VERBOSE, FULL) users;

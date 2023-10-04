@@ -8,9 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     github_id TEXT,
     google_id TEXT,
     admin BOOLEAN NOT NULL DEFAULT false,
-    theme TEXT NOT NULL DEFAULT 'dark',
-    subscriber BOOLEAN DEFAULT false,
-    username TEXT NOT NULL
+    handle VARCHAR(32) UNIQUE NOT NULL,
+    user_has_selected_handle BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS tokens (

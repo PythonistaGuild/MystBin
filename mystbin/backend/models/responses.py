@@ -107,22 +107,18 @@ class TokenList(Struct):
 
 class User(Struct):
     id: int
-    username: str
+    handle: str
     emails: list[str]
     discord_id: str | None
     github_id: str | None
     google_id: str | None
     admin: bool
-    theme: str
-    subscriber: bool
-
 
 class SmallUser(Struct):
     id: int
-    username: str
+    handle: str
     authorizations: list[str]
     admin: bool
-    theme: str
     subscriber: bool
     banned: bool
     last_seen: str | None

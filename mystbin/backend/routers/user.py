@@ -78,6 +78,8 @@ async def get_self(
 desc = f"""Update the User object of the currently logged in user.
 * Requires authentication.
 
+Any 400 errors from this endpoint should be shown to the user.
+
 This endpoint falls under the `self` ratelimit bucket.
 The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
 
@@ -88,10 +90,12 @@ Version added: 4.0
 @openapi.instance.route(openapi.Route(
     "/users/@me",
     "PUT",
-    "Update User",
+    "Update Self",
     ["users"],
     None,
-    [],
+    [
+        openapi.RouteParameter("New Handle", "string", "handle", True, "query")
+    ],
     {
         204: openapi.Response("Success", None),
         401: openapi.UnauthorizedResponse
@@ -107,7 +111,33 @@ async def update_self(
     if not user:
         return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
-    return VariableResponse(responses.create_struct(user, responses.User), request) # type: ignore
+    try:
+        handle = request.query_params["handle"].strip()
+    except:
+        return VariableResponse({"error": "Missing 'handle' query parameter"}, request, status_code=400)
+    
+    exc: str = ""
+
+    if len(handle) > 32:
+        exc += "Handle must be less that 32 characters. "
+    if handle.lower() != handle:
+        exc += "Handle must be lower cased. "
+    if handle.replace(" ", "-") != handle:
+        exc += "Handle cannot have spaces. "
+    if handle in request.app.config.get("banned_handles", ()):
+        exc += "Handle is unavailable. "
+    if any(x in handle for x in "!@#$%^&*(){}[]+=<>,/?\\'\""): # slow but neccesary
+        exc += "Handle cannot contain special characters. "
+    
+    if exc:
+        return VariableResponse({"error": exc}, request, status_code=400)
+    
+    status = await request.app.state.db.update_user_handle(user["id"], handle)
+
+    if not status:
+        return VariableResponse({"error": "Handle is unavailable"}, request, status_code=400)
+
+    return Response(status_code=204)
 
 
 desc = f"""Deletes the authorized user's account.
@@ -472,6 +502,52 @@ async def get_pastes_for_token(request: MystbinRequest) -> VariableResponse:
         token_id = int(request.query_params["token_id"])
     except:
         return VariableResponse({"error": "bad query parameter 'token_id'"}, request, status_code=400)
+    
+    pastes = await request.app.state.db.get_token_pastes(request.state.user["id"], token_id)
+    if pastes is None:
+        return VariableResponse({"error": "Token ID was not created by the requesting user"}, request, status_code=403)
+    
+    return VariableResponse(responses.PasteGetAllResponse(pastes=pastes), request)
+
+
+desc = f"""Gets all pastes from a user.
+* Required authentication.
+
+This endpoint fetches all pastes from a user.
+If you are fetching your own pastes, this will return both public and private pastes.
+Otherwise, it will only return public pastes.
+
+This endpoint falls under the `getpastes` ratelimit bucket.
+The `getpaste` bucket has a ratelimit of {__config['ratelimits']['getpaste']}
+
+Version added: 4.0
+"""
+
+@router.get("/users/{handle:str}/pastes")
+@openapi.instance.route(openapi.Route(
+    "/users/{handle}/pastes",
+    "GET",
+    "Get User Pastes",
+    ["users", "pastes"],
+    None,
+    [
+        openapi.RouteParameter("User's Handle", "string", "handle", True, "path")
+    ],
+    {
+        200: openapi.Response("Success", openapi.PasteGetAllResponse),
+        400: openapi.BadRequestResponse,
+        401: openapi.UnauthorizedResponse,
+        403: openapi.ForbiddenResponse
+    },
+    description=desc,
+    is_body_required=False
+))
+@limit("getpaste")
+async def get_user_pastes(request: MystbinRequest) -> VariableResponse:
+    if not request.state.user:
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
+    
+    handle = request.path_params["handle"]
     
     pastes = await request.app.state.db.get_token_pastes(request.state.user["id"], token_id)
     if pastes is None:

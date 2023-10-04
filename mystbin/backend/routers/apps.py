@@ -44,9 +44,8 @@ ConnectBody = openapi._Component("ConnectBody", [openapi.ComponentProperty("code
     ConnectBody,
     [],
     {
-        200: openapi.Response("Success", openapi.TokenResponse),
+        200: openapi.Response("Success", openapi.LoginTokenResponse),
         400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
     },
     is_body_required=True,
     exclude_from_default_schema=True
@@ -57,10 +56,10 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
         data = await request.json()
         code = data.get("code", None)
     except:
-        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=400)
 
     if not code:
-        return UJSONResponse({"error": "Missing code query"}, status_code=400)
+        return UJSONResponse({"error": "Missing 'code' query parameter"}, status_code=400)
 
     client_id = request.app.config["apps"]["discord_application_id"]
     client_secret = request.app.config["apps"]["discord_application_secret"]
@@ -76,31 +75,37 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with request.app.state.client.post("https://discord.com/api/v8/oauth2/token", data=data, headers=headers) as resp:
+    async with request.app.state.client.post("https://discord.com/api/v10/oauth2/token", data=data, headers=headers) as resp:
         data = await resp.json()
-        token = data["access_token"]
+        try:
+            token = data["access_token"]
+        except KeyError:
+            return UJSONResponse({"error": "Oauth token is invalid"}, status_code=400)
+
+        if "email" not in data["scope"]:
+            return UJSONResponse({"error": "Oauth token is missing the 'email' scope"}, status_code=400)
 
     async with request.app.state.client.get(
-        "https://discord.com/api/v8/users/@me",
+        "https://discord.com/api/v10/users/@me",
         headers={"Authorization": f"Bearer {token}"},
     ) as resp:
         resp.raise_for_status()
         data = await resp.json()
         userid = data["id"]
         email = [data["email"]]
-        username = f"{data['username']}#{data['discriminator']}"
+        username = data['username']
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(request.state.user["id"], discord_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], discord_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(_id, discord_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(_id, discord_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     else:
-        data = await request.app.state.db.new_user(email, username, userid)
-        return UJSONResponse({"token": data[1]})
+        data, token = await request.app.state.db.new_user(email, username, userid)
+        return UJSONResponse({"token": token, "handle": data["handle"], "needs_handle_modal": True})
 
 
 @router.post("/users/connect/google")
@@ -112,7 +117,7 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
     ConnectBody,
     [],
     {
-        200: openapi.Response("Success", openapi.TokenResponse),
+        200: openapi.Response("Success", openapi.LoginTokenResponse),
         400: openapi.BadRequestResponse,
         401: openapi.UnauthorizedResponse
     },
@@ -126,10 +131,10 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
         data = await request.json()
         code = data.get("code", None)
     except:
-        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=400)
 
     if not code:
-        return UJSONResponse({"error": "Missing code query"}, status_code=400)
+        return UJSONResponse({"error": "Missing 'code' query"}, status_code=400)
 
     client_id = request.app.config["apps"]["google_application_id"]
     client_secret = request.app.config["apps"]["google_application_secret"]
@@ -145,9 +150,14 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
     async with request.app.state.client.post("https://oauth2.googleapis.com/token", data=data, headers=headers) as resp:
-        resp.raise_for_status()
-        data = await resp.json()
-        token = data["access_token"]
+        try:
+            data = await resp.json()
+            token = data["access_token"]
+        except:
+            return UJSONResponse({"error": "Oauth token is invalid"}, status_code=400)
+        
+        if "https://www.googleapis.com/auth/userinfo.email" not in data["scope"]:
+            return UJSONResponse({"error": "Oauth token is missing the 'email' scope"}, status_code=400)
 
     async with request.app.state.client.get(
         "https://www.googleapis.com/userinfo/v2/me",
@@ -160,16 +170,16 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
         username = data.get("name") or data["email"].split("@")[0]
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(request.state.user["id"], google_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], google_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(_id, google_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(_id, google_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     else:
-        data = await request.app.state.db.new_user(email, username, google_id=userid)
-        return UJSONResponse({"token": data[1]})
+        data, token = await request.app.state.db.new_user(email, username, google_id=userid)
+        return UJSONResponse({"token": token, "handle": data["handle"], "needs_handle_modal": True})
 
 
 @router.post("/users/connect/github")
@@ -181,7 +191,7 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
     ConnectBody,
     [],
     {
-        200: openapi.Response("Success", openapi.TokenResponse),
+        200: openapi.Response("Success", openapi.LoginTokenResponse),
         400: openapi.BadRequestResponse,
         401: openapi.UnauthorizedResponse
     },
@@ -195,10 +205,10 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
         data = await request.json()
         code = data.get("code", None)
     except:
-        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=421)
+        return UJSONResponse({"error": "Bad JSON body passed"}, status_code=40)
 
     if not code:
-        return UJSONResponse({"error": "Missing code query"}, status_code=400)
+        return UJSONResponse({"error": "Missing 'code' query"}, status_code=400)
 
     client_id = request.app.config["apps"]["github_application_id"]
     client_secret = request.app.config["apps"]["github_application_secret"]
@@ -219,9 +229,14 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
     async with request.app.state.client.post(
         "https://github.com/login/oauth/access_token", data=data, headers=headers
     ) as resp:
-        resp.raise_for_status()
-        data = await resp.json()
-        token = data["access_token"]
+        try:
+            data = await resp.json()
+            token = data["access_token"]
+        except:
+            return UJSONResponse({"error": "Oauth token is invalid"}, status_code=400)
+        
+        if "user:email" not in data["scope"]:
+            return UJSONResponse({"error": "Oauth token is missing the 'email' scope"}, status_code=400)
 
     async with request.app.state.client.get(
         "https://api.github.com/user", headers={"Authorization": f"Bearer {token}"}
@@ -245,16 +260,16 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
             email.append(entry["email"])
 
     if request.state.user is not None:
-        token = await request.app.state.db.update_user(request.state.user["id"], github_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], github_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
-        token = await request.app.state.db.update_user(_id, github_id=userid, emails=email)
-        return UJSONResponse({"token": token})
+        token , needs_modal, handle = await request.app.state.db.update_user_on_login(_id, github_id=userid, emails=email)
+        return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     else:
-        data = await request.app.state.db.new_user(email, username, github_id=userid)
-        return UJSONResponse({"token": data[1]})
+        data, token = await request.app.state.db.new_user(email, username, github_id=userid)
+        return UJSONResponse({"token": token, "handle": data["handle"], "needs_handle_modal": True})
 
 
 @router.delete("/users/connect/{app}")
