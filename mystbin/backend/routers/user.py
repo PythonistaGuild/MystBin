@@ -86,10 +86,10 @@ The `self` bucket has a ratelimit of {__config['ratelimits']['self']}
 Version added: 4.0
 """
 
-@router.put("/users/@me")
+@router.patch("/users/@me")
 @openapi.instance.route(openapi.Route(
     "/users/@me",
-    "PUT",
+    "PATCH",
     "Update Self",
     ["users"],
     None,
@@ -564,7 +564,7 @@ async def get_user_pastes(request: MystbinRequest) -> VariableResponse:
         return VariableResponse({"error": "Cannot fetch another user's private pastes"}, request, status_code=400)
 
     pastes = await request.app.state.db.get_all_user_pastes(None, 50, page, author_handle=handle, public_only=not private)
-    
+
     return VariableResponse(responses.PasteGetAllResponse(pastes=pastes), request)
 
 
