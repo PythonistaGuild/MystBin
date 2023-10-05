@@ -29,5 +29,5 @@ def get_user_id(token: str) -> tuple[int, int, uuid.UUID] | None:
     try:
         payload = jwt.decode(token, key=signing_key, algorithms=["HS512"], options=JWT_OPTIONS)
         return payload["uid"], payload["tid"], uuid.UUID(int=payload["tkey"], is_safe=uuid.SafeUUID(payload["safe"]))
-    except (jwt.DecodeError, jwt.ExpiredSignatureError):
+    except (jwt.DecodeError, jwt.ExpiredSignatureError, KeyError):
         return None
