@@ -34,7 +34,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from models import payloads, responses
 
-from . import tokens
+from . import tokens, gravatar
 
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
@@ -791,10 +791,12 @@ class Database:
         userid = int((datetime.datetime.utcnow().timestamp() * 1000) - EPOCH)
         token_key = uuid.uuid4()
 
+        gravatar_hash = await gravatar.find_available_gravatar(emails, force_response=True)
+
         query = """
                 INSERT INTO users
-                (id, emails, discord_id, github_id, google_id, handle)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                (id, emails, discord_id, github_id, google_id, handle, gravatar_hash)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
                 """
 
@@ -808,6 +810,7 @@ class Database:
                     github_id and str(github_id),
                     google_id and str(google_id) or None,
                     username.lower().replace(" ", "-")[:32],
+                    gravatar_hash,
                     conn=conn
                 )
             except asyncpg.UniqueViolationError: # the name is taken, so we default to the user id
@@ -819,6 +822,7 @@ class Database:
                     github_id and str(github_id),
                     google_id and str(google_id) or None,
                     str(userid),
+                    gravatar_hash,
                     conn=conn
                 )
             
@@ -856,6 +860,11 @@ class Database:
             Returns the updated user's token, and whether or not they need to be presented with a handle selection modal, and their current handle.
         """
 
+        if emails:
+            new_gravatar_hash = await gravatar.find_available_gravatar(emails, force_response=False)
+        else:
+            new_gravatar_hash = None
+
         query = """
                 UPDATE users SET
                     discord_id = COALESCE($1, discord_id),
@@ -866,7 +875,8 @@ class Database:
                             (ARRAY( SELECT DISTINCT unnest(emails || $5::text[]) ))
                         ELSE
                             emails
-                    END
+                    END,
+                    gravatar_hash = COALESCE($6, gravatar_hash)
                 WHERE
                     id = $4
                 RETURNING
@@ -882,7 +892,8 @@ class Database:
             github_id and str(github_id),
             google_id and str(google_id),
             user_id,
-            emails
+            emails,
+            new_gravatar_hash
         )
         if not data:
             raise RuntimeError("attempted to update user that does not exist")
@@ -981,14 +992,6 @@ class Database:
                 """
         data = await self._do_query(query, page - 1)
         return data
-
-    async def switch_theme(self, userid: int, theme: str) -> None:
-        """Quick query to set theme choices."""
-        query = """
-                UPDATE users SET theme = $1 WHERE id = $2
-                """
-
-        await self._do_query(query, theme, userid)
 
     @wrapped_hook_callback
     async def toggle_subscription(self, userid: int, state: bool):
@@ -1198,8 +1201,7 @@ class Database:
                     discord_id,
                     google_id,
                     admin,
-                    theme,
-                    subscriber,
+                    gravatar_hash,
                     (SELECT COUNT(*) FROM pastes WHERE author_id = users.id) AS paste_count
                 FROM users LIMIT 20 OFFSET $1 * 20;
         """
@@ -1217,6 +1219,7 @@ class Database:
                 "handle": x["handle"],
                 "admin": x["admin"],
                 "paste_count": x["paste_count"],
+                "gravatar_hash": x["gravatar_hash"],
                 "last_seen": None,  # TODO need something to track last seen timestamps
                 "authorizations": [
                     x

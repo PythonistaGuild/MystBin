@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     google_id TEXT,
     admin BOOLEAN NOT NULL DEFAULT false,
     handle VARCHAR(32) UNIQUE NOT NULL,
-    user_has_selected_handle BOOLEAN NOT NULL DEFAULT FALSE
+    user_has_selected_handle BOOLEAN NOT NULL DEFAULT FALSE,
+    gravatar_hash TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tokens (

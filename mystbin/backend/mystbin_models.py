@@ -27,9 +27,7 @@ class _StateUser(TypedDict):
     github_id: str | None
     google_id: str | None
     admin: bool
-    theme: str
-    subscriber: bool
-    username: str
+    handle: str
     _is_ip_banned: str | None
     _is_user_banned: int | None
 

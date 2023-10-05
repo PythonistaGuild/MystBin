@@ -113,6 +113,7 @@ class User(Struct):
     github_id: str | None
     google_id: str | None
     admin: bool
+    gravatar_hash: str | None
 
 class SmallUser(Struct):
     id: int
@@ -123,6 +124,7 @@ class SmallUser(Struct):
     banned: bool
     last_seen: str | None
     paste_count: int
+    gravatar_hash: str | None
 
 
 class UserCount(Struct):

@@ -273,22 +273,20 @@ ValidationErrorResponse = Response("Validation Error", _Component("ValidationErr
 
 User = _Component("User", properties=[
     ComponentProperty("id", "ID", "integer", required=True),
-    ComponentProperty("username", "Username", "string", required=True),
+    ComponentProperty("handle", "Handle", "string", required=True),
     ComponentProperty("discord_id", "Discord ID", "string", "Linked Account", required=False),
     ComponentProperty("github_id", "Github ID", "string", "Linked Account", required=False),
     ComponentProperty("google_id", "Google ID", "string", "Linked Account", required=False),
     ComponentProperty("admin", "Admin", "boolean", "Is admin", required=True),
-    ComponentProperty("theme", "Theme", "string", required=True),
-    ComponentProperty("subscriber", "Subscriber", "boolean", required=True),
+    ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=True),
     ComponentArrayProperty("emails", "Emails", required=True, items={"type": "string"})
 ])
 
 SmallUser = _Component("SmallUser", properties=[
     ComponentProperty("id", "ID", "integer", required=True),
-    ComponentProperty("username", "Username", "string", required=True),
+    ComponentProperty("handle", "Handle", "string", required=True),
     ComponentProperty("admin", "Admin", "boolean", "Is admin", required=True),
-    ComponentProperty("theme", "Theme", "string", required=True),
-    ComponentProperty("subscriber", "Subscriber", "boolean", required=True),
+    ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=True),
     ComponentProperty("banned", "Is Banned", "boolean", required=True),
     ComponentProperty("paste_count", "Paste Count", "integer", required=True),
 ])
@@ -373,6 +371,7 @@ RichPastePost = _Component("RichPastePost", properties=[
 PastePatch = _Component("PastePatch", properties=[
     ComponentProperty("new_expires", "New Expiry", "date-time", required=False),
     ComponentProperty("new_password", "New Password", "string", required=False),
+    ComponentProperty("private", "Private", "boolean", required=False),
     ComponentArrayProperty("new_files", "New Files", required=True, items=UploadPasteFile)
 ], example={"new_password": "abc123", "new_files": [{"content": "foo", "filename": "bar.txt"}]})
 

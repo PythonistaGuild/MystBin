@@ -5,7 +5,8 @@ ALTER TABLE users
     DROP subscriber,
     DROP theme,
     ADD COLUMN user_has_selected_handle BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN handle VARCHAR(32) GENERATED ALWAYS AS (left(lower(replace(username,' ', '-'))), 32) STORED;
+    ADD COLUMN handle VARCHAR(32) GENERATED ALWAYS AS (left(lower(replace(username,' ', '-'))), 32) STORED,
+    ADD COLUMN gravatar_hash TEXT;
 
 ALTER TABLE users
     ALTER COLUMN handle DROP EXPRESSION,
