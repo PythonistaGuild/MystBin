@@ -737,7 +737,7 @@ class Database:
             return False
 
         query = """
-            UPDATE users SET handle = $1 WHERE id = $2
+            UPDATE users SET handle = $1, needs_handle_modal = FALSE WHERE id = $2
         """
 
         try:
