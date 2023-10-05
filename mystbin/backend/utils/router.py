@@ -18,46 +18,49 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
-from typing import Callable, TypeVar, Literal, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
+
 from starlette.routing import Route, WebSocketRoute
+
 
 if TYPE_CHECKING:
     from app import MystbinApp
 
 T = TypeVar("T", bound=Callable[..., Any])
 
+
 class Router:
     def __init__(self) -> None:
         self._routes: list[Route | WebSocketRoute] = []
-    
+
     def route(self, path: str, methods: list[Literal["GET", "POST", "PATCH", "DELETE", "PUT"]]) -> Callable[[T], T]:
         def wraps(fn: T) -> T:
             self._routes.append(Route(path, fn, methods=methods))
             return fn
-        
+
         return wraps
-    
+
     def get(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["GET"])
-    
+
     def post(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["POST"])
-    
+
     def delete(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["DELETE"])
-    
+
     def put(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["PUT"])
-    
+
     def patch(self, path: str) -> Callable[[T], T]:
         return self.route(path, ["PATCH"])
-    
+
     def ws(self, path: str) -> Callable[[T], T]:
         def wraps(fn: T) -> T:
             self._routes.append(WebSocketRoute(path, fn))
             return fn
-        
+
         return wraps
-    
+
     def add_to_app(self, app: MystbinApp) -> None:
         app.router.routes.extend(self._routes)

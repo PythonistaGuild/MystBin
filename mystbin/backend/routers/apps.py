@@ -23,33 +23,40 @@ import datetime
 import yarl
 
 from mystbin_models import MystbinRequest
-from utils.embed import Embed
-from utils.responses import Response, UJSONResponse
-from utils.ratelimits import limit
-from utils.router import Router
 from utils import openapi
+from utils.embed import Embed
+from utils.ratelimits import limit
+from utils.responses import Response, UJSONResponse
+from utils.router import Router
 
 
 router = Router()
 
-ConnectBody = openapi._Component("ConnectBody", [openapi.ComponentProperty("code", "Auth Code", "string", "OAuth", True)], example={"code": "akopfmk334b56jo"})
+ConnectBody = openapi._Component(
+    "ConnectBody",
+    [openapi.ComponentProperty("code", "Auth Code", "string", "OAuth", True)],
+    example={"code": "akopfmk334b56jo"},
+)
+
 
 @limit("apps")
 @router.post("/users/connect/discord")
-@openapi.instance.route(openapi.Route(
-    "/users/connect/discord",
-    "POST",
-    "Connect Discord",
-    ["users"],
-    ConnectBody,
-    [],
-    {
-        200: openapi.Response("Success", openapi.LoginTokenResponse),
-        400: openapi.BadRequestResponse,
-    },
-    is_body_required=True,
-    exclude_from_default_schema=True
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/users/connect/discord",
+        "POST",
+        "Connect Discord",
+        ["users"],
+        ConnectBody,
+        [],
+        {
+            200: openapi.Response("Success", openapi.LoginTokenResponse),
+            400: openapi.BadRequestResponse,
+        },
+        is_body_required=True,
+        exclude_from_default_schema=True,
+    )
+)
 async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate from Discord OAuth."""
     try:
@@ -93,10 +100,12 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
         data = await resp.json()
         userid = data["id"]
         email = [data["email"]]
-        username = data['username']
+        username = data["username"]
 
     if request.state.user is not None:
-        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], discord_id=userid, emails=email)
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(
+            request.state.user["id"], discord_id=userid, emails=email
+        )
         return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
@@ -109,21 +118,23 @@ async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
 
 
 @router.post("/users/connect/google")
-@openapi.instance.route(openapi.Route(
-    "/users/connect/google",
-    "POST",
-    "Connect Google",
-    ["users"],
-    ConnectBody,
-    [],
-    {
-        200: openapi.Response("Success", openapi.LoginTokenResponse),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
-    },
-    is_body_required=True,
-    exclude_from_default_schema=True
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/users/connect/google",
+        "POST",
+        "Connect Google",
+        ["users"],
+        ConnectBody,
+        [],
+        {
+            200: openapi.Response("Success", openapi.LoginTokenResponse),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+        },
+        is_body_required=True,
+        exclude_from_default_schema=True,
+    )
+)
 @limit("apps")
 async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate from Google OAuth."""
@@ -155,7 +166,7 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
             token = data["access_token"]
         except:
             return UJSONResponse({"error": "Oauth token is invalid"}, status_code=400)
-        
+
         if "https://www.googleapis.com/auth/userinfo.email" not in data["scope"]:
             return UJSONResponse({"error": "Oauth token is missing the 'email' scope"}, status_code=400)
 
@@ -170,7 +181,9 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
         username = data.get("name") or data["email"].split("@")[0]
 
     if request.state.user is not None:
-        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], google_id=userid, emails=email)
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(
+            request.state.user["id"], google_id=userid, emails=email
+        )
         return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
@@ -183,21 +196,23 @@ async def auth_from_google(request: MystbinRequest) -> UJSONResponse:
 
 
 @router.post("/users/connect/github")
-@openapi.instance.route(openapi.Route(
-    "/users/connect/github",
-    "POST",
-    "Connect Github",
-    ["users"],
-    ConnectBody,
-    [],
-    {
-        200: openapi.Response("Success", openapi.LoginTokenResponse),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
-    },
-    is_body_required=True,
-    exclude_from_default_schema=True
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/users/connect/github",
+        "POST",
+        "Connect Github",
+        ["users"],
+        ConnectBody,
+        [],
+        {
+            200: openapi.Response("Success", openapi.LoginTokenResponse),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+        },
+        is_body_required=True,
+        exclude_from_default_schema=True,
+    )
+)
 @limit("apps")
 async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate with GitHub OAuth."""
@@ -234,7 +249,7 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
             token = data["access_token"]
         except:
             return UJSONResponse({"error": "Oauth token is invalid"}, status_code=400)
-        
+
         if "user:email" not in data["scope"]:
             return UJSONResponse({"error": "Oauth token is missing the 'email' scope"}, status_code=400)
 
@@ -260,11 +275,13 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
             email.append(entry["email"])
 
     if request.state.user is not None:
-        token, needs_modal, handle = await request.app.state.db.update_user_on_login(request.state.user["id"], github_id=userid, emails=email)
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(
+            request.state.user["id"], github_id=userid, emails=email
+        )
         return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     elif _id := await request.app.state.db.check_email(email):
-        token , needs_modal, handle = await request.app.state.db.update_user_on_login(_id, github_id=userid, emails=email)
+        token, needs_modal, handle = await request.app.state.db.update_user_on_login(_id, github_id=userid, emails=email)
         return UJSONResponse({"token": token, "handle": handle, "needs_handle_modal": needs_modal})
 
     else:
@@ -273,25 +290,23 @@ async def auth_from_github(request: MystbinRequest) -> UJSONResponse:
 
 
 @router.delete("/users/connect/{app}")
-@openapi.instance.route(openapi.Route(
-    "/users/connect/{app}",
-    "DELETE",
-    "Delete Connection",
-    ["users"],
-    ConnectBody,
-    [],
-    {
-        204: openapi.Response("Success", None),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
-    },
-    is_body_required=False,
-    exclude_from_default_schema=True
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/users/connect/{app}",
+        "DELETE",
+        "Delete Connection",
+        ["users"],
+        ConnectBody,
+        [],
+        {204: openapi.Response("Success", None), 400: openapi.BadRequestResponse, 401: openapi.UnauthorizedResponse},
+        is_body_required=False,
+        exclude_from_default_schema=True,
+    )
+)
 @limit("apps")
 async def disconnect_app(request: MystbinRequest):
     app: str = request.path_params["app"]
-    
+
     if app not in ("github", "discord", "google"):
         return Response(status_code=404)
 

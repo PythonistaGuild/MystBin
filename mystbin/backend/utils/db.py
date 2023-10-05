@@ -23,18 +23,18 @@ import datetime
 import difflib
 import functools
 import os
-import uuid
 import pathlib
-from typing import Any, Literal, cast, Callable, Awaitable
+import uuid
+from typing import Any, Awaitable, Callable, Literal, cast
 
 import asyncpg
 import msgspec
 from asyncpg import Record
+from models import payloads, responses
 from starlette.requests import Request
 from starlette.responses import Response
-from models import payloads, responses
 
-from . import tokens, gravatar
+from . import gravatar, tokens
 
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
@@ -101,13 +101,13 @@ class Database:
         return self._pool
 
     async def __ainit__(self):
-
         self._pool = await asyncpg.create_pool(
             self._config["dsn"], max_inactive_connection_lifetime=3, max_size=3, min_size=0
         )
-        self._listener_pool = cast(asyncpg.Pool, await asyncpg.create_pool(
-            self._config["dsn"], max_inactive_connection_lifetime=0, max_size=9999, min_size=0
-        ))
+        self._listener_pool = cast(
+            asyncpg.Pool,
+            await asyncpg.create_pool(self._config["dsn"], max_inactive_connection_lifetime=0, max_size=9999, min_size=0),
+        )
         # with open(self._db_schema) as schema:
         #    await self._pool.execute(schema.read())
         return self
@@ -126,12 +126,12 @@ class Database:
         finally:
             if not conn:
                 await self.pool.release(_conn)
-    
+
     async def create_listener(self, fn: Callable[[str, str, str, str], Awaitable[None]]) -> asyncpg.Connection:
         conn: asyncpg.Connection = await self._listener_pool.acquire()
         await conn.add_listener("paste_requests", fn)
         return conn
-    
+
     async def release_listener(self, conn: asyncpg.Connection, fn: Callable[[str, str, str, str], Awaitable[None]]) -> None:
         await conn.remove_listener("paste_requests", fn)
         await self._listener_pool.release(conn)
@@ -231,12 +231,14 @@ class Database:
                 return ret
             else:
                 return None
-    
+
     @wrapped_hook_callback
-    async def get_token_pastes(self, user_id: int | None, token_id: int, verify_user: bool = True) -> list[responses.PasteGetAll] | None:
+    async def get_token_pastes(
+        self, user_id: int | None, token_id: int, verify_user: bool = True
+    ) -> list[responses.PasteGetAll] | None:
         """Fetches all pastes that are generated with a specific token.
         If verify_user is True, the user_id must match the user that generated the token.
-        
+
         Parameters
         -----------
         user_id: class:`int` | None
@@ -245,20 +247,20 @@ class Database:
             The token to fetch pastes for
         verify_user: :class:`bool` = True
             Whether to verify if the user_id matches that of the token_id
-        
+
         Returns
         --------
         list[PasteGetAll] | None
         """
         if not self._pool:
             await self.__ainit__()
-        
+
         async with self.pool.acquire() as conn:
             if verify_user:
                 query = "SELECT 1 FROM tokens WHERE id = $1 AND user_id = $2"
                 if not await conn.fetchval(query, token_id, user_id):
                     return None
-            
+
             query = """
                     SELECT
                         id,
@@ -275,7 +277,7 @@ class Database:
 
             resp = await self._do_query(query, token_id, conn=conn)
             return [responses.PasteGetAll(**record) for record in resp]
-    
+
     @wrapped_hook_callback
     async def get_raw_paste_info(self, paste_id: str, password: str | None) -> dict[str, Any] | None:
         query = """
@@ -309,14 +311,11 @@ class Database:
             "author_id": r0["author_id"],
             "has_password": r0["has_password"],
             "password_ok": r0["password_ok"],
-            "files": [{
-                "filename": x["filename"],
-                "content": x["content"],
-                "charcount": x["charcount"],
-                "n": i}
-            for i, x in enumerate(resp)]
+            "files": [
+                {"filename": x["filename"], "content": x["content"], "charcount": x["charcount"], "n": i}
+                for i, x in enumerate(resp)
+            ],
         }
-
 
     @wrapped_hook_callback
     async def put_paste(
@@ -329,7 +328,7 @@ class Database:
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
-        private: bool = False
+        private: bool = False,
     ) -> dict[str, str | int | None | list[dict[str, str | int]]]:
         """Puts the specified paste.
         Parameters
@@ -408,7 +407,7 @@ class Database:
         new_expires: datetime.datetime | None = None,
         new_password: str | None = None,
         files: list[payloads.PasteFile] | None = None,
-        private: bool | None = None
+        private: bool | None = None,
     ) -> Literal[404] | None:
         """Puts the specified paste.
         Parameters
@@ -497,7 +496,9 @@ class Database:
         return None
 
     @wrapped_hook_callback
-    async def get_all_user_pastes(self, author_id: int | None, limit: int, page: int, author_handle: str | None = None, public_only: bool = False) -> list[asyncpg.Record]:
+    async def get_all_user_pastes(
+        self, author_id: int | None, limit: int, page: int, author_handle: str | None = None, public_only: bool = False
+    ) -> list[asyncpg.Record]:
         """Get all pastes for an author and/or with a limit.
         Parameters
         ------------
@@ -550,7 +551,7 @@ class Database:
                 """
         if not author_id and not author_handle:
             raise ValueError("One of author_id or author_handle must be specified.")
-        
+
         assert page >= 1 and limit >= 1, ValueError("limit and page cannot be smaller than 1")
         response = await self._do_query(query, author_id, limit, page - 1, author_handle)
         if not response:
@@ -599,7 +600,7 @@ class Database:
         response = await self._do_query(query, paste_id, author_id, admin)
 
         return response[0] if response else None
-    
+
     async def put_paste_request(self, slug: str, author_id: int) -> None:
         """Creates a paste request
 
@@ -609,7 +610,7 @@ class Database:
             The request slug. Usually 3 random words.
         author_id: :class:`int`
             The user who made the request for the paste.
-        
+
         Raises
         -------
         ValueError: The slug is taken.
@@ -637,11 +638,11 @@ class Database:
             The request slug. Usually 3 random words.
         user_id: :class:`int`
             The user who made the request for the paste.
-        
+
         Returns
         --------
         :class:`str` | None
-            Returns the new slug, if the request has been fulfilled. Otherwise, returns an empty string. 
+            Returns the new slug, if the request has been fulfilled. Otherwise, returns an empty string.
             Returns None if the request does not exist.
         """
 
@@ -656,25 +657,22 @@ class Database:
         resp = await self._do_query(query, user_id, slug, conn=conn)
         if not resp:
             return None
-        
-        return resp[0]['fulfilled_slug'] or ""
-    
+
+        return resp[0]["fulfilled_slug"] or ""
+
     async def fulfill_paste_request(self, slug: str, user_id: int, paste_slug: str) -> None:
         if not self._pool:
             await self.__ainit__()
-        
+
         async with cast(asyncpg.Pool, self._pool).acquire() as conn:
             conn: asyncpg.Connection
             await conn.execute(
                 "SELECT pg_notify('paste_requests', $1);",
-                msgspec.json.encode({
-                    "slug": slug,
-                    "user_id": user_id,
-                    "paste_slug": paste_slug
-                }).decode()
-                )
-            await conn.execute("UPDATE requested_pastes SET fulfilled_slug = $3 WHERE requester = $1 AND id = $2", user_id, slug, paste_slug)
-        
+                msgspec.json.encode({"slug": slug, "user_id": user_id, "paste_slug": paste_slug}).decode(),
+            )
+            await conn.execute(
+                "UPDATE requested_pastes SET fulfilled_slug = $3 WHERE requester = $1 AND id = $2", user_id, slug, paste_slug
+            )
 
     @wrapped_hook_callback
     async def get_user(self, *, user_id: int | None = None, token: str | None = None) -> asyncpg.Record | int | None:
@@ -703,7 +701,7 @@ class Database:
             t = tokens.get_user_id(token)
             if not t:
                 return 400
-            
+
             user_id = t[0]
 
         query = """
@@ -727,7 +725,7 @@ class Database:
             The user id to update.
         handle: :class:`str`
             The new handle.
-        
+
         Returns
         --------
         :class:`bool`
@@ -746,7 +744,6 @@ class Database:
         except:
             return False
 
-    
     async def _create_default_token(self, user_id, token_key, conn: asyncpg.Connection | None = None) -> int:
         query = """
                 INSERT INTO
@@ -756,7 +753,7 @@ class Database:
                 ($1, 'Default Token', $2, true)
                 RETURNING id
                 """
-        
+
         resp = await self._do_query(query, user_id, token_key, conn=conn)
         return resp[0]["id"]
 
@@ -811,9 +808,9 @@ class Database:
                     google_id and str(google_id) or None,
                     username.lower().replace(" ", "-")[:32],
                     gravatar_hash,
-                    conn=conn
+                    conn=conn,
                 )
-            except asyncpg.UniqueViolationError: # the name is taken, so we default to the user id
+            except asyncpg.UniqueViolationError:  # the name is taken, so we default to the user id
                 data = await self._do_query(
                     query,
                     userid,
@@ -823,9 +820,9 @@ class Database:
                     google_id and str(google_id) or None,
                     str(userid),
                     gravatar_hash,
-                    conn=conn
+                    conn=conn,
                 )
-            
+
             token_id = await self._create_default_token(userid, token_key, conn=conn)
 
             token = tokens.generate(userid, token_key, token_id)
@@ -893,7 +890,7 @@ class Database:
             google_id and str(google_id),
             user_id,
             emails,
-            new_gravatar_hash
+            new_gravatar_hash,
         )
         if not data:
             raise RuntimeError("attempted to update user that does not exist")
@@ -1018,13 +1015,13 @@ class Database:
                     WHERE id = $2 AND user_id = $3
                     RETURNING id
                     """
-            
+
             resp = await conn.fetchval(query, new_token_key, token_id, userid)
             if resp:
                 return new_token
-            
+
             return None
-    
+
     @wrapped_hook_callback
     async def get_tokens(self, userid: int) -> list[dict]:
         """
@@ -1035,7 +1032,7 @@ class Database:
 
         data = await self._do_query(query, userid)
         return data
-    
+
     @wrapped_hook_callback
     async def create_token(self, user_id: int, name: str, description: str) -> tuple[str, int] | None:
         query = """
@@ -1046,16 +1043,16 @@ class Database:
                 ($1, $2, $3, $4, false)
                 RETURNING id
                 """
-        
+
         token_key = uuid.uuid4()
         try:
             resp = await self._do_query(query, user_id, name, description, token_key)
         except (asyncpg.CheckViolationError, asyncpg.StringDataRightTruncationError):
             return None
 
-        token = tokens.generate(user_id, token_key, resp[0]['id'])
+        token = tokens.generate(user_id, token_key, resp[0]["id"])
         return token, resp[0]["id"]
-    
+
     async def delete_token(self, user_id: int, token_id: int) -> bool:
         query = """
                 DELETE FROM
@@ -1066,7 +1063,7 @@ class Database:
                 user_id = $2
                 RETURNING id
                 """
-        
+
         resp = await self._do_query(query, token_id, user_id)
         return bool(resp)
 
@@ -1105,7 +1102,7 @@ class Database:
                     accent = $6,
                     prism_theme = $7
                 """
-        
+
         await self._do_query(
             query,
             userid,
@@ -1114,7 +1111,7 @@ class Database:
             style.primary_font,
             style.secondary_font,
             style.accent,
-            style.prism_theme
+            style.prism_theme,
         )
 
     @wrapped_hook_callback
@@ -1314,17 +1311,17 @@ class Database:
             body = request._body
         except:
             body = None
-        
+
         try:
             resp = str(response.body)
         except AttributeError:
             resp = None
-        
+
         user_id: int | None = request.state.user and request.state.user["id"]
         route = f"{request.method.upper()} {request.url.path}{'?' + request.url.query if request.url.query else ''}"
 
         if route == "DELETE /users/@me":
-            user_id = None # fix foreign key violation when the account has been deleted
+            user_id = None  # fix foreign key violation when the account has been deleted
 
         await self._do_query(
             query,
@@ -1338,7 +1335,7 @@ class Database:
             response.status_code,
             resp,
         )
-    
+
     async def delete_user(self, user_id: int, keep_pastes: bool) -> None:
         """
         Deletes a user's account.

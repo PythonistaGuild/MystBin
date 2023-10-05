@@ -17,7 +17,8 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from datetime import datetime
-from typing import TypeVar, Type
+from typing import Type, TypeVar
+
 from msgspec import Struct
 
 
@@ -52,6 +53,7 @@ class File(Struct):
     charcount: int
     attachment: str | None
 
+
 class PastePostResponse(Struct):
     created_at: datetime
     files: list[File]
@@ -84,17 +86,17 @@ class PasteGetAll(Struct):
 class PasteGetAllResponse(Struct):
     pastes: list[PasteGetAll]
 
+
 class TokenResponse(Struct):
     token: str
 
-_tokenlistitem_renamer = {
-    "token_name": "name",
-    "token_description": "description",
-    "is_main": "is_web_token"
-}
+
+_tokenlistitem_renamer = {"token_name": "name", "token_description": "description", "is_main": "is_web_token"}
+
 
 def _tokenlistitem_rename_fn(name: str) -> str | None:
     return _tokenlistitem_renamer.get(name, None)
+
 
 class TokenListItem(Struct, rename=_tokenlistitem_rename_fn):
     id: int
@@ -102,8 +104,10 @@ class TokenListItem(Struct, rename=_tokenlistitem_rename_fn):
     description: str
     is_web_token: bool
 
+
 class TokenList(Struct):
     tokens: list[TokenListItem]
+
 
 class User(Struct):
     id: int
@@ -114,6 +118,7 @@ class User(Struct):
     google_id: str | None
     admin: bool
     gravatar_hash: str | None
+
 
 class SmallUser(Struct):
     id: int
@@ -146,6 +151,7 @@ class Bookmark(Struct):
 
 class Bookmarks(Struct):
     bookmarks: list[Bookmark]
+
 
 class Style(Struct):
     primary_bg: str

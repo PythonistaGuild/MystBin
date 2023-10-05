@@ -27,12 +27,12 @@ import sentry_sdk
 import ujson
 from redis import asyncio as aioredis  # fuckin lol
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from mystbin_models import MystbinRequest, MystbinState
-from routers import admin, doc, apps, pastes, user
+from routers import admin, apps, doc, pastes, user
 from utils import cli as _cli, ratelimits
 from utils.db import Database
 

@@ -1,6 +1,6 @@
 import binascii
-import uuid
 import os
+import uuid
 
 import jwt
 from Crypto.Random import get_random_bytes
@@ -16,6 +16,7 @@ else:
     signing_key = binascii.hexlify(get_random_bytes(64)).decode()
     with open(".signing-key", "w") as f:
         f.write(signing_key)
+
 
 def generate(userid: int, token_key: uuid.UUID, token_id: int) -> str:
     """Generate a token."""

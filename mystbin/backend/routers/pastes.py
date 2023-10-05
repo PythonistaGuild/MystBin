@@ -26,20 +26,20 @@ import uuid
 from random import sample
 from typing import Coroutine
 
-from asyncpg import Record
 import msgspec
 import yarl
-from starlette import status as HTTPStatus
-from starlette.requests import Request
-from starlette.datastructures import UploadFile
-from sse_starlette import EventSourceResponse
-
+from asyncpg import Record
 from models import payloads, responses
+from sse_starlette import EventSourceResponse
+from starlette import status as HTTPStatus
+from starlette.datastructures import UploadFile
+from starlette.requests import Request
+
 from mystbin_models import MystbinRequest, MystbinWebsocket
-from utils.ratelimits import limit
-from utils.responses import VariableResponse, Response
-from utils.router import Router
 from utils import openapi
+from utils.ratelimits import limit
+from utils.responses import Response, VariableResponse
+from utils.router import Router
 
 
 _WORDS_LIST = open(pathlib.Path("utils/words.txt")).readlines()
@@ -142,11 +142,14 @@ def respect_dnt(request: MystbinRequest):
         return "DNT"
 
     if request.app.config["paste"]["log_ip"]:
-        return request.headers.get("X-Forwarded-For", request.client.host) # type: ignore
+        return request.headers.get("X-Forwarded-For", request.client.host)  # type: ignore
 
     return None
 
-async def handle_paste_requests(request: MystbinRequest, payload: payloads.RichPastePost | payloads.PastePost, new_paste_id: str) -> str | None:
+
+async def handle_paste_requests(
+    request: MystbinRequest, payload: payloads.RichPastePost | payloads.PastePost, new_paste_id: str
+) -> str | None:
     if payload.requester_id is not None and payload.requester_slug is not None:
         if await request.app.state.db.get_paste_request(payload.requester_slug, payload.requester_id) is not None:
             await request.app.state.db.fulfill_paste_request(payload.requester_slug, payload.requester_id, new_paste_id)
@@ -162,20 +165,22 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
 
 
 @router.post("/paste")
-@openapi.instance.route(openapi.Route(
-    "/paste",
-    "POST",
-    "Create Paste",
-    ["pastes"],
-    openapi.PastePost,
-    [],
-    {
-        201: openapi.Response("Success", openapi.PastePostResponse),
-        400: openapi.BadRequestResponse,
-        422: openapi.ValidationErrorResponse
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/paste",
+        "POST",
+        "Create Paste",
+        ["pastes"],
+        openapi.PastePost,
+        [],
+        {
+            201: openapi.Response("Success", openapi.PastePostResponse),
+            400: openapi.BadRequestResponse,
+            422: openapi.ValidationErrorResponse,
+        },
+        description=desc,
+    )
+)
 @limit("postpastes")
 async def put_pastes(request: MystbinRequest) -> Response:
     author_: Record | None = request.state.user
@@ -184,7 +189,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         _data = await request.body()
     except:
         return VariableResponse({"error": "Bad body"}, request, status_code=400)
-    
+
     payload = payloads.create_struct_from_payload(_data, payloads.PastePost)
 
     if err := enforce_multipaste_limit(request.app, payload, request):
@@ -207,9 +212,8 @@ async def put_pastes(request: MystbinRequest) -> Response:
         password=payload.password,
         origin_ip=respect_dnt(request),
         token_id=request.state.token_id,
-        private=payload.private
+        private=payload.private,
     )
-
 
     _request_notice = await handle_paste_requests(request, payload, paste_id)
     if _request_notice is not None:
@@ -219,7 +223,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
             notice = _request_notice
 
     paste["notice"] = notice and notice.strip()
-    response = responses.PastePostResponse(**paste) # type: ignore
+    response = responses.PastePostResponse(**paste)  # type: ignore
     return VariableResponse(response, request)
 
 
@@ -228,11 +232,11 @@ async def put_pastes(request: MystbinRequest) -> Response:
 async def post_rich_paste(request: MystbinRequest) -> Response:
     form = await request.form()
 
-    reads: str | None = form.get("data") # type: ignore
-    images: list[UploadFile] | None = form.getlist("images") # type: ignore
+    reads: str | None = form.get("data")  # type: ignore
+    images: list[UploadFile] | None = form.getlist("images")  # type: ignore
     if not reads:
         return VariableResponse({"error": "multipart.data: `data` field not given"}, request, status_code=400)
-    
+
     payload = payloads.create_struct_from_payload(reads, payloads.RichPastePost)
 
     paste_id = generate_paste_id()
@@ -252,7 +256,7 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         for index, image in enumerate(images):  # TODO honour config filesize limit
             if not isinstance(image, UploadFile):
                 return VariableResponse({"error", f"multipart.images.{index}: Expected an image"}, request)
-            
+
             origin = image.filename.split(".")[-1]
             new_name = f"{('%032x' % uuid.uuid4().int)[:8]}-{paste_id}.{origin}"
             url = f"https://{__config['bunny_cdn']['hostname']}.b-cdn.net/images/{new_name}"
@@ -263,7 +267,9 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         for n, file in enumerate(payload.files):
             if file.attachment is not None:
                 if file.attachment not in image_idx:
-                    return VariableResponse({"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"}, request)
+                    return VariableResponse(
+                        {"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"}, request
+                    )
 
                 file.attachment = image_idx[file.attachment]
 
@@ -287,7 +293,7 @@ async def post_rich_paste(request: MystbinRequest) -> Response:
         author=author,
         password=payload.password,
         origin_ip=respect_dnt(request),
-        token_id=request.state.token_id
+        token_id=request.state.token_id,
     )
 
     _request_notice = await handle_paste_requests(request, payload, paste_id)
@@ -310,24 +316,26 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 
 
 @router.get("/paste/{paste_id}")
-@openapi.instance.route(openapi.Route(
-    "/paste/{paste_id}",
-    "GET",
-    "Get Paste",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("Password", "string", "password", False, "query"),
-        openapi.RouteParameter("Paste ID", "string", "paste_id", False, "path")
-    ],
-    {
-        201: openapi.Response("Success", openapi.PasteGetResponse),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse,
-        404: openapi.NotFoundResponse
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/paste/{paste_id}",
+        "GET",
+        "Get Paste",
+        ["pastes"],
+        None,
+        [
+            openapi.RouteParameter("Password", "string", "password", False, "query"),
+            openapi.RouteParameter("Paste ID", "string", "paste_id", False, "path"),
+        ],
+        {
+            201: openapi.Response("Success", openapi.PasteGetResponse),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+            404: openapi.NotFoundResponse,
+        },
+        description=desc,
+    )
+)
 @limit("getpaste")
 async def get_paste(request: MystbinRequest) -> VariableResponse:
     paste_id: str = request.path_params["paste_id"]
@@ -353,28 +361,32 @@ The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpas
 
 
 @router.get("/pastes/@me")
-@openapi.instance.route(openapi.Route(
-    "/pastes/@me",
-    "GET",
-    "Get User Pastes",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("Limit Per Page (default: 50)", "integer", "limit", False, "query"),
-        openapi.RouteParameter("Page", "integer", "page", False, "query")
-    ],
-    {
-        201: openapi.Response("Success", openapi.PasteGetAllResponse),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse,
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/pastes/@me",
+        "GET",
+        "Get User Pastes",
+        ["pastes"],
+        None,
+        [
+            openapi.RouteParameter("Limit Per Page (default: 50)", "integer", "limit", False, "query"),
+            openapi.RouteParameter("Page", "integer", "page", False, "query"),
+        ],
+        {
+            201: openapi.Response("Success", openapi.PasteGetAllResponse),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+        },
+        description=desc,
+    )
+)
 @limit("getpaste")
 async def get_all_pastes(request: MystbinRequest) -> VariableResponse:
     user = request.state.user
     if not user:
-        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
+        return VariableResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401
+        )
 
     try:
         limit = int(request.query_params.get("limit", 50))
@@ -402,32 +414,34 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
 
 
 @router.patch("/paste/{paste_id}")
-@openapi.instance.route(openapi.Route(
-    "/paste/{paste_id}",
-    "PATCH",
-    "Edit Paste",
-    ["pastes"],
-    openapi.PastePatch,
-    [
-        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path")
-    ],
-    {
-        204: openapi.Response("Success", None),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse,
-        404: openapi.NotFoundResponse,
-        422: openapi.ValidationErrorResponse
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/paste/{paste_id}",
+        "PATCH",
+        "Edit Paste",
+        ["pastes"],
+        openapi.PastePatch,
+        [openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path")],
+        {
+            204: openapi.Response("Success", None),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+            404: openapi.NotFoundResponse,
+            422: openapi.ValidationErrorResponse,
+        },
+        description=desc,
+    )
+)
 @limit("postpastes")
 async def edit_paste(request: MystbinRequest) -> VariableResponse | Response:
     author = request.state.user
     if not author:
-        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
-    
+        return VariableResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401
+        )
+
     paste_id: str = request.path_params["paste_id"]
-    
+
     try:
         _body = await request.body()
     except:
@@ -441,7 +455,7 @@ async def edit_paste(request: MystbinRequest) -> VariableResponse | Response:
         new_expires=payload.new_expires,
         new_password=payload.new_password,
         files=payload.new_files,
-        private=payload.private
+        private=payload.private,
     )
     if paste == 404:
         return VariableResponse(
@@ -464,34 +478,34 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
 
 
 @router.delete("/paste/{paste_id}")
-@openapi.instance.route(openapi.Route(
-    "/paste/{paste_id}",
-    "DELETE",
-    "Delete Paste",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path")
-    ],
-    {
-        204: openapi.Response("Success", None),
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/paste/{paste_id}",
+        "DELETE",
+        "Delete Paste",
+        ["pastes"],
+        None,
+        [openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path")],
+        {204: openapi.Response("Success", None), 400: openapi.BadRequestResponse, 401: openapi.UnauthorizedResponse},
+        description=desc,
+    )
+)
 @limit("deletepaste")
 async def delete_paste(request: MystbinRequest) -> Response | VariableResponse:
     user = request.state.user
     if not user:
-        return VariableResponse({"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401)
+        return VariableResponse(
+            {"error": "Unathorized", "notice": "You must be signed in to use this route"}, request, status_code=401
+        )
 
     paste_id: str = request.path_params["paste_id"]
 
     if not user["admin"]:
         is_owner: bool = await request.app.state.db.ensure_author(paste_id, user["id"])
         if not is_owner:
-            return VariableResponse({"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, request, status_code=401)
+            return VariableResponse(
+                {"error": "Unauthorized", "notice": f"You do not own paste '{paste_id}'"}, request, status_code=401
+            )
 
     deleted: Record = await request.app.state.db.delete_paste(paste_id, user["id"], admin=user["admin"])
 
@@ -512,21 +526,23 @@ The `deletepaste` bucket has a default ratelimit of {__config['ratelimits']['del
 
 
 @router.delete("/paste")
-@openapi.instance.route(openapi.Route(
-    "/paste",
-    "DELETE",
-    "Delete Many Pastes",
-    ["pastes"],
-    openapi.PasteDelete,
-    [],
-    {
-        200: openapi.PasteDeleteResponse,
-        400: openapi.BadRequestResponse,
-        401: openapi.UnauthorizedResponse,
-        422: openapi.ValidationErrorResponse
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/paste",
+        "DELETE",
+        "Delete Many Pastes",
+        ["pastes"],
+        openapi.PasteDelete,
+        [],
+        {
+            200: openapi.PasteDeleteResponse,
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse,
+            422: openapi.ValidationErrorResponse,
+        },
+        description=desc,
+    )
+)
 @limit("deletepaste")
 async def delete_pastes(request: MystbinRequest) -> VariableResponse:
     # We will filter out the pastes that are authorized and unauthorized, and return a clear response
@@ -535,7 +551,7 @@ async def delete_pastes(request: MystbinRequest) -> VariableResponse:
     author: Record = request.state.user
     if not author:
         return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
-    
+
     try:
         _body = await request.body()
     except:
@@ -562,23 +578,23 @@ This endpoint falls under the `getpaste` ratelimit bucket.
 The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
 
+
 @router.get("/raw/{paste_id}")
-@openapi.instance.route(openapi.Route(
-    "/raw/{paste_id}",
-    "GET",
-    "Get raw overview",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
-        openapi.RouteParameter("Password", "string", "password", False, "query")
-    ],
-    {
-        200: openapi.Response("Success", None, "text/plain"),
-        401: openapi.Response("Unauthorized", None, "text/plain")
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/raw/{paste_id}",
+        "GET",
+        "Get raw overview",
+        ["pastes"],
+        None,
+        [
+            openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
+            openapi.RouteParameter("Password", "string", "password", False, "query"),
+        ],
+        {200: openapi.Response("Success", None, "text/plain"), 401: openapi.Response("Unauthorized", None, "text/plain")},
+        description=desc,
+    )
+)
 @limit("getpaste")
 async def get_raw_paste_overview(request: MystbinRequest) -> Response:
     paste_id = request.path_params["paste_id"]
@@ -590,7 +606,7 @@ async def get_raw_paste_overview(request: MystbinRequest) -> Response:
 
     if paste["has_password"] and not paste["password_ok"]:
         return Response("Password: failed", status_code=401)
-    
+
     files = [f"File-Index: {f['n']}\nFile-Name: {f['filename']}\nFile-Chars: {f['charcount']}\n\n" for f in paste["files"]]
 
     response = f"""Password: {'OK' if paste['has_password'] else 'NA'}
@@ -611,29 +627,29 @@ This endpoint falls under the `getpaste` ratelimit bucket.
 The `getpaste` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
 
+
 @router.get("/raw/{paste_id}/{file_index:int}")
-@openapi.instance.route(openapi.Route(
-    "/raw/{paste_id}/{file_index}",
-    "GET",
-    "Get raw content",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
-        openapi.RouteParameter("File Index (0-indexed)", "integer", "file_index", True, "path"),
-        openapi.RouteParameter("Password", "string", "password", False, "query")
-    ],
-    {
-        200: openapi.Response("Success", None, "text/plain"),
-        401: openapi.Response("Unauthorized", None, "text/plain")
-    },
-    description=desc
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/raw/{paste_id}/{file_index}",
+        "GET",
+        "Get raw content",
+        ["pastes"],
+        None,
+        [
+            openapi.RouteParameter("Paste ID", "string", "paste_id", True, "path"),
+            openapi.RouteParameter("File Index (0-indexed)", "integer", "file_index", True, "path"),
+            openapi.RouteParameter("Password", "string", "password", False, "query"),
+        ],
+        {200: openapi.Response("Success", None, "text/plain"), 401: openapi.Response("Unauthorized", None, "text/plain")},
+        description=desc,
+    )
+)
 @limit("getpaste")
 async def get_raw_paste_file(request: MystbinRequest) -> Response:
     paste_id = request.path_params["paste_id"]
     file_index = int(request.path_params["file_index"])
-    
+
     password: str | None = request.query_params.get("password")
 
     paste = await request.app.state.db.get_raw_paste_info(paste_id, password)
@@ -642,7 +658,7 @@ async def get_raw_paste_file(request: MystbinRequest) -> Response:
 
     if paste["has_password"] and not paste["password_ok"]:
         return Response("Password: failed", status_code=401)
-    
+
     try:
         return Response(paste["files"][file_index]["content"])
     except IndexError:
@@ -660,21 +676,29 @@ The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['post
 
 
 @router.post("/documents")
-@openapi.instance.route(openapi.Route(
-    "/documents",
-    "POST",
-    "Hastebin Create Paste",
-    ["pastes"],
-    None,
-    [],
-    {
-        200: openapi.Response("Success", openapi._Component("HasteCompatComponent",
-            [openapi.ComponentProperty("key", "Key", "string", "Paste ID", True)], example={"key": "FooBar"})),
-        400: openapi.BadRequestResponse
-    },
-    description=desc,
-    deprecated=True
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/documents",
+        "POST",
+        "Hastebin Create Paste",
+        ["pastes"],
+        None,
+        [],
+        {
+            200: openapi.Response(
+                "Success",
+                openapi._Component(
+                    "HasteCompatComponent",
+                    [openapi.ComponentProperty("key", "Key", "string", "Paste ID", True)],
+                    example={"key": "FooBar"},
+                ),
+            ),
+            400: openapi.BadRequestResponse,
+        },
+        description=desc,
+        deprecated=True,
+    )
+)
 @limit("postpastes")
 async def compat_create_paste(request: MystbinRequest) -> VariableResponse:
     content = await request.body()
@@ -686,7 +710,7 @@ async def compat_create_paste(request: MystbinRequest) -> VariableResponse:
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
         origin_ip=respect_dnt(request),
-        token_id=None
+        token_id=None,
     )
     return VariableResponse({"key": paste["id"]}, request)
 
@@ -706,24 +730,33 @@ This endpoint falls under the `postpastes` ratelimit bucket.
 The `postpastes` bucket has a ratelimit of {__config['ratelimits']['authed_postpastes']} when signed in
 """
 
+
 @router.post("/paste/request")
-@openapi.instance.route(openapi.Route(
-    "/pastes/request",
-    "POST",
-    "Create Request",
-    ["pastes"],
-    None,
-    [],
-    {
-        200: openapi.Response("Success", openapi._Component("PasteRequestSuccessComponent", [
-            openapi.ComponentProperty("edit_url", "Edit URL", "string", required=True),
-            openapi.ComponentProperty("websocket_url", "Websocket URL", "string", required=True)
-        ])),
-        401: openapi.UnauthorizedResponse
-    },
-    desc,
-    is_body_required=False
-))
+@openapi.instance.route(
+    openapi.Route(
+        "/pastes/request",
+        "POST",
+        "Create Request",
+        ["pastes"],
+        None,
+        [],
+        {
+            200: openapi.Response(
+                "Success",
+                openapi._Component(
+                    "PasteRequestSuccessComponent",
+                    [
+                        openapi.ComponentProperty("edit_url", "Edit URL", "string", required=True),
+                        openapi.ComponentProperty("websocket_url", "Websocket URL", "string", required=True),
+                    ],
+                ),
+            ),
+            401: openapi.UnauthorizedResponse,
+        },
+        desc,
+        is_body_required=False,
+    )
+)
 @limit("postpastes")
 async def request_paste(request: MystbinRequest) -> Response:
     author = request.state.user
@@ -735,22 +768,20 @@ async def request_paste(request: MystbinRequest) -> Response:
 
     for _ in range(3):
         try:
-            await request.app.state.db.put_paste_request(
-                slug,
-                author["id"]
-            )
+            await request.app.state.db.put_paste_request(slug, author["id"])
             success = True
             break
         except ValueError:
             continue
-    
+
     if not success:
         return VariableResponse({"error": "Unable to assign a slug. What have you done?"}, request, status_code=500)
-    
+
     edit_url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(f"/request/{author['id']}/{slug}")
     websocket_url = yarl.URL(request.app.config["site"]["backend_site"]).with_path(f"/request/{author['id']}/{slug}")
 
     return VariableResponse({"edit_url": str(edit_url), "websocket_url": str(websocket_url)}, request)
+
 
 desc = f"""
 Open a websocket that sends an event once the paste request has been fulfilled.
@@ -764,23 +795,24 @@ This endpoint falls under the `postpastes` ratelimit bucket.
 The `postpastes` bucket has a default ratelimit of {__config['ratelimits']['getpaste']}, and a ratelimit of {__config['ratelimits']['authed_getpaste']} when signed in
 """
 
+
 @router.ws("/request/{user_id:int}/{slug:str}")
-@openapi.instance.route(openapi.Route(
-    "/request/@{user_id}/{slug}",
-    "GET",
-    "Request WS",
-    ["pastes"],
-    None,
-    [
-        openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
-        openapi.RouteParameter("Slug", "string", "slug", True, "path")
-    ],
-    {
-        101: openapi.Response("SWITCHING PROTOCOLS", None, "TODO")
-    },
-    desc,
-    is_body_required=False
-    ))
+@openapi.instance.route(
+    openapi.Route(
+        "/request/@{user_id}/{slug}",
+        "GET",
+        "Request WS",
+        ["pastes"],
+        None,
+        [
+            openapi.RouteParameter("User ID", "integer", "user_id", True, "path"),
+            openapi.RouteParameter("Slug", "string", "slug", True, "path"),
+        ],
+        {101: openapi.Response("SWITCHING PROTOCOLS", None, "TODO")},
+        desc,
+        is_body_required=False,
+    )
+)
 @limit("getpaste")
 async def request_ws(websocket: MystbinWebsocket):
     slug = websocket.path_params["slug"]
@@ -795,7 +827,7 @@ async def request_ws(websocket: MystbinWebsocket):
         await websocket.send_json(payload)
         await websocket.close(code=HTTPStatus.WS_1000_NORMAL_CLOSURE, reason="Invalid")
         return
-    
+
     event = asyncio.Future[str]()
 
     async def wait_for_event(_, __, ___, payload: str) -> None:
@@ -806,33 +838,33 @@ async def request_ws(websocket: MystbinWebsocket):
     conn = await websocket.app.state.db.create_listener(wait_for_event)
 
     while True:
-        if websocket.client_state is websocket.client_state.DISCONNECTED: # client disconnected, clean up and exit
+        if websocket.client_state is websocket.client_state.DISCONNECTED:  # client disconnected, clean up and exit
             await websocket.app.state.db.release_listener(conn, wait_for_event)
             event.cancel()
             return
-        
+
         elif event.done():
             await websocket.app.state.db.release_listener(conn, wait_for_event)
             result = event.result()
             break
-        
+
         else:
             await asyncio.sleep(1)
-    
+
     url = yarl.URL(websocket.app.config["site"]["frontend_site"]).with_path(result)
     response = {"event": "FULFILLED", "url": str(url)}
-    
+
     try:
         await websocket.send(response)
         await websocket.close(
             code=HTTPStatus.WS_1000_NORMAL_CLOSURE,
-            reason="https://media.discordapp.net/attachments/336642776609456130/816774571772477500/1006_socket_disconnected-s.png"
-        ) # we'll see how long until someone notices this
+            reason="https://media.discordapp.net/attachments/336642776609456130/816774571772477500/1006_socket_disconnected-s.png",
+        )  # we'll see how long until someone notices this
     except:
         pass
 
 
-@router.get("/request/{user_id:int}/{slug:str}/sse") # this needs some debugging, seems like uvicorn doesnt like it
+@router.get("/request/{user_id:int}/{slug:str}/sse")  # this needs some debugging, seems like uvicorn doesnt like it
 @limit("getpaste")
 async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse:
     slug = request.path_params["slug"]
@@ -843,14 +875,14 @@ async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse
         return Response(status_code=404)
     elif fulfilled:
         return Response(f"FULFILLED:{fulfilled}", status_code=400)
-    
+
     event = asyncio.Future[str]()
 
     async def wait_for_event(_, __, ___, payload: str) -> None:
         decoded = msgspec.json.decode(payload)
         if decoded["slug"] == slug and decoded["user_id"] == user_id:
             event.set_result(decoded["paste_slug"])
-    
+
     async def generate_send_event():
         try:
             slug = await asyncio.wait_for(event, None)
@@ -862,7 +894,7 @@ async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse
         else:
             url = yarl.URL(request.app.config["site"]["frontend_site"]).with_path(slug)
             resp = "FULFILLED:" + str(url)
-        
+
         try:
             yield resp
         finally:
@@ -872,4 +904,6 @@ async def request_sse(request: MystbinRequest) -> Response | EventSourceResponse
     return EventSourceResponse(generate_send_event())
 
 
-request_sse.SSE = True # SSE endpoints cant have logging applied (response unfurling), so this tells the ratelimiter not to log at all
+request_sse.SSE = (
+    True  # SSE endpoints cant have logging applied (response unfurling), so this tells the ratelimiter not to log at all
+)

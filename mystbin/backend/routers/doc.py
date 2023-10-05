@@ -17,11 +17,12 @@ You should have received a copy of the GNU General Public License
 along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from utils import openapi
-from utils.router import Router
-from utils.responses import Response, UJSONResponse
-from utils.version import VERSION
 from mystbin_models import MystbinRequest
+from utils import openapi
+from utils.responses import Response, UJSONResponse
+from utils.router import Router
+from utils.version import VERSION
+
 
 html = """
 <!DOCTYPE html>
@@ -64,28 +65,37 @@ Note that toml does not have NULL values, so `"NULL"` will be sent to represent 
 
 router = Router()
 
+
 @router.get("/docs")
 async def get_docs(_) -> Response:
     return Response(html.format(spec="/openapi.json"), media_type="text/html")
+
 
 @router.get("/admindocs")
 async def get_admin_docs(_) -> Response:
     return Response(html.format(spec="/admin-openapi.json"), media_type="text/html")
 
+
 @router.get("/openapi.json")
 async def get_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "openapi", None)
     if spec is None:
-        request.app.state.openapi = openapi.instance.render_spec("Mystbin",
-        f"Documentation pertaining to the public useable endpoints.\n{description}", VERSION, True)
-    
+        request.app.state.openapi = openapi.instance.render_spec(
+            "Mystbin", f"Documentation pertaining to the public useable endpoints.\n{description}", VERSION, True
+        )
+
     return UJSONResponse(request.app.state.openapi)
+
 
 @router.get("/admin-openapi.json")
 async def get_admin_openapi(request: MystbinRequest) -> UJSONResponse:
     spec = getattr(request.app.state, "admin_openapi", None)
     if spec is None:
-        request.app.state.admin_openapi = openapi.instance.render_spec("Mystbin",
-        f"Documentation pertaining to the ALL useable endpoints (including admin endpoints)\n{description}", VERSION, False)
-    
+        request.app.state.admin_openapi = openapi.instance.render_spec(
+            "Mystbin",
+            f"Documentation pertaining to the ALL useable endpoints (including admin endpoints)\n{description}",
+            VERSION,
+            False,
+        )
+
     return UJSONResponse(request.app.state.admin_openapi)

@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 import time
-import ujson
+import uuid
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
+import msgspec
+import ujson
+from sse_starlette import EventSourceResponse
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from starlette.routing import Match
+
 from utils.responses import Response, UJSONResponse
-from sse_starlette import EventSourceResponse
-import msgspec
 
 from . import tokens
 
@@ -192,7 +193,7 @@ class Limiter:
 
             resp_.body = body
             response = resp_
-        
+
         elif isinstance(response, EventSourceResponse):
             await self.app.state.db.put_log(request, Response("<SSE EVENT>", status_code=response.status_code))
             return response
@@ -273,7 +274,9 @@ class Limiter:
                 if not getattr(handler, "SSE", None):
                     resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
-                resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = UJSONResponse(
+                    {"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422
+                )  # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
@@ -303,7 +306,9 @@ class Limiter:
                 if not getattr(handler, "SSE", None):
                     resp = await self._transform_and_log(request, resp)
             except msgspec.ValidationError as e:
-                resp = UJSONResponse({"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422) # TODO: parse out arguments
+                resp = UJSONResponse(
+                    {"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422
+                )  # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
@@ -339,10 +344,10 @@ async def _get_redis_ip_key(request: MystbinRequest, key: str) -> str | None:
 
     bans: bytes | None = await redis.get(key)  # speed up ban checking by redis caching
     return None if bans is None else bans.decode()
-    
+
 
 async def _fetch_user(request: MystbinRequest):
-    host = request.headers.get("X-Forwarded-For") or request.client.host # type: ignore
+    host = request.headers.get("X-Forwarded-For") or request.client.host  # type: ignore
     auth = request.headers.get("Authorization", None)
 
     request.state.user_id = None
@@ -352,7 +357,7 @@ async def _fetch_user(request: MystbinRequest):
     if auth:
         uid = tokens.get_user_id(auth.removeprefix("Bearer "))
 
-        if not uid: # invalid token
+        if not uid:  # invalid token
             auth = None
         else:
             request.state.user_id = uid[0]
@@ -367,12 +372,12 @@ async def _fetch_user(request: MystbinRequest):
             if not auth:
                 request.state.user = None
                 return  # quick path: no db requests
-        
+
         if auth:
             user = await _get_redis_ip_key(request, f"token-{request.state.token_key}")
             if user and user.startswith("BANNED:"):
                 raise IPBanned(user.removeprefix("BANNED:"))
-            
+
             elif user is not None:
                 request.state.user = ujson.loads(user)
                 request.state.user["_token_key"] = uuid.UUID(int=request.state.user["_token_key"])
@@ -390,7 +395,7 @@ async def _fetch_user(request: MystbinRequest):
 
         asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
         return
-    
+
     query = """
             SELECT
                 users.*,
@@ -418,7 +423,7 @@ async def _fetch_user(request: MystbinRequest):
             asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", user["_ban_reason"]))
 
         raise IPBanned(user["_ban_reason"])
-    
+
     elif request.app.redis:
         asyncio.create_task(_set_redis_ip_key(request, f"ban-ip-{host}", ""))
 
@@ -432,8 +437,9 @@ async def _fetch_user(request: MystbinRequest):
         d = dict(user)
         d["_token_key"] = d["_token_key"].int
         asyncio.create_task(_set_redis_ip_key(request, f"token-{user['_token_key']}", ujson.dumps(d)))
-    
+
     request.state.user = user
+
 
 async def _ignores_ratelimits(request: MystbinRequest):
     if request.state.user and request.state.user["admin"]:
@@ -463,11 +469,11 @@ def get_zone(zone: str, request: MystbinRequest) -> str:
 async def ratelimit_id_key(request: Request) -> str:
     auth = request.headers.get("Authorization", None)
     if not auth:
-        return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
+        return request.headers.get("X-Forwarded-For", None) or request.client.host  # type: ignore
 
     userid = tokens.get_user_id(auth.replace("Bearer ", ""))
     if not userid:  # must be a fake token, so just ignore it and go by ip
-        return request.headers.get("X-Forwarded-For", None) or request.client.host # type: ignore
+        return request.headers.get("X-Forwarded-For", None) or request.client.host  # type: ignore
 
     request.state._userid = userid[0]
     request.state._token_uuid = userid[1]

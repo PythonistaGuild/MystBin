@@ -19,9 +19,10 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import datetime
-from typing import TypeVar, Type
-from msgspec import Struct
+from typing import Type, TypeVar
+
 import msgspec
+from msgspec import Struct
 
 
 __all__ = (
@@ -37,17 +38,21 @@ __all__ = (
 
 T = TypeVar("T", bound=Struct)
 
+
 def create_struct_from_payload(data: str | bytes, struct: Type[T]) -> T:
     return msgspec.json.decode(data, type=struct)
+
 
 class PasteFile(Struct):
     content: str
     filename: str
 
+
 class RichPasteFile(Struct):
     content: str
     filename: str
     attachment: str | None = None
+
 
 class PastePost(Struct):
     files: list[PasteFile]
@@ -81,6 +86,7 @@ class PasteDelete(Struct):
 
 class BookmarkPutDelete(Struct):
     paste_id: str
+
 
 class TokenPost(Struct):
     name: str
