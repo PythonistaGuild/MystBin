@@ -20,10 +20,6 @@
         "google_application_secret": "",
         "github_bot_token": ""
     },
-    "bunny_cdn": {
-        "hostname": "mystbin",
-        "token": ""
-    },
     "site": {
         "frontend_site": "https://mysite.com",
         "backend_site": "https://api.mysite.com",
@@ -33,6 +29,7 @@
     "paste": {
         "character_limit": 300000,
         "file_limit": 5,
+        "filename_character_limit": 25,
         "filesize_limit": "8mb",
         "log_ip": true
     },
@@ -52,16 +49,12 @@
         "_comment": "Ratelimit values. Written in the format of `time/unit` (60/minute)",
         "global": "60/minute",
         "authed_global": "120/minute",
-        "premium_global": "360/minute",
         "postpastes": "5/minute",
         "authed_postpastes": "10/minute",
-        "premium_postpastes": "20/minute",
         "getpaste": "20/minute",
         "authed_getpaste": "40/minute",
-        "premium_getpaste": "80/minute",
         "deletepaste": "1/minute",
         "authed_deletepaste": "10/minute",
-        "premium_deletepaste": "20/minute",
         "self": "20/minute",
         "tokengen": "2/hour",
         "admin": "5/second",
