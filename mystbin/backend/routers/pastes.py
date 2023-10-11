@@ -74,7 +74,7 @@ def generate_paste_id(n: int = 3):
 def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile, request: Request, n=1):
     charlim = app.config["paste"]["character_limit"]
     filename_lim = app.config["paste"]["filename_character_limit"]
-    
+
     if len(paste.filename) > filename_lim:
         return VariableResponse(
             {
@@ -82,7 +82,7 @@ def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile,
                 f"You are {len(paste.filename)-filename_lim} characters over the filename limit"
             },
             request,
-            status_code=400
+            status_code=400,
         )
 
     if len(paste.content) > charlim:
@@ -224,7 +224,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         password=payload.password,
         origin_ip=respect_dnt(request),
         token_id=request.state.token_id,
-        private=payload.private,
+        public=payload.public,
     )
 
     _request_notice = await handle_paste_requests(request, payload, paste_id)

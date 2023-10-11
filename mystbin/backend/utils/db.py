@@ -328,7 +328,7 @@ class Database:
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
-        private: bool = False,
+        public: bool = True,
     ) -> dict[str, str | int | None | list[dict[str, str | int]]]:
         """Puts the specified paste.
         Parameters
@@ -347,8 +347,8 @@ class Database:
             The password used to encrypt the paste, if present.
         token_id: Optional[:class:`uuid.UUID`]
             The token that created this paste. Used for token analytics.
-        private: :class:`bool`
-            Is this paste private? defaults to False.
+        public: :class:`bool`
+            Is this paste private? defaults to True.
 
         Returns
         ---------
@@ -359,13 +359,13 @@ class Database:
 
         async with self.pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, private)
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, public)
                     VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7)
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
             resp: list[asyncpg.Record] = await self._do_query(
-                query, paste_id, author, expires, password, origin_ip, token_id, private, conn=conn
+                query, paste_id, author, expires, password, origin_ip, token_id, public, conn=conn
             )
 
             resp = resp[0]
