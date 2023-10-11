@@ -22,9 +22,7 @@ import asyncio
 import json
 import pathlib
 import re
-import uuid
 from random import sample
-from typing import Coroutine
 
 import msgspec
 import yarl
@@ -32,7 +30,6 @@ from asyncpg import Record
 from models import payloads, responses
 from sse_starlette import EventSourceResponse
 from starlette import status as HTTPStatus
-from starlette.datastructures import UploadFile
 from starlette.requests import Request
 
 from mystbin_models import MystbinRequest, MystbinWebsocket
@@ -237,87 +234,6 @@ async def put_pastes(request: MystbinRequest) -> Response:
     paste["notice"] = notice and notice.strip()
     response = responses.PastePostResponse(**paste)  # type: ignore
     return VariableResponse(response, request)
-
-
-@router.post("/rich-paste")
-@limit("postpastes")
-async def post_rich_paste(request: MystbinRequest) -> Response:
-    form = await request.form()
-
-    reads: str | None = form.get("data")  # type: ignore
-    images: list[UploadFile] | None = form.getlist("images")  # type: ignore
-    if not reads:
-        return VariableResponse({"error": "multipart.data: `data` field not given"}, request, status_code=400)
-
-    payload = payloads.create_struct_from_payload(reads, payloads.RichPastePost)
-
-    paste_id = generate_paste_id()
-
-    if images and HAS_BUNNYCDN:
-
-        async def _partial(target, spool: UploadFile):
-            data = await spool.read()
-            await request.app.state.client.put(
-                target, data=data, headers=headers
-            )  # TODO figure out how to pass spooled object instead of load into memory
-
-        image_idx = {}
-        headers = {"Content-Type": "application/octet-stream", "AccessKey": f"{__config['bunny_cdn']['token']}"}
-        partials: list[Coroutine] = []
-
-        for index, image in enumerate(images):  # TODO honour config filesize limit
-            if not isinstance(image, UploadFile):
-                return VariableResponse({"error", f"multipart.images.{index}: Expected an image"}, request)
-
-            origin = image.filename.split(".")[-1]
-            new_name = f"{('%032x' % uuid.uuid4().int)[:8]}-{paste_id}.{origin}"
-            url = f"https://{__config['bunny_cdn']['hostname']}.b-cdn.net/images/{new_name}"
-            image_idx[image.filename] = url
-            target = f"https://storage.bunnycdn.com/{__config['bunny_cdn']['hostname']}/images/{new_name}"
-            partials.append(_partial(target, image))
-
-        for n, file in enumerate(payload.files):
-            if file.attachment is not None:
-                if file.attachment not in image_idx:
-                    return VariableResponse(
-                        {"error": f"files.{n}.attachment: Unkown attachment '{file.attachment}'"}, request
-                    )
-
-                file.attachment = image_idx[file.attachment]
-
-        await asyncio.wait(partials, return_when=asyncio.ALL_COMPLETED)
-
-    if err := enforce_multipaste_limit(request.app, payload, request):
-        return err
-
-    notice = None
-
-    if tokens := await find_discord_tokens(request, payload):
-        gist = await upload_to_gist(request, "\n".join(tokens))
-        notice = f"Discord tokens have been found and uploaded to {gist['html_url']}"
-
-    author: int | None = request.state.user["id"] if request.state.user else None
-
-    paste = await request.app.state.db.put_paste(
-        paste_id=paste_id,
-        pages=payload.files,
-        expires=payload.expires,
-        author=author,
-        password=payload.password,
-        origin_ip=respect_dnt(request),
-        token_id=request.state.token_id,
-    )
-
-    _request_notice = await handle_paste_requests(request, payload, paste_id)
-    if _request_notice is not None:
-        if notice is not None:
-            notice += "\n" + _request_notice
-        else:
-            notice = _request_notice
-
-    paste["notice"] = notice
-    resp = responses.PastePostResponse(**paste)  # type: ignore
-    return Response(msgspec.json.encode(resp), status_code=201)
 
 
 desc = f"""Get a paste by ID.
