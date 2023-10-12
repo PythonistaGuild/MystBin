@@ -211,6 +211,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
     author: int | None = author_["id"] if author_ else None
+    token_id: int | None = request.state.token_id if author else None
     paste_id: str = generate_paste_id()
 
     paste = await request.app.state.db.put_paste(
@@ -220,7 +221,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         author=author,
         password=payload.password,
         origin_ip=respect_dnt(request),
-        token_id=request.state.token_id,
+        token_id=token_id,
         public=payload.public,
     )
 

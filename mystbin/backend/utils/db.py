@@ -364,9 +364,12 @@ class Database:
                     RETURNING id, author_id, created_at, expires, origin_ip
                     """
 
-            resp: list[asyncpg.Record] = await self._do_query(
-                query, paste_id, author, expires, password, origin_ip, token_id, public, conn=conn
-            )
+            try:
+                resp: list[asyncpg.Record] = await self._do_query(
+                    query, paste_id, author, expires, password, origin_ip, token_id, public, conn=conn
+                )
+            except asyncpg.ForeignKeyViolationError: # token id does not exist ???
+                raise ValueError("token id does not exist") # ????
 
             resp = resp[0]
             to_insert = []
