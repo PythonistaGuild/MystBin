@@ -125,10 +125,16 @@ class SmallUser(Struct):
     handle: str
     authorizations: list[str]
     admin: bool
-    subscriber: bool
     banned: bool
     last_seen: str | None
     paste_count: int
+    gravatar_hash: str | None
+
+
+class PublicUser(Struct):
+    id: int
+    handle: str
+    admin: bool
     gravatar_hash: str | None
 
 

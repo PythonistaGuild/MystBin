@@ -174,6 +174,40 @@ async def delete_self(request: MystbinRequest) -> Response:
     return Response(status_code=204)
 
 
+desc = f"""Fetches a user's public information.
+
+This endpoint has no direct ratelimit bucket, and falls under the global ratelimit.
+The global ratelimit is {__config['ratelimits']['global']}, and {__config['ratelimits']["authed_global"]} when logged in.
+"""
+
+
+@router.get("/users/{id:int}")
+@openapi.instance.route(
+    openapi.Route(
+        "/users/@me",
+        "GET",
+        "Get Self",
+        ["users"],
+        None,
+        [],
+        {
+            200: openapi.Response("Success", openapi.PublicUser), 
+            401: openapi.UnauthorizedResponse
+        },
+        description=desc,
+        is_body_required=False,
+    )
+)
+@limit()
+async def get_any_user(request: MystbinRequest) -> VariableResponse:
+    user = await request.app.state.db.get_user(user_id=int(request.path_params["id"]))
+
+    if isinstance(user, int) or user is None:
+        return VariableResponse({"error": "The requested user does not exist"}, request, status_code=400)
+    
+    return VariableResponse(responses.create_struct(user, responses.PublicUser), request)
+
+
 desc = f"""Creates a bookmark on the authorized user's account.
 * Required authentication.
 

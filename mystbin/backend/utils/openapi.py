@@ -302,10 +302,20 @@ SmallUser = _Component(
         ComponentProperty("id", "ID", "integer", required=True),
         ComponentProperty("handle", "Handle", "string", required=True),
         ComponentProperty("admin", "Admin", "boolean", "Is admin", required=True),
-        ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=True),
+        ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=False),
         ComponentProperty("banned", "Is Banned", "boolean", required=True),
         ComponentProperty("paste_count", "Paste Count", "integer", required=True),
     ],
+)
+
+PublicUser = _Component(
+    "PublicUser",
+    properties=[
+        ComponentProperty("id", "ID", "integer", required=True),
+        ComponentProperty("handle", "Handle", "string", required=True),
+        ComponentProperty("admin", "Admin", "boolean", "Is admin", required=True),
+        ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=False)
+    ]
 )
 
 AdminUserList = _Component(
