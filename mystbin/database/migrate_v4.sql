@@ -35,7 +35,8 @@ ALTER TABLE pastes
         FOREIGN KEY (author_id)
         REFERENCES users(id)
         ON DELETE SET NULL,
-    ADD COLUMN public BOOLEAN NOT NULL DEFAULT TRUE;
+    ADD COLUMN public BOOLEAN NOT NULL DEFAULT TRUE,
+    ALTER COLUMN created_at TYPE TIMESTAMP; -- previously timestamp with time zone
 
 CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,
