@@ -71,6 +71,7 @@ class MystbinApp(Starlette):
             "Access-Control-Allow-Headers": request.headers.get("Access-Control-Request-Headers", ""),
             "Access-Control-Allow-Methods": ", ".join(METHODS),
             "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "*",
             "Access-Control-Max-Age": "600",
             "Vary": "Origin",
         }
