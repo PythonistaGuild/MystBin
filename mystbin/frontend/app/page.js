@@ -151,7 +151,10 @@ export default function Home() {
             let identifier = data["id"];
 
             setSavedPaste(identifier);
-            setCookie(identifier, pasteContent["password"], {maxAge: 3600})
+
+            if (pasteContent["password"] !== undefined) {
+                setCookie(identifier, pasteContent["password"], {maxAge: 3600})
+            }
             return
         }
 
