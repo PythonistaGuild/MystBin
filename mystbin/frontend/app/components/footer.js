@@ -1,6 +1,6 @@
-import LogoSmall from "@/app/svgs/logoSmall";
-import GithubLogo from "@/app/svgs/githubLogo";
-import DiscordLogo from "@/app/svgs/discordLogo";
+import LogoSmall from "@/app/svgs/logoSmallSVG";
+import GithubLogo from "@/app/svgs/githubLogoSVG";
+import DiscordLogo from "@/app/svgs/discordLogoSVG";
 
 
 export default function Footer() {

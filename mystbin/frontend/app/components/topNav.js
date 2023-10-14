@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from 'next-themes'
-import LogoSmall from "@/app/svgs/logoSmall";
+import LogoSmall from "@/app/svgs/logoSmallSVG"
 import {useEffect, useState, useRef} from "react";
 import ThemeSVG from "@/app/svgs/themeSVG";
 import SunSVG from "@/app/svgs/sunSVG";
