@@ -517,7 +517,7 @@ code > span::selection {
   hyphens: none;
   background: transparent;
   caret-color: var(--tokBase)!important;
-  white-space: normal;
+  white-space: pre-wrap;
 }
 
 .editorCode:focus {
