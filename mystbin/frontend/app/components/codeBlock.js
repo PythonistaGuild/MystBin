@@ -107,14 +107,16 @@ export default function CodeBlock({children}) {
                         )
                 })}
             </div>
-            <pre className="line-numbers" style={{whiteSpace: "pre-wrap"}} suppressHydrationWarning>
-                {tabContent.map((file, index) => {
-                    return <Fragment key={`codeBlock-${index}`}>
-                        <div className={"copyButton"} onClick={() => copyConent()}>{copiedContent === null ? <CopySVG /> : copiedContent === true ? <DoneSVG/> : <CloseSVG/>}</div>
-                        <code className={`language-${file["lang"]}`} style={tab !== index ? {display: "none"} : null}>{file["content"]}</code>
-                    </Fragment>
-                })}
+            <div className={"preContainer"}>
+                <div className={"copyButton"} onClick={() => copyConent()}>{copiedContent === null ? <CopySVG /> : copiedContent === true ? <DoneSVG/> : <CloseSVG/>}</div>
+                <pre className="line-numbers" style={{whiteSpace: "pre-wrap"}} suppressHydrationWarning>
+                    {tabContent.map((file, index) => {
+                        return <Fragment key={`codeBlock-${index}`}>
+                            <code className={`language-${file["lang"]}`} style={tab !== index ? {display: "none"} : null}>{file["content"]}</code>
+                        </Fragment>
+                    })}
             </pre>
+            </div>
         </>
     )
 }
