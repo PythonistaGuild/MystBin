@@ -461,6 +461,7 @@ pre {
   font-size: calc(1em - var(--code-zoom))!important;
   margin-bottom: 4rem!important;
   border-radius: 0.5rem;
+  transform: scale(1);
 }
 
 pre:focus-within {
@@ -475,9 +476,14 @@ pre > span {
   height: 100%;
 }
 
+.preContainer {
+  position: relative;
+}
+
 code[class*=language-], pre[class*=language-] {
   text-shadow: var(--shadow-code)!important;
   color: var(--tokBase)!important;
+  white-space: pre!important;
 }
 
 code::selection {
@@ -922,13 +928,14 @@ code > span::selection {
 }
 
 /* COPY BUTTON IN EDITOR */
+
 .copyButton {
   z-index: 9;
   position: absolute;
-  top: 0;
   right: 0;
-  margin: 1rem;
+  top: 0;
   color: var(--button-default-border-colour);
+  padding: 1.5rem 1rem;
 }
 
 .copyButton > svg {
