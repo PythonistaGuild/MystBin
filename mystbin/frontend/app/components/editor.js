@@ -24,7 +24,7 @@ const EXTENSIONS = {
 
 export default function Editor({copyID, tabContent, setTabContent}) {
     const [tab, setTab] = useState(0);
-    const debounceCalculate = debounce(contentHandler, 800);
+    const debounceCalculate = debounce(contentHandler, 10);
     const debounceFirst = debounce(contentHandler, 100);
     const [updateHighlight, setUpdateHighlight] = useState(0);
 
