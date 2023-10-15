@@ -5,7 +5,7 @@ import TopNav from "@/app/components/topNav";
 
 export const metadata = {
   title: 'MystBin',
-  description: 'The easy way to share.',
+  description: 'Share code and text.',
 }
 
 
