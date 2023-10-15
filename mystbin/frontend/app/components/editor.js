@@ -178,6 +178,7 @@ export default function Editor({copyID, tabContent, setTabContent}) {
                             onChange={e => inputChange(e, index)}
                             value={file["content"]}
                             style={tab !== index ? {display: "none"} : null}
+                            spellCheck={"false"}
                         />
                     <code
                         id={`code-editor-${index}`}
