@@ -55,11 +55,6 @@ with __p.open() as __f:
     __config = json.load(__f)
 
 del __p, __f  # micro-opt, don't keep unneeded variables in-ram
-HAS_BUNNYCDN = True
-if not __config.get("bunny_cdn"):
-    HAS_BUNNYCDN = False
-elif not __config["bunny_cdn"].get("token"):
-    HAS_BUNNYCDN = False
 
 
 def generate_paste_id(n: int = 3):
