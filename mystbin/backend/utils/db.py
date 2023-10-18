@@ -1329,7 +1329,7 @@ class Database:
 
         if route == "DELETE /users/@me":
             user_id = None  # fix foreign key violation when the account has been deleted
-        
+
         elif route in TRIM_BODY_ROUTES:
             resp = "<body trimmed>"
 
