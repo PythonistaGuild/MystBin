@@ -265,7 +265,9 @@ BadRequestResponse = Response(
 )
 NotFoundResponse = Response(
     "Not Found",
-    _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Resource Not Found"}),
+    _Component(
+        "BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Resource Not Found"}
+    ),
 )
 
 ValidationErrorResponse = Response(
@@ -314,8 +316,8 @@ PublicUser = _Component(
         ComponentProperty("id", "ID", "integer", required=True),
         ComponentProperty("handle", "Handle", "string", required=True),
         ComponentProperty("admin", "Admin", "boolean", "Is admin", required=True),
-        ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=False)
-    ]
+        ComponentProperty("gravatar_hash", "Gravatar Hash", "string", required=False),
+    ],
 )
 
 AdminUserList = _Component(

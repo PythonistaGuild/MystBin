@@ -189,13 +189,8 @@ The global ratelimit is {__config['ratelimits']['global']}, and {__config['ratel
         "Get Any User",
         ["users"],
         None,
-        [
-            openapi.RouteParameter("User ID", "integer", "id", True, "path")
-        ],
-        {
-            200: openapi.Response("Success", openapi.PublicUser), 
-            404: openapi.NotFoundResponse
-        },
+        [openapi.RouteParameter("User ID", "integer", "id", True, "path")],
+        {200: openapi.Response("Success", openapi.PublicUser), 404: openapi.NotFoundResponse},
         description=desc,
         is_body_required=False,
     )
@@ -206,7 +201,7 @@ async def get_any_user(request: MystbinRequest) -> VariableResponse:
 
     if isinstance(user, int) or user is None:
         return VariableResponse({"error": "The requested user does not exist"}, request, status_code=404)
-    
+
     return VariableResponse(responses.create_struct(user, responses.PublicUser), request)
 
 
@@ -684,4 +679,10 @@ async def set_user_style(request: MystbinRequest) -> Response | VariableResponse
         return VariableResponse({"error": e.args[0]}, request, status_code=400)
 
     style = await request.app.state.db.set_user_style(request.state.user["id"], style)
+    return Response(status_code=204)
+
+
+@router.post("/yeet")
+@limit()
+async def stuff(request: MystbinRequest):
     return Response(status_code=204)

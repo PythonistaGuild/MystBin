@@ -5,7 +5,8 @@ import asyncio
 import shlex
 from typing import TYPE_CHECKING
 
-import aioconsole
+import prompt_toolkit
+import prompt_toolkit.patch_stdout
 import tabulate
 
 from utils.version import VERSION
@@ -26,6 +27,8 @@ class Interrupt(Exception):
 class CLIHandler:
     def __init__(self, db: Database) -> None:
         self.db: Database = db
+        self.prompt_session = prompt_toolkit.PromptSession("> ")
+
         self.parser = argparse.ArgumentParser(
             prog="Mystbin",
             description="the Mystbin backend command-line tool",
@@ -72,13 +75,10 @@ class CLIHandler:
     async def parse_cli(self) -> None:
         await asyncio.sleep(1)  # wait until app startup and until the prints are done
         print("Entering the command line tool. Type 'help' for more information")
-        try:
+        with prompt_toolkit.patch_stdout.patch_stdout():
             while True:
-                data = await aioconsole.ainput(prompt="> ")
+                data = await self.prompt_session.prompt_async("> ")
                 await self.parse_once(data)
-                print("\n")
-        except KeyboardInterrupt:
-            return
 
     async def parse_once(self, inp: str) -> None:
         args = shlex.split(inp)
@@ -122,7 +122,7 @@ class CLIHandler:
                 headers=["id", "author id", "created at", "views", "expires", "origin ip", "has password"],
                 tablefmt="psql",
             )
-            await aioconsole.aprint(tabled)
+            print(tabled)
 
             print(f"Paste: Showing {len(paste_info)} pastes (page {page+1})")
 
@@ -203,7 +203,7 @@ class CLIHandler:
                 headers=["User ID", "Username", "Discord ID", "Github ID", "Google ID"],
                 tablefmt="psql",
             )
-            await aioconsole.aprint(resp)
+            print(resp)
 
     async def command_users(self, namespace: argparse.Namespace) -> None:
         if namespace.list:
@@ -222,7 +222,7 @@ class CLIHandler:
                 user["authorizations"] = ", ".join(user["authorizations"])
 
             fmt = tabulate.tabulate([list(x.values()) for x in users], headers=list(users[0].keys()), tablefmt="psql")
-            await aioconsole.aprint(fmt)
+            print(fmt)
 
 
 if __name__ == "__main__":
