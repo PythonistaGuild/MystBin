@@ -3,11 +3,10 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Coroutine
 
 import msgspec
 import ujson
-from sse_starlette import EventSourceResponse
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from starlette.routing import Match
@@ -194,10 +193,6 @@ class Limiter:
             resp_.body = body
             response = resp_
 
-        elif isinstance(response, EventSourceResponse):
-            await self.app.state.db.put_log(request, Response("<SSE EVENT>", status_code=response.status_code))
-            return response
-
         await self.app.state.db.put_log(request, response)
         return response
 
@@ -214,7 +209,7 @@ class Limiter:
 
         return bucket
 
-    async def middleware(self, request: MystbinRequest, call_next: _CT) -> Response:
+    async def middleware(self, request: MystbinRequest, final: Callable[[MystbinRequest], Awaitable[Response]]) -> Response:
         zone: str | None = None
         handler: Callable | None = None
         request.state.user = None
@@ -240,10 +235,6 @@ class Limiter:
                 "X-Global-Ratelimit-Reset": str(bucket.reset_at),
                 "X-Global-Ratelimit-Max": str(bucket.count),
                 "X-Global-Ratelimit-Available": str(bucket.count - keys_used),
-                "X-Ratelimit-Used": "0",
-                "X-Ratelimit-Reset": "0",
-                "X-Ratelimit-Max": "1",
-                "X-Ratelimit-Available": "1",
                 "X-Ratelimit-Strategy": self.bucket_cls.strategy,
             }
 
@@ -261,6 +252,8 @@ class Limiter:
                         "X-Ratelimit-Reset": str(bucket.reset_at),
                         "X-Ratelimit-Max": str(bucket.count),
                         "X-Ratelimit-Available": str(bucket.count - keys_used),
+                        "X-Ratelimit-Base-Zone": zone,
+                        "X-Ratelimit-True-Zone": key,
                     }
                 )
 
@@ -268,7 +261,7 @@ class Limiter:
                     return Response(status_code=429, headers=headers)
 
             try:
-                resp = await call_next(request)
+                resp = await final(request)
                 resp.headers.update(headers)
 
                 if not getattr(handler, "SSE", None):
@@ -301,24 +294,36 @@ class Limiter:
                 "X-Ratelimit-Strategy": "ignore",
             }
             try:
-                resp = await call_next(request)
+                resp = await final(request)
                 resp.headers.update(headers)
+
                 if not getattr(handler, "SSE", None):
                     resp = await self._transform_and_log(request, resp)
+
             except msgspec.ValidationError as e:
                 resp = UJSONResponse(
                     {"error": e.args[0], "location": e.args[0]}, headers=headers, status_code=422
                 )  # TODO: parse out arguments
                 resp = await self._transform_and_log(request, resp)
+
             except msgspec.DecodeError as e:
                 resp = Response(status_code=400, headers=headers, content=f'{{"error": "{e.args[0]}"}}')
                 resp = await self._transform_and_log(request, resp)
+
             except:
                 resp = Response(status_code=500, headers=headers, content="An error occurred while processing the request")
                 resp = await self._transform_and_log(request, resp)
                 raise
 
             return resp
+
+    def decorator(
+        self, route: Callable[[MystbinRequest], Awaitable[Response]]
+    ) -> Callable[[MystbinRequest], Awaitable[Response]]:
+        async def func(request: MystbinRequest) -> Response:
+            return await self.middleware(request, route)
+
+        return func
 
 
 def parse_ratelimit(limit: str) -> tuple[int, int]:
@@ -483,7 +488,7 @@ async def ratelimit_id_key(request: Request) -> str:
 def limit(zone: str | None = None) -> Callable[[Any], Callable[[Any], Any]]:
     def wrapped(cb: Callable[[Any], Any]) -> Callable[[Any], Any]:
         cb.__zone__ = zone
-        return cb
+        return limiter.decorator(cb)
 
     return wrapped
 

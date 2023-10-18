@@ -102,7 +102,6 @@ class MystbinApp(Starlette):
             self.redis = None
 
         ratelimits.limiter.startup(self)
-        self.middleware("http")(ratelimits.limiter.middleware)
         self.add_middleware(BaseHTTPMiddleware, dispatch=self.cors_middleware)
 
         nocli = pathlib.Path(".nocli")
