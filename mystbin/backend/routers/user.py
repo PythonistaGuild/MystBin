@@ -176,7 +176,7 @@ async def delete_self(request: MystbinRequest) -> Response:
 
 desc = f"""Fetches a user's public information.
 
-This endpoint has no direct ratelimit bucket, and falls under the global ratelimit.
+This endpoint has no direct ratelimit bucket, and falls only under the global ratelimit.
 The global ratelimit is {__config['ratelimits']['global']}, and {__config['ratelimits']["authed_global"]} when logged in.
 """
 
@@ -184,15 +184,17 @@ The global ratelimit is {__config['ratelimits']['global']}, and {__config['ratel
 @router.get("/users/{id:int}")
 @openapi.instance.route(
     openapi.Route(
-        "/users/@me",
+        "/users/{id}",
         "GET",
-        "Get Self",
+        "Get Any User",
         ["users"],
         None,
-        [],
+        [
+            openapi.RouteParameter("User ID", "integer", "id", True, "path")
+        ],
         {
             200: openapi.Response("Success", openapi.PublicUser), 
-            401: openapi.UnauthorizedResponse
+            404: openapi.NotFoundResponse
         },
         description=desc,
         is_body_required=False,
@@ -203,7 +205,7 @@ async def get_any_user(request: MystbinRequest) -> VariableResponse:
     user = await request.app.state.db.get_user(user_id=int(request.path_params["id"]))
 
     if isinstance(user, int) or user is None:
-        return VariableResponse({"error": "The requested user does not exist"}, request, status_code=400)
+        return VariableResponse({"error": "The requested user does not exist"}, request, status_code=404)
     
     return VariableResponse(responses.create_struct(user, responses.PublicUser), request)
 
