@@ -39,6 +39,8 @@ from . import gravatar, tokens
 
 EPOCH = 1587304800000  # 2020-04-20T00:00:00.0 * 1000 (Milliseconds)
 
+TRIM_BODY_ROUTES = {"GET /docs", "GET /admindocs", "GET /openapi.json", "GET /admin-openapi.json"}
+
 
 def _recursive_hook(d: dict):
     for a, b in d.items():
@@ -1328,8 +1330,8 @@ class Database:
         if route == "DELETE /users/@me":
             user_id = None  # fix foreign key violation when the account has been deleted
         
-        elif route in {"GET /docs", "GET /admindocs"}:
-            resp = "<doc body trimmed>"
+        elif route in TRIM_BODY_ROUTES:
+            resp = "<body trimmed>"
 
         route += query_params
 
