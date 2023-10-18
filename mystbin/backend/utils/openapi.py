@@ -265,7 +265,7 @@ BadRequestResponse = Response(
 )
 NotFoundResponse = Response(
     "Not Found",
-    _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Paste Not Found"}),
+    _Component("BadRequestComponent", [ComponentProperty("error", "Error", "string")], example={"error": "Resource Not Found"}),
 )
 
 ValidationErrorResponse = Response(
