@@ -368,8 +368,8 @@ class Database:
                 resp: list[asyncpg.Record] = await self._do_query(
                     query, paste_id, author, expires, password, origin_ip, token_id, public, conn=conn
                 )
-            except asyncpg.ForeignKeyViolationError: # token id does not exist ???
-                raise ValueError("token id does not exist") # ????
+            except asyncpg.ForeignKeyViolationError:  # token id does not exist ???
+                raise ValueError("token id does not exist")  # ????
 
             resp = resp[0]
             to_insert = []
@@ -1311,7 +1311,8 @@ class Database:
         INSERT INTO logs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         """
         try:
-            body = request._body
+            b: bytes = await request.body()
+            body = b.decode()
         except:
             body = None
 
@@ -1321,10 +1322,13 @@ class Database:
             resp = None
 
         user_id: int | None = request.state.user and request.state.user["id"]
-        route = f"{request.method.upper()} {request.url.path}{'?' + request.url.query if request.url.query else ''}"
+        route = f"{request.method.upper()} {request.url.path}"
+        query_params = "?" + request.url.query if request.url.query else ""
 
         if route == "DELETE /users/@me":
             user_id = None  # fix foreign key violation when the account has been deleted
+
+        route += query_params
 
         await self._do_query(
             query,
