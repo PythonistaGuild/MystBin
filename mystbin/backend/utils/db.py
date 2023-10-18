@@ -1327,6 +1327,9 @@ class Database:
 
         if route == "DELETE /users/@me":
             user_id = None  # fix foreign key violation when the account has been deleted
+        
+        elif route in {"GET /docs", "GET /admindocs"}:
+            resp = "<doc body trimmed>"
 
         route += query_params
 
