@@ -100,7 +100,7 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
 
     function inputChange(e, index) {
         let newTabs = [...tabContent];
-        newTabs[index].content = e.target.innerHTML.replace(/<br ?\/?>/g, "\n");
+        newTabs[index].content = e.target.innerText.replace(/<br ?\/?>/g, "\n");
 
         if (e.target.innerHTML === "" || newTabs[index].content === "") {
             newTabs[index].content = "\n"
@@ -160,6 +160,35 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
         setUpdateHighlight(updateHighlight + 1)
     }
 
+    function handlePasting(e, index) {
+        e.preventDefault();
+
+        let paste = (e.clipboardData || window.clipboardData).getData("text");
+
+        let newTabs = [...tabContent];
+        if (paste === "" && newTabs[index].content === "") {
+            newTabs[index].content = "\n"
+            e.target.innerText = "\n"
+        }
+        else {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) {
+                e.target.innerText = paste;
+            }
+            else {
+                selection.deleteFromDocument();
+                selection.getRangeAt(0).insertNode(document.createTextNode(paste));
+                selection.collapseToEnd();
+            }
+
+            newTabs[index].content = e.target.innerText;
+        }
+
+        setTabContent(newTabs);
+        debounceCalculate();
+
+    }
+
     return (
         <>
             <div className={"tabContainer"}>
@@ -198,6 +227,7 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
                                 spellCheck={"false"}
                                 contentEditable={true}
                                 role={"textbox"}
+                                onPaste={(e) => handlePasting(e, index)}
                             />
                         <code
                             id={`code-editor-${index}`}
