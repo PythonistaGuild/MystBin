@@ -22,11 +22,13 @@ const EXTENSIONS = {
 };
 
 
-export default function Editor({copyID, tabContent, setTabContent}) {
+export default function Editor({copyID, tabContent, setTabContent, fetched}) {
     const [tab, setTab] = useState(0);
     const debounceCalculate = debounce(contentHandler, 10);
     const debounceFirst = debounce(contentHandler, 100);
     const [updateHighlight, setUpdateHighlight] = useState(0);
+
+    const textRef = useRef(null);
 
     useEffect(() => {
         window.Prism = window.Prism || {};
@@ -38,9 +40,19 @@ export default function Editor({copyID, tabContent, setTabContent}) {
     }, [updateHighlight, tab]);
 
     useEffect(() => {
+        let count = 0;
+
+        for (let file of tabContent) {
+            let textArea = document.getElementById(`code-input-${count}`);
+            textArea.textContent = file["content"];
+
+            count += 1;
+        }
+    }, [fetched])
+
+    useEffect(() => {
         Prism.highlightAll();
-        debounceFirst()
-    }, []);
+    }, [fetched]);
 
     function tabEditDown(e, index) {
         if (e.key === "Enter" || e.key === "Tab") {
@@ -88,7 +100,11 @@ export default function Editor({copyID, tabContent, setTabContent}) {
 
     function inputChange(e, index) {
         let newTabs = [...tabContent];
-        newTabs[index].content = e.target.value;
+        newTabs[index].content = e.target.innerHTML.replace(/<br ?\/?>/g, "\n");
+
+        if (e.target.innerHTML === "" || newTabs[index].content === "") {
+            newTabs[index].content = "\n"
+        }
 
         setTabContent(newTabs);
         debounceCalculate();
@@ -116,7 +132,7 @@ export default function Editor({copyID, tabContent, setTabContent}) {
         }
 
         let newTabs = [...tabContent];
-        newTabs.push({"filename": "file.ext", "content": "", "lang": "none"})
+        newTabs.push({"filename": "file.ext", "content": "\n", "lang": "none"})
         setTabContent(newTabs)
         setTab(tabContent.length)
     }
@@ -167,30 +183,33 @@ export default function Editor({copyID, tabContent, setTabContent}) {
                 {/* TODO: Config values... */}
                 {tabContent.length === 5 ? null : <span className={"tabBase tabNot tabAdd"} onClick={handleAdditionalTab}><PlusSVG /> Add</span>}
             </div>
-            <pre className={"line-numbers"} style={{whiteSpace: "pre-wrap"}} suppressHydrationWarning>
-                {tabContent.map((file, index) => {
-                    return (<Fragment key={`codeFrag-${index}`}>
-                        <textarea
-                            id={`code-input-${index}`}
-                            key={`codeInput-${index}`}
-                            className={"editorCode"}
-                            inputMode={"text"}
-                            onChange={e => inputChange(e, index)}
-                            value={file["content"]}
-                            style={tab !== index ? {display: "none"} : null}
-                            spellCheck={"false"}
-                        />
-                    <code
-                        id={`code-editor-${index}`}
-                        key={`code-${index}`}
-                        data-index-value={index}
-                        className={tab !== index ? "disabledBlock" : `language-${file["lang"]}`}
-                        style={tab !== index ? {display: "none"} : {userSelect: "none"}}>
-                            {file["content"] + "\n"}
-                    </code>
-                    </Fragment>)
-                })}
-            </pre>
+                <pre className={"line-numbers"} style={{whiteSpace: "pre-wrap"}} suppressHydrationWarning>
+                    {tabContent.map((file, index) => {
+                        return (<Fragment key={`codeFrag-${index}`}>
+                            <span
+                                ref={textRef}
+                                suppressContentEditableWarning
+                                id={`code-input-${index}`}
+                                key={`codeInput-${index}`}
+                                className={"editorCode"}
+                                inputMode={"text"}
+                                onInput={e => inputChange(e, index)}
+                                style={tab !== index ? {display: "none"} : null}
+                                spellCheck={"false"}
+                                contentEditable={true}
+                                role={"textbox"}
+                            />
+                        <code
+                            id={`code-editor-${index}`}
+                            key={`code-${index}`}
+                            data-index-value={index}
+                            className={tab !== index ? "disabledBlock" : `language-${file["lang"]}`}
+                            style={tab !== index ? {display: "none"} : {userSelect: "none"}}>
+                                {file["content"]}
+                        </code>
+                        </Fragment>)
+                    })}
+                </pre>
         </>
     )
 }

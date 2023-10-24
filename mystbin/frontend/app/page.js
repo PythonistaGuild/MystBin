@@ -35,6 +35,7 @@ export default function Home() {
     const [ratelimit, setRatelimit] = useState(false);
     const [pasteError, setPasteError] = useState(false);
     const [passwordNeeded, setPasswordNeeded] = useState(false);
+    const [fetched, setFetched] =useState(false);
 
     const searchParams = useSearchParams()
     const copyID = searchParams.get('copy')
@@ -95,7 +96,7 @@ export default function Home() {
         }
 
         setTabContent(newFiles);
-
+        setFetched(true);
     }
 
     useEffect(() => {
@@ -209,7 +210,7 @@ export default function Home() {
               </div>
 
               <div className={"innerWrapper"}>
-                  <Editor copyID={copyID} tabContent={tabContent} setTabContent={setTabContent} />
+                  <Editor copyID={copyID} tabContent={tabContent} setTabContent={setTabContent} fetched={fetched} />
                   <Footer />
               </div>
           </div>
