@@ -1,7 +1,6 @@
 "use client";
 
-import '@/prism/prism.css';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useState, Fragment} from "react";
+import {useEffect, useLayoutEffect, useState, Fragment, useRef} from "react";
 import debounce from "lodash/debounce";
 import Prism from "@/prism/prism";
 import PlusSVG from "@/app/svgs/plusSVG";
