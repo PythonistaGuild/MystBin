@@ -1161,3 +1161,6 @@ code > span::selection {
   padding-top: 0.5rem;
   gap: 0.25rem;
 }
+*[contenteditable="true"] > * {
+  padding: 0;
+}
