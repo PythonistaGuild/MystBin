@@ -100,7 +100,9 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
 
     function inputChange(e, index) {
         let newTabs = [...tabContent];
-        newTabs[index].content = e.target.innerText.replace(/<br ?\/?>/g, "\n");
+
+        // .replace(/<br ?\/?>/g, "\n");
+        newTabs[index].content = e.target.innerText
 
         if (e.target.innerHTML === "" || newTabs[index].content === "") {
             newTabs[index].content = "\n"
