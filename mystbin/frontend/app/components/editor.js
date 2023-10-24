@@ -98,12 +98,31 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
     }
 
     function inputChange(e, index) {
+        for (let child of e.target.childNodes) {
+            if (child instanceof HTMLDivElement) {
+                let content = child.innerText;
+
+                if (content === "\n") {
+                    e.target.removeChild(child)
+                }
+
+                else if (child instanceof HTMLBRElement) {
+                    e.target.removeChild(child)
+                }
+
+                else {
+                    e.target.replaceChild(document.createTextNode(content), child);
+                }
+
+            }
+        }
+
         let newTabs = [...tabContent];
 
         // .replace(/<br ?\/?>/g, "\n");
         newTabs[index].content = e.target.innerText
 
-        if (e.target.innerHTML === "" || newTabs[index].content === "") {
+        if (e.target.innerText === "" || newTabs[index].content === "") {
             newTabs[index].content = "\n"
         }
 
@@ -190,6 +209,13 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
 
     }
 
+    function handleEditableKeyDown(e) {
+        if (e.key === "Enter") {
+            document.execCommand('insertLineBreak', false);
+            e.preventDefault();
+        }
+    }
+
     return (
         <>
             <div className={"tabContainer"}>
@@ -216,7 +242,7 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
                 <pre className={"line-numbers"} style={{whiteSpace: "pre-wrap"}} suppressHydrationWarning>
                     {tabContent.map((file, index) => {
                         return (<Fragment key={`codeFrag-${index}`}>
-                            <span
+                            <div
                                 ref={textRef}
                                 suppressContentEditableWarning
                                 id={`code-input-${index}`}
@@ -226,10 +252,16 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
                                 onInput={e => inputChange(e, index)}
                                 style={tab !== index ? {display: "none"} : null}
                                 spellCheck={"false"}
-                                contentEditable={true}
                                 role={"textbox"}
                                 onPaste={(e) => handlePasting(e, index)}
-                            />
+                                onKeyDown={handleEditableKeyDown}
+                                contentEditable={"true"}
+
+                            >
+                                <p>
+                                    <br/>
+                                </p>
+                            </div>
                         <code
                             id={`code-editor-${index}`}
                             key={`code-${index}`}
