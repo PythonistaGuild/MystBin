@@ -1161,6 +1161,12 @@ code > span::selection {
   padding-top: 0.5rem;
   gap: 0.25rem;
 }
+
+/* MOBILE NAV */
+.navMobile {
+  display: none;
+}
+
 *[contenteditable="true"] > * {
   padding: 0;
 }
