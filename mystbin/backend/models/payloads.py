@@ -28,9 +28,7 @@ from msgspec import Struct
 __all__ = (
     "create_struct_from_payload",
     "PasteFile",
-    "RichPasteFile",
     "PastePost",
-    "RichPastePost",
     "PastePatch",
     "PasteDelete",
     "BookmarkPutDelete",
@@ -46,12 +44,7 @@ def create_struct_from_payload(data: str | bytes, struct: Type[T]) -> T:
 class PasteFile(Struct):
     content: str
     filename: str
-
-
-class RichPasteFile(Struct):
-    content: str
-    filename: str
-    attachment: str | None = None
+    annotation: str | None = None
 
 
 class PastePost(Struct):
@@ -59,15 +52,7 @@ class PastePost(Struct):
     expires: datetime.datetime | None = None
     password: str | None = None
     public: bool = True
-
-    requester_id: int | None = None
-    requester_slug: str | None = None
-
-
-class RichPastePost(Struct):
-    files: list[RichPasteFile]
-    expires: datetime.datetime | None = None
-    password: str | None = None
+    source: str | None = None
 
     requester_id: int | None = None
     requester_slug: str | None = None

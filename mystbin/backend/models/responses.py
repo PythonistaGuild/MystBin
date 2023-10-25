@@ -52,6 +52,7 @@ class File(Struct):
     loc: int
     charcount: int
     attachment: str | None
+    annotation: str | None
 
 
 class PastePostResponse(Struct):
@@ -61,6 +62,7 @@ class PastePostResponse(Struct):
     notice: str | None = None
     author_id: int | None = None
     expires: datetime | None = None
+    source: str | None = None
 
 
 class PasteGetResponse(Struct):

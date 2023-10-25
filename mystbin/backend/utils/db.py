@@ -325,12 +325,13 @@ class Database:
         *,
         paste_id: str,
         origin_ip: str | None,
-        pages: list[payloads.RichPasteFile] | list[payloads.PasteFile],
+        pages: list[payloads.PasteFile],
         token_id: int | None,
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
         public: bool = True,
+        source: str | None = None
     ) -> dict[str, str | int | None | list[dict[str, str | int]]]:
         """Puts the specified paste.
         Parameters
@@ -351,6 +352,8 @@ class Database:
             The token that created this paste. Used for token analytics.
         public: :class:`bool`
             Is this paste private? defaults to True.
+        source: :class:`str` | None
+            The source of the paste. Defaults to None.
 
         Returns
         ---------
@@ -361,9 +364,9 @@ class Database:
 
         async with self.pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, public)
-                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7)
-                    RETURNING id, author_id, created_at, expires, origin_ip
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, public, source)
+                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7, $8)
+                    RETURNING id, author_id, created_at, expires, origin_ip, source
                     """
 
             try:
@@ -382,14 +385,14 @@ class Database:
                         page.content,
                         page.filename,
                         page.content.count("\n") + 1,  # add an extra for line 1
-                        getattr(page, "attachment", None),
+                        page.annotation
                     )
                 )
 
             files_query = """
-                          INSERT INTO files (parent_id, content, filename, loc, attachment)
+                          INSERT INTO files (parent_id, content, filename, loc, annotation)
                           VALUES ($1, $2, $3, $4, $5)
-                          RETURNING index, filename, loc, charcount, content, attachment
+                          RETURNING index, filename, loc, charcount, content, annotation
                           """
             inserted = []
             async with conn.transaction():

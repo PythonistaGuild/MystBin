@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS pastes (
     views INTEGER DEFAULT 0,
     origin_ip TEXT,
     token_id INTEGER REFERENCES tokens(id),
-    public BOOLEAN NOT NULL DEFAULT TRUE
+    public BOOLEAN NOT NULL DEFAULT TRUE,
+    source TEXT,
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS files (
     loc INTEGER NOT NULL,
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
     index SERIAL NOT NULL,
-    attachment TEXT,
+    annotation TEXT,
     PRIMARY KEY (parent_id, index)
 );
 
