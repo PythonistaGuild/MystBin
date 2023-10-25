@@ -1,9 +1,6 @@
 "use client";
-import dynamic from 'next/dynamic'
 
 import {useEffect, useRef, useState} from "react";
-
-import '@/prism/prism.css';
 import { useCookies } from 'react-cookie';
 
 import * as dayjs from 'dayjs';
@@ -23,9 +20,8 @@ import CloseSVG from "@/app/svgs/closeSVG";
 
 import JSZip from "jszip";
 import Footer from "@/app/components/footer";
+import CodeBlock from "@/app/components/codeBlock";
 import Image from "next/image";
-
-const CodeBlock = dynamic(() => import('../components/codeBlock'), { ssr: false })
 
 
 export default function Home({ params }) {
@@ -260,7 +256,7 @@ export default function Home({ params }) {
                                             <input readOnly={true} value={`${process.env.NEXT_PUBLIC_FRONTEND_HOST}/${pasteID}`} type={"text"} onFocus={shareSelect}/>
                                             <div className={"shareButton"} onClick={() => copyURL()}>{copiedUrl === null ? <ShareSVG /> : copiedUrl === true ? <DoneSVG/> : <CloseSVG/>}</div>
                                         </div>
-                                        <div className={"downloadButton"} onClick={() => downloadPaste()}>Download <DownloadSVG /></div>
+                                        <div className={"downloadButton navMobileOff"} onClick={() => downloadPaste()}>Download <DownloadSVG /></div>
                                     </div>
                                 </div>
                             </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import '@/prism/prism.css';
 import Prism from "@/prism/prism.js";
 import {Fragment, useEffect, useLayoutEffect, useState} from "react";
 import CopySVG from "@/app/svgs/copySVG";

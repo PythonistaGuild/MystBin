@@ -248,6 +248,18 @@ a {
   color: var(--link-colour);
 }
 
+/* MOBILE NAV */
+.navMobile {
+  display: none;
+}
+.navMobileOn {
+  display: none!important;
+}
+.navMobileOff {
+  display: inherit!important;
+}
+.pasteButtonMobile {}
+
 /* MAIN CONTAINER */
 .container {
   display: flex;
@@ -613,6 +625,29 @@ code > span::selection {
     --footer-padding: 2rem 1rem;
   }
 
+  pre {
+    margin-bottom: 1rem!important;
+    height: inherit;
+  }
+
+  .preContainer {
+    height: 100%;
+  }
+
+  /* MOBILE SAVE PASTE */
+  .pasteButtonMobile {
+    align-self: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .navMobileOn {
+    display: inherit!important;
+  }
+
+  .navMobileOff {
+    display: none!important;
+  }
+
   .footerContainer {
     flex-direction: column;
     gap: 1rem;
@@ -655,9 +690,9 @@ code > span::selection {
 
   #navShares {
     margin-top: 1rem;
-    margin-right: auto!important;
-    align-items: flex-start;
-    margin-left: unset!important;
+    flex-direction: row-reverse;
+    min-width: 100%;
+    justify-content: space-between;
   }
 
   .pasteForm {
@@ -1162,11 +1197,7 @@ code > span::selection {
   gap: 0.25rem;
 }
 
-/* MOBILE NAV */
-.navMobile {
-  display: none;
-}
-
+/* FIREFOX CODE EDITOR FIX */
 *[contenteditable="true"] > * {
   padding: 0;
 }
