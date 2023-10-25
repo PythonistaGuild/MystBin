@@ -8,6 +8,7 @@ import Footer from "@/app/components/footer";
 import { useRouter } from 'next/navigation';
 import {useCookies} from "react-cookie";
 import { useSearchParams } from 'next/navigation'
+import LoadingBall from "@/app/svgs/loader";
 
 dayjs.extend(RelativeTime);
 
@@ -34,6 +35,7 @@ export default function Home() {
     const [pasteError, setPasteError] = useState(false);
     const [passwordNeeded, setPasswordNeeded] = useState(false);
     const [fetched, setFetched] =useState(false);
+    const [saving, setSaving] = useState(false);
 
     const searchParams = useSearchParams()
     const copyID = searchParams.get('copy')
@@ -106,10 +108,16 @@ export default function Home() {
 
 
     async function savePaste() {
-        if (tabContent.every( (val, i, arr) => val["content"] === "" )) {
+        if (saving) {
             return
         }
 
+        if (tabContent.every( (val, i, arr) => val["content"] === "" )) {
+            setSaving(false);
+            return
+        }
+
+        setSaving(true);
         let pasteContent = {files: []};
 
         for (let file of tabContent) {
@@ -141,7 +149,8 @@ export default function Home() {
                 body: JSON.stringify(pasteContent)
             })
         } catch (err) {
-            setPasteError(true)
+            setPasteError(true);
+            setSaving(false);
             return
         }
 
@@ -150,6 +159,7 @@ export default function Home() {
             let identifier = data["id"];
 
             setSavedPaste(identifier);
+            setSaving(false);
 
             if (pasteContent["password"] !== undefined) {
                 setCookie(identifier, pasteContent["password"], {maxAge: 3600})
@@ -159,6 +169,7 @@ export default function Home() {
 
         if (response.status === 429) {
             setRatelimit(true);
+            setSaving(false);
             return
         } else {
             setRatelimit(false);
@@ -168,6 +179,7 @@ export default function Home() {
             setPasteError(true);
         }
 
+        setSaving(false);
     }
 
     useEffect(() => {
@@ -199,7 +211,7 @@ export default function Home() {
                               <input type={"number"} ref={expireRef} className={"passwordPasteInput"} autoComplete="off" placeholder={"Between 1-72"} min="0" max="72"/>
                           </div>
                           <div className={"pasteFormItem navRight navMobileOff"}>
-                              <div className={"pasteSubmitButton"} onClick={savePaste}>Save Paste</div>
+                              <div className={"pasteSubmitButton"} onClick={savePaste}>{saving ? <LoadingBall /> : "Save Paste"}</div>
                               {ratelimit ? <small className={"wrongPassword"}>You are being rate limited. Please slow down, and try again later.</small> : null}
                               {pasteError ? <small className={"wrongPassword"}>It looks like an internal error has occurred. Please try again in a moment.</small> : null}
                           </div>
@@ -211,7 +223,7 @@ export default function Home() {
                   <Editor copyID={copyID} tabContent={tabContent} setTabContent={setTabContent} fetched={fetched} />
 
                   <div className={"pasteButtonMobile navMobileOn"}>
-                      <div className={"pasteSubmitButton"} onClick={savePaste}>Save Paste</div>
+                      <div className={"pasteSubmitButton"} onClick={savePaste}>{saving ? <LoadingBall /> : "Save Paste"}</div>
                       {ratelimit ? <small className={"wrongPassword"}>You are being rate limited. Please slow down, and try again later.</small> : null}
                       {pasteError ? <small className={"wrongPassword"}>It looks like an internal error has occurred. Please try again in a moment.</small> : null}
                   </div>

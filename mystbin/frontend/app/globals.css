@@ -1172,6 +1172,11 @@ code > span::selection {
   align-self: flex-end;
 }
 
+.pasteSubmitButton > svg {
+  height: 1.5rem;
+  width: auto;
+}
+
 .pasteSubmitButton:hover {
   filter: brightness(120%);
   cursor: pointer;
