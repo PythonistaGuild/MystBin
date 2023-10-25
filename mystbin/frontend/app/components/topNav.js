@@ -87,7 +87,7 @@ export default function TopNav({children}) {
                 </div>
             </div>
 
-            <div>
+            <div id={"loginButton"}>
                 Login
             </div>
         </div>
