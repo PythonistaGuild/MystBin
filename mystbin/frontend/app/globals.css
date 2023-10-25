@@ -364,6 +364,7 @@ a {
 
 /* TAB STUFF */
 .tabContainer {
+  overflow-y: hidden;
   display: flex;
   flex-direction: row;
   margin-right: auto;
