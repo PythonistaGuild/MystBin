@@ -5,7 +5,6 @@ import debounce from "lodash/debounce";
 import Prism from "@/prism/prism";
 import PlusSVG from "@/app/svgs/plusSVG";
 import CloseSVG from "@/app/svgs/closeSVG";
-import {useCookies} from "react-cookie";
 
 
 const EXTENSIONS = {
@@ -24,7 +23,6 @@ const EXTENSIONS = {
 export default function Editor({copyID, tabContent, setTabContent, fetched}) {
     const [tab, setTab] = useState(0);
     const debounceCalculate = debounce(contentHandler, 10);
-    const debounceFirst = debounce(contentHandler, 100);
     const [updateHighlight, setUpdateHighlight] = useState(0);
 
     const textRef = useRef(null);
@@ -118,7 +116,6 @@ export default function Editor({copyID, tabContent, setTabContent, fetched}) {
         }
 
         let newTabs = [...tabContent];
-
         // .replace(/<br ?\/?>/g, "\n");
         newTabs[index].content = e.target.innerText
 

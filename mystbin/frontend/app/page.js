@@ -1,8 +1,6 @@
 "use client";
 import {useEffect, useRef, useState} from "react";
 
-import '@/prism/prism.css';
-
 import * as dayjs from 'dayjs';
 import RelativeTime from 'dayjs/plugin/relativeTime';
 import Editor from "@/app/components/editor";
@@ -200,7 +198,7 @@ export default function Home() {
                               <small>Optional Expiry: (Hours)</small>
                               <input type={"number"} ref={expireRef} className={"passwordPasteInput"} autoComplete="off" placeholder={"Between 1-72"} min="0" max="72"/>
                           </div>
-                          <div className={"pasteFormItem navRight"}>
+                          <div className={"pasteFormItem navRight navMobileOff"}>
                               <div className={"pasteSubmitButton"} onClick={savePaste}>Save Paste</div>
                               {ratelimit ? <small className={"wrongPassword"}>You are being rate limited. Please slow down, and try again later.</small> : null}
                               {pasteError ? <small className={"wrongPassword"}>It looks like an internal error has occurred. Please try again in a moment.</small> : null}
@@ -211,6 +209,13 @@ export default function Home() {
 
               <div className={"innerWrapper"}>
                   <Editor copyID={copyID} tabContent={tabContent} setTabContent={setTabContent} fetched={fetched} />
+
+                  <div className={"pasteButtonMobile navMobileOn"}>
+                      <div className={"pasteSubmitButton"} onClick={savePaste}>Save Paste</div>
+                      {ratelimit ? <small className={"wrongPassword"}>You are being rate limited. Please slow down, and try again later.</small> : null}
+                      {pasteError ? <small className={"wrongPassword"}>It looks like an internal error has occurred. Please try again in a moment.</small> : null}
+                  </div>
+
                   <Footer />
               </div>
           </div>
