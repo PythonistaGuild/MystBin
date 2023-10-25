@@ -1,6 +1,7 @@
 import LogoSmall from "@/app/svgs/logoSmallSVG";
 import GithubLogo from "@/app/svgs/githubLogoSVG";
 import DiscordLogo from "@/app/svgs/discordLogoSVG";
+import Image from "next/image";
 
 
 export default function Footer() {
@@ -13,6 +14,7 @@ export default function Footer() {
 
             <div className={"footerRight"}>
                 <div className={"footerSection"}>
+                    <a href={"vscode:extension/PythonistaGuild.mystbin"}>Install on <Image src={"/vsc.png"} alt={"Visual Studio Code"} width={16} height={16}/></a>
                     <a href={`${process.env.NEXT_PUBLIC_BACKEND_HOST}/docs`}>Documentation</a>
                     <a href={"/privacy"}>Privacy Policy</a>
                     <a href={"https://discord.gg/RAKc3HF"}>Contact</a>
