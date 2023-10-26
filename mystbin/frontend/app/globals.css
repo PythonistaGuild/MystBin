@@ -354,6 +354,11 @@ a {
   align-items: center;
 }
 
+.footerSection > a {
+  display: flex;
+  gap: 0.125rem;
+}
+
 .footerRight {
   display: flex;
   flex-direction: row;
