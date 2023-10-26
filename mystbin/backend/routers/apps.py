@@ -39,7 +39,6 @@ ConnectBody = openapi._Component(
 )
 
 
-@limit("apps")
 @router.post("/users/connect/discord")
 @openapi.instance.route(
     openapi.Route(
@@ -57,6 +56,7 @@ ConnectBody = openapi._Component(
         exclude_from_default_schema=True,
     )
 )
+@limit("apps")
 async def auth_from_discord(request: MystbinRequest) -> UJSONResponse:
     """Allows user to authenticate from Discord OAuth."""
     try:

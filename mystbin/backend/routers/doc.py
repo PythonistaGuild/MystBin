@@ -61,6 +61,21 @@ The following are valid values in the `Accept` Header for all endpoints that ret
 - `application/msgpack`
 
 Note that toml does not have NULL values, so `"NULL"` will be sent to represent them.
+
+Ratelimits fall under two types. The global ratelimit applies to all requests, and the zone ratelimit applies to the zone of the route you're requesting.
+You'll find the following headers for a typical request where both apply (the global ratelimit looks like `X-Global-Ratelimit-Foobar`):
+
+- `X-Ratelimit-Used` - How many requests have been applied against the current ratelimit.
+- `X-Ratelimit-Reset` - When the ratelimit will reset. Only applies when the strategy is `window`.
+- `X-Ratelimit-Max` - The max amount of requests that can be made.
+- `X-Ratelimit-Available` - How many requests are available to be made.
+
+The following key will be available all the time:
+- `X-Ratelimit-Strategy` - The method that the server is using to manage ratelimits.
+
+The following keys will only be available for zone ratelimits (not global ones, or when there is no zone):
+- `X-Ratelimit-Base-Zone` - The base zone of the request. This is static per-route. Ex `postpastes`.
+- `X-Ratelimit-True-Zone` - The zone for this particular request. This can change depending on factors such as passing a valid token, Ex `authed_postpastes`.
 """
 
 router = Router()

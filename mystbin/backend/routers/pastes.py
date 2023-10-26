@@ -63,7 +63,7 @@ def generate_paste_id(n: int = 3):
     return "".join(word_samples).replace("\n", "")
 
 
-def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile, request: Request, n=1):
+def enforce_paste_limit(app, paste: payloads.PasteFile, request: Request, n=1):
     charlim = app.config["paste"]["character_limit"]
     filename_lim = app.config["paste"]["filename_character_limit"]
 
@@ -90,7 +90,7 @@ def enforce_paste_limit(app, paste: payloads.PasteFile | payloads.RichPasteFile,
     return None
 
 
-def enforce_multipaste_limit(app, pastes: payloads.PastePost | payloads.RichPastePost, request: Request):
+def enforce_multipaste_limit(app, pastes: payloads.PastePost, request: Request):
     filelim = app.config["paste"]["character_limit"]
     if len(pastes.files) < 1:
         return VariableResponse({"error": "files.length: you have not provided any files"}, request, status_code=400)
@@ -127,7 +127,7 @@ async def upload_to_gist(request: MystbinRequest, tokens: str) -> dict:
         raise RuntimeError
 
 
-async def find_discord_tokens(request: MystbinRequest, pastes: payloads.PastePost | payloads.RichPastePost):
+async def find_discord_tokens(request: MystbinRequest, pastes: payloads.PastePost):
     if not request.app.config["apps"].get("github_bot_token", None):
         return None
 
@@ -152,7 +152,7 @@ def respect_dnt(request: MystbinRequest):
 
 
 async def handle_paste_requests(
-    request: MystbinRequest, payload: payloads.RichPastePost | payloads.PastePost, new_paste_id: str
+    request: MystbinRequest, payload: payloads.PastePost, new_paste_id: str
 ) -> str | None:
     if payload.requester_id is not None and payload.requester_slug is not None:
         if await request.app.state.db.get_paste_request(payload.requester_slug, payload.requester_id) is not None:
@@ -218,6 +218,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         origin_ip=respect_dnt(request),
         token_id=token_id,
         public=payload.public,
+        source=payload.source
     )
 
     _request_notice = await handle_paste_requests(request, payload, paste_id)
@@ -632,7 +633,7 @@ async def compat_create_paste(request: MystbinRequest) -> VariableResponse:
 
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
-        pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"))],
+        pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"), annotation=None)],
         origin_ip=respect_dnt(request),
         token_id=None,
     )

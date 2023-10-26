@@ -354,7 +354,7 @@ File = _Component(
         ComponentProperty("content", "Content", "string", required=True),
         ComponentProperty("loc", "Lines of content", "integer", required=True),
         ComponentProperty("charcount", "Character Count", "integer", required=True),
-        ComponentProperty("attachment", "Attachment", "string"),
+        ComponentProperty("annotation", "File Annotation", "string")
     ],
     example={
         "filename": "foo.py",
@@ -363,16 +363,6 @@ File = _Component(
         "charcount": 49,
         "attachment": "https://mystbin.b-cdn.com/umbra_sucks.jpeg",
     },
-)
-
-UploadRichPasteFile = _Component(
-    "UploadRichPasteFile",
-    properties=[
-        ComponentProperty("content", "Content", "string", required=True),
-        ComponentProperty("filename", "Filename", "string", required=True),
-        ComponentProperty("attachment", "Attachment", "string", required=False),
-    ],
-    example={"content": "explosions everywhere", "filename": "kaboom.txt", "attachment": "image.png"},
 )
 
 UploadPasteFile = _Component(
@@ -393,36 +383,20 @@ PastePost = _Component(
         ComponentProperty("requester_id", "Requester ID", "integer", required=False),
         ComponentProperty("requester_slug", "Requester Slug", "string", required=False),
         ComponentProperty("private", "Private Paste", "boolean", required=False),
+        ComponentProperty("source", "Source", "string", required=False)
     ],
     example={
         "expires": "2020-11-16T13:46:49.215Z",
         "password": None,
         "private": False,
+        "source": "Mystbin Web",
         "files": [
             {"content": "import this", "filename": "foo.py"},
             {
                 "filename": "doc.md",
                 "content": "**do not use this in production**",
+                "annotation": "Lines 18-25 of main.py"
             },
-        ],
-    },
-)
-
-RichPastePost = _Component(
-    "RichPastePost",
-    properties=[
-        ComponentProperty("expires", "Expires", "date-time", required=False),
-        ComponentProperty("password", "Password", "string", required=False),
-        ComponentArrayProperty("files", "Files", required=True, items=UploadRichPasteFile),
-        ComponentProperty("requester_id", "Requester ID", "integer", required=False),
-        ComponentProperty("requester_slug", "Requester Slug", "string", required=False),
-    ],
-    example={
-        "expires": "2020-11-16T13:46:49.215Z",
-        "password": None,
-        "files": [
-            {"content": "import this", "filename": "foo.py", "attachment": None},
-            {"filename": "doc.md", "content": "**do not use this in production**", "attachment": "image2.jpeg"},
         ],
     },
 )

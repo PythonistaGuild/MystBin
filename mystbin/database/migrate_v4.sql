@@ -36,7 +36,12 @@ ALTER TABLE pastes
         REFERENCES users(id)
         ON DELETE SET NULL,
     ADD COLUMN public BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN source TEXT,
     ALTER COLUMN created_at TYPE TIMESTAMP; -- previously timestamp with time zone
+
+ALTER TABLE files
+    DROP attachment,
+    ADD COLUMN annotation TEXT;
 
 CREATE TABLE tokens (
     id SERIAL PRIMARY KEY,
