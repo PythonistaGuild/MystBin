@@ -51,7 +51,6 @@ class File(Struct):
     content: str
     loc: int
     charcount: int
-    attachment: str | None
     annotation: str | None
 
 
