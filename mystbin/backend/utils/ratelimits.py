@@ -97,10 +97,10 @@ class InMemoryLimitBucket(BaseLimitBucket):
     async def hit(self) -> tuple[bool, int]:
         await self._clear_dead_keys()
         self.hits.append(time.time())
-        return len(self.hits) >= self.count, len(self.hits)
+        return len(self.hits) > self.count, len(self.hits)
 
     async def is_limited(self) -> bool:
-        return len(self.hits) >= self.count
+        return len(self.hits) > self.count
 
     @property
     def reset_at(self):
@@ -140,14 +140,14 @@ class RedisLimitBucket(BaseLimitBucket):
         else:
             val = await self.app.redis.incr(self.key)
 
-        return val >= self.count, val
+        return val > self.count, val
 
     async def is_limited(self) -> bool:
         if not self.app.redis:
             raise NoRedisConnection()
 
         t = await self.app.redis.get(self.key)
-        return t >= self.count if t is not None else False
+        return t > self.count if t is not None else False
 
     @property
     def reset_at(self):
@@ -209,8 +209,7 @@ class Limiter:
 
         return bucket
 
-    async def middleware(self, request: MystbinRequest, final: Callable[[MystbinRequest], Awaitable[Response]]) -> Response:
-        zone: str | None = None
+    async def middleware(self, request: MystbinRequest, final: Callable[[MystbinRequest], Awaitable[Response]], zone: str | None) -> Response:
         handler: Callable | None = None
         request.state.user = None
 
@@ -218,12 +217,6 @@ class Limiter:
             await _fetch_user(request)
         except IPBanned as e:
             return e.resp  # don't log attempts from banned ips (maybe we should?)
-
-        for route in self.app.routes:
-            match, _ = route.matches(request.scope)
-            if match == Match.FULL and hasattr(route, "endpoint"):
-                handler = route.endpoint  # type: ignore
-                zone = getattr(handler, "__zone__", None)
 
         if not await _ignores_ratelimits(request):
             key = await self.get_key("global", request)
@@ -321,7 +314,7 @@ class Limiter:
         self, route: Callable[[MystbinRequest], Awaitable[Response]]
     ) -> Callable[[MystbinRequest], Awaitable[Response]]:
         async def func(request: MystbinRequest) -> Response:
-            return await self.middleware(request, route)
+            return await self.middleware(request, route, getattr(route, "__zone__"))
 
         return func
 
