@@ -157,7 +157,7 @@ Not that it matters after deleting your account.
         ["users"],
         None,
         [],
-        {204: openapi.Response("Deleted", None), 401: openapi.UnauthorizedResponse},
+        {204: openapi.Response("Processing", None), 401: openapi.UnauthorizedResponse},
         description=desc,
         is_body_required=False,
     )
@@ -168,9 +168,9 @@ async def delete_self(request: MystbinRequest) -> Response:
     if not user:
         return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
 
-    await request.app.state.db.delete_user(
+    await request.app.state.db.mark_user_for_deletion(
         user["id"], True
-    )  # TODO: do we want to allow deletion of all pastes tied to account?
+    )
     return Response(status_code=204)
 
 
@@ -682,7 +682,48 @@ async def set_user_style(request: MystbinRequest) -> Response | VariableResponse
     return Response(status_code=204)
 
 
-@router.post("/yeet")
-@limit()
-async def stuff(request: MystbinRequest):
+desc = f"""Requests the authorized users data, in compliance with the GDPR.
+* Required authentication.
+
+This endpoint falls under the `datapackage` ratelimit bucket.
+The `datapackage` bucket has a ratelimit of {__config['ratelimits']['datapackage']}
+
+Version added: 4.0
+"""
+
+@router.post("/users/@me/datapackage")
+@openapi.instance.route(
+    openapi.Route(
+        "/users/@me/datapackage",
+        "POST",
+        "Request DataPackage",
+        ["users"],
+        None,
+        [
+            openapi.RouteParameter("Email", "string", "email", True, "query")
+        ],
+        {
+            204: openapi.Response("Scheduled", None),
+            400: openapi.BadRequestResponse,
+            401: openapi.UnauthorizedResponse
+        },
+        description=desc,
+        is_body_required=False,
+        exclude_from_default_schema=True
+    )
+)
+@limit("datapackage")
+async def get_user_datapackage(request: MystbinRequest) -> Response:
+    if not request.state.user:
+        return VariableResponse({"error": "Unauthorized"}, request, status_code=401)
+    
+    email = request.query_params.get("email")
+    if not email:
+        return VariableResponse({"error": "Missing email query parameter"}, request, status_code=400)
+    
+    if not await request.app.state.db.check_user_email(request.state.user_id, email): # type: ignore
+        return VariableResponse({"error": "Invalid email provided. Try with an email attached to your account."}, request, status_code=400)
+    
+    await request.app.state.db.request_datapackage(request.state.user_id, email) # type: ignore
+
     return Response(status_code=204)

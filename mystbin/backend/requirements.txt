@@ -16,3 +16,4 @@ python-multipart
 sse-starlette
 tomli_w
 prompt_toolkit>=3.0.39,<4
+aiosmtplib>=3.0,<4.0

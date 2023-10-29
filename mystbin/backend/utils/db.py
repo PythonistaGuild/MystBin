@@ -30,6 +30,7 @@ from typing import Any, Awaitable, Callable, Literal, cast
 import asyncpg
 import msgspec
 from asyncpg import Record
+from msgspec import json
 from models import payloads, responses
 from starlette.requests import Request
 from starlette.responses import Response
@@ -937,6 +938,15 @@ class Database:
         data = await self._do_query(query, emails)
         if data:
             return data[0]["id"]
+    
+    async def check_user_email(self, userid: int, email: str) -> bool:
+        """quick check to query if a user has a listed email"""
+        query = """
+                SELECT 1 FROM users WHERE $1 = ANY(emails) AND id = $2
+                """
+
+        data = await self._do_query(query, email, userid)
+        return len(data) > 0
 
     async def toggle_admin(self, userid: int, admin: bool) -> bool:
         """Quick query to toggle admin privileges."""
@@ -1350,12 +1360,17 @@ class Database:
             response.status_code,
             resp,
         )
+    
+    async def mark_user_for_deletion(self, user_id: int, keep_pastes: bool) -> None:
+        """
+        Marks the users account for deletion. This will process the deletion, and then send a confirmation email.
+        """
+        query = "SELECT pg_notify('create_task', $1);"
+        await self._do_query(query, json.encode({"task": "delete_user", "user_id": user_id, "keep_pastes": keep_pastes}).decode())
 
-    async def delete_user(self, user_id: int, keep_pastes: bool) -> None:
+    async def request_datapackage(self, user_id: int, email: str) -> None:
         """
-        Deletes a user's account.
-        This simply calls the underlying SQL function created in the schema,
-        refer to the SQL function for implementation details.
+        Request a data package for a user.
         """
-        query = "SELECT public.deleteUserAccount($1::bigint, $2::boolean) AS pain"
-        await self._do_query(query, user_id, keep_pastes)
+        query = "SELECT pg_notify('create_task', $1);"
+        await self._do_query(query, json.encode({"task": "datapackage", "user_id": user_id, "email": email}).decode())

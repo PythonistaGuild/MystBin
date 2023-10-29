@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import argparse
 import json
 import os
 import pathlib
 import sys
+import atexit
 
 import uvicorn
 from uvicorn.supervisors import Multiprocess
 
+from daemon import tasks
 
 def get_config() -> dict[str, dict[str, int | str]]:
     pth = pathlib.Path("config.json")
@@ -25,6 +28,10 @@ def get_config() -> dict[str, dict[str, int | str]]:
         data = json.load(f)
 
     return data
+
+
+def print_ignore_shutdown():
+    print("\033[31;1;4mTHESE ARE EXPECTED ERRORS AND SHOULD BE IGNORED. DO NOT OPEN BUG REPORTS ABOUT THEM.\033[0m", flush=True)
 
 
 if __name__ == "__main__":
@@ -57,17 +64,43 @@ if __name__ == "__main__":
         config = uvicorn.Config("app:app", port=port, host="127.0.0.1")
 
     server = uvicorn.Server(config)
+    taskmaster = tasks.TaskProcessor(cfg)
 
     if use_workers:
         config.workers = worker_count
         sock = config.bind_socket()
 
         runner = Multiprocess(config, target=server.run, sockets=[sock])
+
+        async def _run():
+            await taskmaster.start()
+            await asyncio.get_running_loop().run_in_executor(None, runner.should_exit.wait)
+            runner.shutdown()
+
+        def run():
+            runner.startup()
+            asyncio.run(_run())
+
     else:
         runner = server
 
+        async def _run():
+            await taskmaster.start()
+            try:
+                await runner.serve()
+            except KeyboardInterrupt:
+                pass
+        
+        def run():
+            runner.config.setup_event_loop()
+            asyncio.run(_run())
+            
     try:
-        runner.run()
+        atexit.register(print_ignore_shutdown) # this is stupid, but the only way to ensure the print happens after all the errors
+
+        run()
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        pass
     finally:
         if _cli_path.exists():
             os.remove(_cli_path)

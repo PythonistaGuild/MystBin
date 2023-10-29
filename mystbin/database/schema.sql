@@ -91,20 +91,6 @@ CREATE TABLE requested_pastes (
     fulfilled_slug TEXT
 );
 
-CREATE OR REPLACE FUNCTION deleteOldPastes() RETURNS TRIGGER AS $$
-BEGIN
-    DELETE FROM pastes CASCADE WHERE expires IS NOT NULL AND expires < now() AT TIME ZONE 'utc';
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS oldPastesExpiry on public.pastes;
-CREATE TRIGGER oldPastesExpiry
-    AFTER INSERT OR UPDATE
-    ON pastes
-    FOR STATEMENT
-    EXECUTE PROCEDURE deleteOldPastes();
-
 CREATE OR REPLACE FUNCTION deleteUserAccount(delete_user_id BIGINT, keep_pastes BOOLEAN)
 RETURNS BOOLEAN
 AS $$

@@ -72,6 +72,8 @@ CREATE TABLE requested_pastes (
     fulfilled_slug TEXT
 );
 
+DROP TRIGGER IF EXISTS oldPastesExpiry on public.pastes;
+
 CREATE OR REPLACE FUNCTION deleteUserAccount(delete_user_id INTEGER, keep_pastes BOOLEAN)
 RETURNS BOOLEAN
 AS $$

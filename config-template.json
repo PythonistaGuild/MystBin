@@ -45,6 +45,15 @@
         "_commend_webhook": "If filled, and a sentry webhook is configured to mysite.com/callbacks/sentry, will forward all new errors to the webhook",
         "discord_webhook": ""
     },
+    "mailer": {
+        "_comment": "Mail sender used for sending out data packages. If left empty, data packages will be disabled. Be carefuly when disabling this, as you may break GDPR.",
+        "smtp_server": "smtp.myemailprovider.com",
+        "_comment_port": "use 465 for SSL or 587 for STARTTLS",
+        "smtp_port": 465,
+        "from": "myaddress@myemailprovider.com",
+        "username": "mylogindetails",
+        "password": "mypassword"
+    },
     "ratelimits": {
         "_comment": "Ratelimit values. Written in the format of `time/unit` (60/minute)",
         "global": "60/minute",
@@ -60,6 +69,13 @@
         "admin": "5/second",
         "apps": "5/hour",
         "sentry": "10/minute",
-        "bookmarks": "30/minute"
-    }
+        "bookmarks": "30/minute",
+        "datapackage": "1/week"
+    },
+    "banned_handles": [
+        "admin",
+        "dashboard",
+        "root",
+        ""
+    ]
 }
