@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS pastes (
     token_id INTEGER REFERENCES tokens(id),
     public BOOLEAN NOT NULL DEFAULT TRUE,
     source TEXT,
+    safety TEXT
 );
 
 CREATE TABLE IF NOT EXISTS files (

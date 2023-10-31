@@ -37,6 +37,7 @@ ALTER TABLE pastes
         ON DELETE SET NULL,
     ADD COLUMN public BOOLEAN NOT NULL DEFAULT TRUE,
     ADD COLUMN source TEXT,
+    ADD COLUMN safety TEXT,
     ALTER COLUMN created_at TYPE TIMESTAMP; -- previously timestamp with time zone
 
 ALTER TABLE files

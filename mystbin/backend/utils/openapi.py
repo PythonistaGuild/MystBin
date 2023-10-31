@@ -583,3 +583,13 @@ Style = _Component(
         ComponentProperty("prism_theme", "Prism Theme", "string", required=True),
     ],
 )
+
+SafetyDelete = _Component(
+    "SafetyDelete",
+    properties=[
+        ComponentProperty("id", "Paste ID", "string", required=True),
+    ],
+    example={
+        "id": "ThreeRandomWords"
+    },
+)

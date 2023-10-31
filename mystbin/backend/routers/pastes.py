@@ -22,6 +22,7 @@ import asyncio
 import json
 import pathlib
 import re
+import secrets
 from random import sample
 
 import msgspec
@@ -205,6 +206,7 @@ async def put_pastes(request: MystbinRequest) -> Response:
         data = await upload_to_gist(request, "\n".join(tokens))
         notice = f"Discord tokens have been found and uploaded to {data['html_url']}"
 
+    safety_token: str = secrets.token_urlsafe(64)
     author: int | None = author_["id"] if author_ else None
     token_id: int | None = request.state.token_id if author else None
     paste_id: str = generate_paste_id()
@@ -218,7 +220,8 @@ async def put_pastes(request: MystbinRequest) -> Response:
         origin_ip=respect_dnt(request),
         token_id=token_id,
         public=payload.public,
-        source=payload.source
+        source=payload.source,
+        safety=safety_token
     )
 
     _request_notice = await handle_paste_requests(request, payload, paste_id)
@@ -229,6 +232,8 @@ async def put_pastes(request: MystbinRequest) -> Response:
             notice = _request_notice
 
     paste["notice"] = notice and notice.strip()
+    paste["safety_token"] = safety_token
+
     response = responses.PastePostResponse(**paste)  # type: ignore
     return VariableResponse(response, request)
 
@@ -630,12 +635,14 @@ async def compat_create_paste(request: MystbinRequest) -> VariableResponse:
     limit = request.app.config["paste"]["character_limit"]
     if len(content) > limit:
         return VariableResponse({"error": f"body: file size exceeds character limit of {limit}"}, request, status_code=400)
-
+    
+    safety_token: str = secrets.token_urlsafe(64)
     paste: Record = await request.app.state.db.put_paste(
         paste_id=generate_paste_id(),
         pages=[payloads.PasteFile(filename="file.txt", content=content.decode("utf8"), annotation=None)],
         origin_ip=respect_dnt(request),
         token_id=None,
+        safety=safety_token
     )
     return VariableResponse({"key": paste["id"]}, request)
 

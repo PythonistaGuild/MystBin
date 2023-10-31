@@ -201,6 +201,9 @@ class Database:
                 contents: list[asyncpg.Record] = await self._do_query(query, paste_id, conn=conn)
                 resp = dict(resp[0])
                 resp["files"] = [responses.create_struct(x, responses.File) for x in contents]
+
+                # Ensure we are never sending this token after the initial POST request.
+                resp.pop("safety", None)
                 return resp
             else:
                 return None
@@ -328,6 +331,7 @@ class Database:
         origin_ip: str | None,
         pages: list[payloads.PasteFile],
         token_id: int | None,
+        safety: str,
         expires: datetime.datetime | None = None,
         author: int | None = None,
         password: str | None = None,
@@ -355,6 +359,8 @@ class Database:
             Is this paste private? defaults to True.
         source: :class:`str` | None
             The source of the paste. Defaults to None.
+        safety: :class:`str`
+            The safety token for this paste.
 
         Returns
         ---------
@@ -365,14 +371,15 @@ class Database:
 
         async with self.pool.acquire() as conn:
             query = """
-                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, public, source)
-                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7, $8)
+                    INSERT INTO pastes (id, author_id, expires, password, origin_ip, token_id, public, source, safety)
+                    VALUES ($1, $2, $3, (SELECT crypt($4, gen_salt('bf')) WHERE $4 is not null), $5, $6, $7, $8, $9)
                     RETURNING id, author_id, created_at, expires, origin_ip, source
                     """
 
             try:
                 resp: list[asyncpg.Record] = await self._do_query(
-                    query, paste_id, author, expires, password, origin_ip, token_id, public, source, conn=conn
+                    query, paste_id, author, expires, password, origin_ip, token_id, public, source, safety,
+                    conn=conn
                 )
             except asyncpg.ForeignKeyViolationError:  # token id does not exist ???
                 raise ValueError("token id does not exist")  # ????
@@ -582,7 +589,7 @@ class Database:
         return (await self._do_query(query))[0]["count"]
 
     @wrapped_hook_callback
-    async def delete_paste(self, paste_id: str, author_id: int | None = None, *, admin: bool = False) -> str | None:
+    async def delete_paste(self, paste_id: str, author_id: int | None = None, *, admin: bool = False, safety: str | bool = False) -> str | None:
         """Delete a paste, with an admin override.
 
         Parameters
@@ -593,6 +600,8 @@ class Database:
             The author ID the paste belongs to.
         admin: :class:`bool`
             Admin override. Defaults to False.
+        safety: :class:`str`
+            The safety token to use when deleting this paste.
 
         Returns
         ---------
@@ -603,11 +612,10 @@ class Database:
                 DELETE FROM pastes CASCADE
                 WHERE (id = $1 AND author_id = $2)
                 OR (id = $1 AND $3)
+                OR (safety = $4)
                 RETURNING id;
                 """
-
-        response = await self._do_query(query, paste_id, author_id, admin)
-
+        response = await self._do_query(query, paste_id, author_id, admin, safety)
         return response[0] if response else None
 
     async def put_paste_request(self, slug: str, author_id: int) -> None:

@@ -58,6 +58,7 @@ class PastePostResponse(Struct):
     created_at: datetime
     files: list[File]
     id: str
+    safety_token: str
     notice: str | None = None
     author_id: int | None = None
     expires: datetime | None = None
@@ -167,3 +168,7 @@ class Style(Struct):
     secondary_font: str
     accent: str
     prism_theme: str
+    
+
+class SafetyDelete(Struct):
+    id: str
