@@ -18,6 +18,9 @@ along with MystBin.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
+import pathlib
+import json
+
 from asyncpg import Record
 from models import responses
 
@@ -28,12 +31,25 @@ from utils.responses import Response, VariableResponse
 from utils.router import Router
 
 
+__p = pathlib.Path("./config.json")
+if not __p.exists():
+    __p = pathlib.Path("../../config.json")
+
+with __p.open() as __f:
+    __config = json.load(__f)
+
+del __p, __f  # micro-opt, don't keep unneeded variables in-ram
+
+
 router = Router()
 
 
 desc = f"""Delete a paste using a Safety Token.
 
 When you create a paste you will receive a token named "safety_token", this token is displayed **only once**.
+
+This endpoint has no direct ratelimit bucket, and falls only under the global ratelimit.
+The global ratelimit is {__config['ratelimits']['global']}, and {__config['ratelimits']["authed_global"]} when logged in.
 """
 
 
@@ -45,9 +61,9 @@ When you create a paste you will receive a token named "safety_token", this toke
         "Delete Paste with Safety Token",
         ["safety"],
         None,
-        [],
+        [openapi.RouteParameter("Safety Token", "string", "safety_token", True, "path")],
         {
-            200: openapi.Response("Success", openapi.SafetyDelete),
+            200: openapi.Response("Success", openapi.SafetyDeleteResponse),
             404: openapi.NotFoundResponse,
         },
         description=desc,

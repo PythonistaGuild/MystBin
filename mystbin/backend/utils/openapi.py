@@ -584,7 +584,7 @@ Style = _Component(
     ],
 )
 
-SafetyDelete = _Component(
+SafetyDeleteResponse = _Component(
     "SafetyDelete",
     properties=[
         ComponentProperty("id", "Paste ID", "string", required=True),
