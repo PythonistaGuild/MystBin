@@ -116,5 +116,13 @@ After installing the dependancies and copying/symlinking the config, you can bri
 If using the default port, it'd look like `yarn run start --port 4340`.
 
 
+## Docker Installation
+
+To run docker, copy the configuration as noted above to the proper places, but additionally, copy (or symlink) ``config.json`` to ``mystbin/frontend/config.json``.
+
+Then you can proceed as normal with running ``docker compose up``.
+
 ## Other things
 This guide does not cover using a reverse proxy, if you need assistance with that, google "reverse proxy nginx tutorial".
+
+For docker, this guide assumes you have docker compose installed. If you do not, you will need it installed.
