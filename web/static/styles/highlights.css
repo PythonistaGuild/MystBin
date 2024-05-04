@@ -12,7 +12,7 @@ code.hljs {
 }
 
 .hljs-ln td {
-    padding-right: 16px;
+    padding-right: 16px!important;
 }
 
 .hljs-ln-n {
