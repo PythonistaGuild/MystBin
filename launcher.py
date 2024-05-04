@@ -37,7 +37,13 @@ async def main() -> None:
         host: str = core.CONFIG["SERVER"]["host"]
         port: int = core.CONFIG["SERVER"]["port"]
 
-        config: uvicorn.Config = uvicorn.Config(app=app, host=host, port=port, access_log=False, forwarded_allow_ips="*")
+        config: uvicorn.Config = uvicorn.Config(
+            app=app,
+            host=host,
+            port=port,
+            access_log=False,
+            forwarded_allow_ips="*",
+        )
         server: uvicorn.Server = uvicorn.Server(config)
 
         await server.serve()

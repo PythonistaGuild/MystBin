@@ -39,7 +39,7 @@ class Application(starlette_plus.Application):
         routes = [starlette_plus.Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
 
         limit_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["limiter"]) if CONFIG["REDIS"]["limiter"] else None
-        # sess_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["sessions"]) if CONFIG["REDIS"]["sessions"] else None
+        sess_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["sessions"]) if CONFIG["REDIS"]["sessions"] else None
 
         global_limits = [CONFIG["LIMITS"]["global_limit"]]
         middleware = [
@@ -48,7 +48,13 @@ class Application(starlette_plus.Application):
                 ignore_localhost=True,
                 redis=limit_redis,
                 global_limits=global_limits,
-            )
+            ),
+            Middleware(
+                starlette_plus.middleware.SessionMiddleware,
+                secret=CONFIG["SERVER"]["session_secret"],
+                redis=sess_redis,
+                max_age=86400,
+            ),
         ]
 
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)

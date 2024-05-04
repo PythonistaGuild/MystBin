@@ -154,7 +154,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
             return starlette_plus.FileResponse("web/password.html")
 
-        data: dict[str, Any] = paste.serialize(exclude=["safety", "password", "password_ok"])
+        data: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         files: list[dict[str, Any]] = data["files"]
         created_delta: datetime.timedelta = datetime.datetime.now(tz=datetime.timezone.utc) - paste.created_at.replace(
             tzinfo=datetime.timezone.utc
@@ -162,6 +162,16 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
         url: str = f"{CONFIG['SERVER']['domain']}/{identifier}"
         raw_url: str = f"{CONFIG['SERVER']['domain']}/raw/{identifier}"
+        security_html: str = ""
+
+        stored: list[str] = request.session.get("pastes", [])
+        if identifier in stored:
+            security_url: str = f"{CONFIG['SERVER']['domain']}/api/security/info/{data['safety']}"
+
+            security_html = f"""
+            <div class="identifierHeaderSection">
+                <a class="security" href="{security_url}">Security Info</a>
+            </div>"""
 
         html: str = f"""
         <div class="identifierHeader">
@@ -169,12 +179,14 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                 <a href="{url}">/{identifier}</a>
                 <span>Created {humanize.naturaltime(created_delta)}...</span>
             </div>
+            {security_html}
             <div class="identifierHeaderSection">
                 <a href="{raw_url}">Raw</a>
                 <!-- <a href="#">Download</a> -->
             </div>
         </div>
         """
+
         for i, file in enumerate(files):
             html += self.highlight_code(
                 file["filename"],
@@ -234,45 +246,15 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
         paste = await self.app.database.create_paste(data=data)
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
-        files: list[dict[str, Any]] = to_return["files"]
-
         identifier: str = to_return["id"]
-        raw_url: str = f"{CONFIG['SERVER']['domain']}/raw/{identifier}"
-
-        inner_html: str = ""
-        for i, file in enumerate(files):
-            inner_html += self.highlight_code(
-                file["filename"],
-                file["content"],
-                index=i,
-                raw_url=raw_url,
-                annotation=file["annotation"],
-            )
 
         url: str = f"{CONFIG['SERVER']['domain']}/{identifier}"
-        security_url: str = f"{CONFIG['SERVER']['domain']}/api/security/info/{to_return['safety']}"
 
-        created_delta: datetime.timedelta = datetime.datetime.now(tz=datetime.timezone.utc) - paste.created_at.replace(
-            tzinfo=datetime.timezone.utc
-        )
+        try:
+            (request.session["pastes"].append(identifier))
+        except (KeyError, AttributeError):
+            request.session["pastes"] = [identifier]
+        else:
+            request.session["pastes"] = request.session["pastes"][-5:]
 
-        headers: dict[str, str] = {"HX-Push-Url": url}
-        html: str = f"""
-        <div id="content" class="content">
-            <div class="identifierHeader">
-                <div class="identifierHeaderLeft">
-                    <a href="{url}">/{identifier}</a>
-                    <span>Created {humanize.naturaltime(created_delta)}...</span>
-                </div>
-                <div class="identifierHeaderSection">
-                    <a class="security" href="{security_url}">Security Info</a>
-                </div>
-                <div class="identifierHeaderSection">
-                    <a href="{raw_url}">Raw</a>
-                    <!-- <a href="#">Download</a> -->
-                </div>
-            </div>
-            <div id="pastecontainer" class="pasteContainer">{inner_html}</div>
-        </div>"""
-
-        return starlette_plus.HTMLResponse(html, headers=headers)
+        return starlette_plus.HTMLResponse("", headers={"HX-Redirect": url})
