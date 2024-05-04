@@ -61,20 +61,34 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             <pre id="__paste_c_{index}" class="fileContent"><code>{content}</code></pre>
         </div>"""
 
+    def check_discord(self, request: starlette_plus.Request) -> starlette_plus.Response | None:
+        agent: str = request.headers.get("user-agent", "")
+        if "discordbot" in agent.lower():
+            return starlette_plus.Response(status_code=204)
+
     @starlette_plus.route("/", prefix=False)
     async def home(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         return starlette_plus.FileResponse("web/index.html")
 
     @starlette_plus.route("/{id}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         return starlette_plus.FileResponse("web/paste.html")
 
     @starlette_plus.route("/raw/{id}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste_raw(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         password: str | None = request.headers.get("authorization", None)
         identifier: str = request.path_params["id"]
 
@@ -100,6 +114,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste_raw_page(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         password: str | None = request.headers.get("authorization", None)
         identifier: str = request.path_params["id"]
         page: int = max(request.path_params["page"], 1)
@@ -130,6 +147,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def fetch_paste(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         no_reload: bool = request.query_params.get("noReload", False) == "true"
         password: str = unquote(request.query_params.get("pastePassword", ""))
 
@@ -202,6 +222,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post_day"])
     async def htmx_save(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        if resp := self.check_discord(request=request):
+            return resp
+
         form: FormData = await request.form()
         multi = form.multi_items()
 
