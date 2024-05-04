@@ -466,6 +466,7 @@ textarea {
 
   .footer {
     flex-direction: column;
+    padding: 0 0 1rem 0;
   }
 
   .identifierHeaderSection {
@@ -478,5 +479,13 @@ textarea {
 
   .filenameArea {
     font-size: 0.7em;
+  }
+
+  .content {
+    padding: 1rem 0.5rem 1rem 0.5rem;
+  }
+
+  .header {
+    padding: 1rem 0.5rem;
   }
 }
