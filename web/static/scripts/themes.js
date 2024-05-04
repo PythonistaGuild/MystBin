@@ -21,9 +21,9 @@ function updateThemeOnHtmlEl({ theme }) {
   document.querySelector("html").setAttribute("data-theme", theme);
 }
 
-const checkbox = document.querySelector("#themeSwitch");
-const localStorageTheme = localStorage.getItem("theme");
-const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+let checkbox = document.querySelector("#themeSwitch");
+let localStorageTheme = localStorage.getItem("theme");
+let systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
 
 let currentThemeSetting = calculateSettingAsThemeString({
   localStorageTheme,

@@ -1,5 +1,5 @@
-const pasteContainer = document.querySelector(".pasteContainer");
-const addButton = document.querySelector(".addPaste");
+let pasteContainer = document.querySelector(".pasteContainer");
+let addButton = document.querySelector(".addPaste");
 let count = 0;
 
 addButton.addEventListener("click", (e) => {
