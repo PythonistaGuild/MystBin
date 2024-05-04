@@ -1,0 +1,6 @@
+git+https://github.com/PythonistaGuild/StarlettePlus.git
+uvicorn
+asyncpg
+asyncpg-stubs
+bleach
+humanize

@@ -1,0 +1,23 @@
+[SERVER]
+host = "localhost"
+port = 8181
+domain = "https://mystb.in"
+
+[DATABASE]
+dsn = "postgres://USER:PASSWORD@localhost:5432/mystbin"
+
+[REDIS]
+limiter = ""
+sessions = ""
+
+[LIMITS]
+paste_get = {rate=30, per=60, priority=1, bucket="ip"}
+paste_get_day = {rate=7200, per=86400, priority=2, bucket="ip"}
+paste_post = {rate=10, per=60, priority=1, bucket="ip"}
+paste_post_day = {rate=1440, per=86400, priority=2, bucket="ip"}
+global_limit = {rate=21600, per=86400, priority=1, bucket="ip"}
+
+[PASTES]
+char_limit = 300_000
+file_limit = 5
+name_limit = 25
