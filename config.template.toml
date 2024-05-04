@@ -2,13 +2,14 @@
 host = "localhost"
 port = 8181
 domain = "https://mystb.in"
+session_secret = ""  # Run: import secrets; print(secrets.token_urlsafe(64))
 
 [DATABASE]
 dsn = "postgres://USER:PASSWORD@localhost:5432/mystbin"
 
 [REDIS]
-limiter = ""
-sessions = ""
+limiter = ""  # Optional
+sessions = ""  # Optional
 
 [LIMITS]
 paste_get = {rate=30, per=60, priority=1, bucket="ip"}
