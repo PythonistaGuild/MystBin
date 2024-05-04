@@ -87,6 +87,7 @@ class APIView(starlette_plus.View, prefix="api"):
 
         paste = await self.app.database.create_paste(data=data)
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
+        to_return.pop("files", None)
 
         return starlette_plus.JSONResponse(to_return, status_code=200)
 
