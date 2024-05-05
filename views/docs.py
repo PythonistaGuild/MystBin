@@ -31,10 +31,14 @@ class DocsView(starlette_plus.View, prefix="api"):
     def __init__(self, app: Application) -> None:
         self.app: Application = app
 
-    @starlette_plus.route("/docs")
+    @starlette_plus.route("/documentation")
     async def documentation(self, request: starlette_plus.Request) -> starlette_plus.Response:
         headers = {"Access-Control-Allow-Origin": "*"}
         return starlette_plus.FileResponse("web/docs.html", headers=headers)
+
+    @starlette_plus.route("/docs")
+    async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        return starlette_plus.RedirectResponse("/api/documentation")
 
     @starlette_plus.route("/schema")
     async def openapi_schema(self, request: starlette_plus.Request) -> starlette_plus.Response:

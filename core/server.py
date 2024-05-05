@@ -61,6 +61,10 @@ class Application(starlette_plus.Application):
 
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
+    @starlette_plus.route("/docs")
+    async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        return starlette_plus.RedirectResponse("/api/documentation")
+
     async def event_ready(self) -> None:
         self.schemas = SchemaGenerator(
             {

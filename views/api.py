@@ -65,7 +65,89 @@ class APIView(starlette_plus.View, prefix="api"):
         summary: Create a paste.
         description:
             Creates a paste with or without multiple files for view on the web or via the API.
+            You can use this endpoint to POST valid `JSON` data or `plain-text` content.\n\n\n
+
+            When using `plain-text`, only one file will be created, without a password or expiry.\n\n\n
+
+            Max Character per file is `300_000`.\n\n
+
+            Max file limit is `5`.\n\n
+
+        requestBody:
+            description: The paste data. `password` and `expires` are optional.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            files:
+                                type: array
+                                items:
+                                type: object
+                                properties:
+                                    filename:
+                                        type: string
+                                        required: false
+                                    content:
+                                        type: string
+                                        required: true
+                                example:
+                                    - filename: thing.py
+                                      content: print(\"Hello World!\")
+                                    - content: Some text or code...
+                            password:
+                                required: false
+                                type: string
+                                example: null
+                            expires:
+                                required: false
+                                type: string
+                                example: null
+                text/plain:
+                    schema:
+                        type: string
+
+        responses:
+            200:
+                description: The paste meta-data.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: string
+                                    example: abc123
+                                created_at:
+                                    type: string
+                                    example: 2024-01-01T00:00:00.000000+00:00
+                                expires:
+                                    type: string
+                                    example: 2024-01-01T00:00:00.000000+00:00
+                                safety:
+                                    type: string
+            400:
+                description: The paste data was invalid.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+                                    example: The reason the paste was invalid.
+            429:
+                description: You are requesting too fast.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+                                    example: You are requesting too fast.
         """
+
         content_type: str | None = request.headers.get("content-type", None)
         body: dict[str, Any] | str
         data: dict[str, Any]
