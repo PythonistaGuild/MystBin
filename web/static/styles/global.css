@@ -458,6 +458,13 @@ textarea {
   }
 }
 
+.notFound {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-self: center;
+}
+
 @media screen and (max-width: 600px) {
   .savePaste {
     padding: 1rem;

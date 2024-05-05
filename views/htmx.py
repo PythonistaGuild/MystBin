@@ -153,18 +153,25 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         if resp := self.check_discord(request=request):
             return resp
 
+        not_found: str = """
+            <div class="notFound">
+                <h2>404 - This page or paste could not be found</h2>
+                <a href="/">Return Home...</a>
+            </div>
+        """
+
         no_reload: bool = request.query_params.get("noReload", False) == "true"
         password: str = unquote(request.query_params.get("pastePassword", ""))
 
         identifier_quoted: str | None = request.query_params.get("id", None)
         if not identifier_quoted:
-            return starlette_plus.HTMLResponse("<h1>404 - That paste was not Found!</h1>")
+            return starlette_plus.HTMLResponse(not_found)
 
         identifier: str = unquote(identifier_quoted).replace("/", "")
         paste = await self.app.database.fetch_paste(identifier, password=password)
 
         if not paste:
-            return starlette_plus.HTMLResponse("<h1>404 - That paste was not Found!</h1>")
+            return starlette_plus.HTMLResponse(not_found)
 
         if paste.has_password and not paste.password_ok:
             error_headers: dict[str, str] = {"HX-Retarget": "#errorResponse", "HX-Reswap": "outerHTML"}
