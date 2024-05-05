@@ -8,20 +8,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Easily share code and text." />
 
-  <!-- PACKAGES -->
-  <script src="static/packages/htmx.min.js"></script>
-  <script src="static/packages/highlight.min.js"></script>
-  <script src="static/packages/highlight-ln.min.js"></script>
+    <!-- PACKAGES -->
+    <link rel="preload" href="static/packages/htmx.min.js" as="script">
+    <link rel="preload" href="static/packages/highlight.min.js" as="script">
+    <link rel="preload" href="static/packages/highlight-ln.min.js" as="script">
+    <script src="static/packages/htmx.min.js"></script>
+    <script src="static/packages/highlight.min.js"></script>
+    <script src="static/packages/highlight-ln.min.js"></script>
 
-  <!-- SCRIPTS -->
-  <script src="static/scripts/themes.js" defer></script>
-  <script src="static/scripts/files.js" defer></script>
-  <script src="static/scripts/hidecopy.js"></script>
-  <script src="static/scripts/highlights.js"></script>
+    <!-- SCRIPTS -->
+    <script src="static/scripts/themes.js" defer></script>
+    <script src="static/scripts/files.js" defer></script>
+    <script src="static/scripts/hidecopy.js"></script>
+    <script src="static/scripts/highlights.js"></script>
 
-  <!-- STYLESHEETS -->
-  <link rel="stylesheet" type="text/css" href="static/styles/global.css" />
-  <link rel="stylesheet" type="text/css" href="static/styles/highlights.css" />
+    <!-- STYLESHEETS -->
+    <link rel="preload" href="static/styles/global.css" as="style" />
+    <link rel="preload" href="static/styles/highlights.css" as="style" />
+    <link rel="stylesheet" type="text/css" href="static/styles/global.css" />
+    <link rel="stylesheet" type="text/css" href="static/styles/highlights.css" />
 
   <!-- FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
