@@ -40,6 +40,104 @@ class APIView(starlette_plus.View, prefix="api"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste_get(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        """Fetch a paste.
+
+        ---
+        summary: Fetch a paste.
+        description:
+            Fetches a paste with all relevant meta-data and files.\n\n
+
+            Fetching pastes does not include the `password` or `safety` fields. You only receive the `safety` field
+            directly after creating a paste.
+
+        parameters:
+            - in: path
+              name: id
+              schema:
+                type: string
+              required: true
+              description: The paste ID.
+
+            - in: header
+              name: Authorization
+              schema:
+                type: string
+                format: basic
+              required: false
+              description: The password for the paste; if one is required.
+
+        responses:
+            200:
+                description: The paste meta-data and files.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: string
+                                    example: abc123
+                                created_at:
+                                    type: string
+                                    example: 2024-01-01T00:00:00.000000+00:00
+                                expires:
+                                    type: string
+                                views:
+                                    type: integer
+                                    example: 3
+                                has_password:
+                                    type: boolean
+                                    example: false
+                                files:
+                                    type: array
+                                    items:
+                                    type: object
+                                    properties:
+                                        parent_id:
+                                            type: string
+                                        content:
+                                            type: string
+                                        filename:
+                                            type: string
+                                        loc:
+                                            type: integer
+                                        charcount:
+                                            type: integer
+                                        annotation:
+                                            type: string
+
+            404:
+                description: The paste does not exist or has been previously deleted.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+
+            401:
+                description: You are not authorized to view this paste or you provided an incorrect password.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+                                    example: Unauthorized.
+
+            429:
+                description: You are requesting too fast.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+                                    example: You are requesting too fast.
+        """
         password: str | None = request.headers.get("authorization", None)
         identifier: str = request.path_params["id"]
 
@@ -204,8 +302,45 @@ class APIView(starlette_plus.View, prefix="api"):
 
         return starlette_plus.JSONResponse(data, status_code=200)
 
-    @starlette_plus.route("/security/delete/{token}", methods=["GET", "DELETE", "POST"])
+    @starlette_plus.route("/security/delete/{token}", methods=["GET"])
     async def security_delete(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        """Delete a paste.
+
+        ---
+        summary: Delete a paste.
+        description:
+            Deletes a paste with the associated safety token.\n\n
+
+            This action is not reversible.
+
+        parameters:
+            - in: path
+              name: token
+              schema:
+                type: string
+              required: true
+              description: The safety token received when creating the paste.
+
+
+        responses:
+            200:
+                description: The paste was successfully deleted.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+
+            401:
+                description: You are not authorized to delete this paste.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+                                    example: Unauthorized.
+        """
         token: str | None = request.path_params.get("token", None)
         if not token:
             return starlette_plus.JSONResponse({"error": "Unauthorized."}, status_code=401)
