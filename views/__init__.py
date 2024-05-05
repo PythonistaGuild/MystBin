@@ -17,4 +17,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .api import APIView as APIView
+from .docs import DocsView as DocsView
 from .htmx import HTMXView as HTMXView

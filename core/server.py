@@ -20,6 +20,7 @@ import logging
 
 import starlette_plus
 from starlette.middleware import Middleware
+from starlette.schemas import SchemaGenerator
 from starlette.staticfiles import StaticFiles
 
 from core.database import Database
@@ -34,8 +35,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Application(starlette_plus.Application):
     def __init__(self, *, database: Database) -> None:
         self.database: Database = database
+        self.schemas: SchemaGenerator | None = None
 
-        views: list[starlette_plus.View] = [HTMXView(self), APIView(self)]
+        views: list[starlette_plus.View] = [HTMXView(self), APIView(self), DocsView(self)]
         routes = [starlette_plus.Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
 
         limit_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["limiter"]) if CONFIG["REDIS"]["limiter"] else None
@@ -60,4 +62,15 @@ class Application(starlette_plus.Application):
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
     async def event_ready(self) -> None:
+        self.schemas = SchemaGenerator(
+            {
+                "openapi": "3.1.0",
+                "info": {
+                    "title": "MystBin API",
+                    "version": "4.0",
+                    "summary": "API Documentation",
+                    "description": "MystBin - Easily share code and text.",
+                },
+            }
+        )
         logger.info("MystBin application has successfully started!")

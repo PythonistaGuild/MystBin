@@ -59,6 +59,13 @@ class APIView(starlette_plus.View, prefix="api"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post_day"])
     async def paste_post(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        """Create a paste.
+
+        ---
+        summary: Create a paste.
+        description:
+            Creates a paste with or without multiple files for view on the web or via the API.
+        """
         content_type: str | None = request.headers.get("content-type", None)
         body: dict[str, Any] | str
         data: dict[str, Any]

@@ -5,3 +5,4 @@ asyncpg-stubs
 bleach
 humanize
 python-multipart
+pyyaml
