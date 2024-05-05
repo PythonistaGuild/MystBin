@@ -9,13 +9,16 @@ CREATE TABLE IF NOT EXISTS pastes (
     safety TEXT UNIQUE
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS pastes_safety_idx ON pastes (safety);
+-- Index by safety keys for faster lookup to delete.
+
 CREATE TABLE IF NOT EXISTS files (
     parent_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     filename TEXT NOT NULL,
     loc INTEGER NOT NULL,
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
-    index SERIAL NOT NULL,
+    file_index SERIAL NOT NULL,
     annotation TEXT,
-    PRIMARY KEY (parent_id, index)
+    PRIMARY KEY (parent_id, file_index)
 );
