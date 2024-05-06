@@ -62,10 +62,10 @@ class Application(starlette_plus.Application):
 
         if CONFIG["SERVER"]["maintenance"]:
             # inject a catch all before any route...
-            routes.insert(
-                0, Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+            routes.append(Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]))
+            routes.append(
+                Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
             )
-            routes.insert(0, Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]))
 
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
