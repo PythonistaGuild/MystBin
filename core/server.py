@@ -20,6 +20,7 @@ import logging
 
 import starlette_plus
 from starlette.middleware import Middleware
+from starlette.routing import Mount, Route
 from starlette.schemas import SchemaGenerator
 from starlette.staticfiles import StaticFiles
 
@@ -38,7 +39,7 @@ class Application(starlette_plus.Application):
         self.schemas: SchemaGenerator | None = None
 
         views: list[starlette_plus.View] = [HTMXView(self), APIView(self), DocsView(self)]
-        routes = [starlette_plus.Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
+        routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
 
         limit_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["limiter"]) if CONFIG["REDIS"]["limiter"] else None
         sess_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["sessions"]) if CONFIG["REDIS"]["sessions"] else None
@@ -59,7 +60,18 @@ class Application(starlette_plus.Application):
             ),
         ]
 
+        if CONFIG["SERVER"]["maintenance"]:
+            # inject a catch all before any route...
+            routes.insert(
+                0, Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+            )
+            routes.insert(0, Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]))
+
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
+
+    @staticmethod
+    async def maint_mode(request: starlette_plus.Request) -> starlette_plus.Response:
+        return starlette_plus.FileResponse("web/maint.html")
 
     @starlette_plus.route("/docs")
     @starlette_plus.route("/documentation")

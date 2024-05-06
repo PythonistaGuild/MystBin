@@ -26,6 +26,7 @@ class Server(TypedDict):
     port: int
     domain: str
     session_secret: str
+    maintenance: bool
 
 
 class Database(TypedDict):
