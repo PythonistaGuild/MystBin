@@ -62,8 +62,15 @@ class Application(starlette_plus.Application):
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
     @starlette_plus.route("/docs")
+    @starlette_plus.route("/documentation")
     async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
         return starlette_plus.RedirectResponse("/api/documentation")
+
+    @starlette_plus.route("/documents")
+    @starlette_plus.route("/api/documents")
+    async def documents_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+        # Compat redirect route...
+        return starlette_plus.RedirectResponse("/api/paste", status_code=308)
 
     async def event_ready(self) -> None:
         self.schemas = SchemaGenerator(
