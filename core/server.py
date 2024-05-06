@@ -66,8 +66,8 @@ class Application(starlette_plus.Application):
     async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
         return starlette_plus.RedirectResponse("/api/documentation")
 
-    @starlette_plus.route("/documents")
-    @starlette_plus.route("/api/documents")
+    @starlette_plus.route("/documents", methods=["POST"])
+    @starlette_plus.route("/api/documents", methods=["POST"])
     async def documents_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
         # Compat redirect route...
         return starlette_plus.RedirectResponse("/api/paste", status_code=308)
