@@ -23,26 +23,18 @@ import binascii
 import json
 import re
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import starlette_plus
 
 from core import CONFIG
 
 
-if TYPE_CHECKING:
-    from .database import Database
-
-
 TOKEN_REGEX = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
 
 
-async def generate_id(database: Database) -> str:
-    while True:
-        identifier: str = secrets.token_hex(8)
-
-        if not await database.fetch_paste(identifier, password=None):
-            return identifier
+async def generate_id() -> str:
+    return secrets.token_hex(8)
 
 
 def generate_safety_token() -> str:

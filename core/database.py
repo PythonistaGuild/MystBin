@@ -129,12 +129,24 @@ class Database:
         password: str | None = data["password"]
 
         async with self.pool.acquire() as connection:
-            identifier: str = await utils.generate_id(self)
-            safety: str = utils.generate_safety_token()
+            while True:
+                identifier: str = await utils.generate_id()
+                safety: str = utils.generate_safety_token()
 
-            paster: asyncpg.Record | None = await connection.fetchrow(paste_query, identifier, expiry, password, safety)
-            if not paster:
-                raise RuntimeError("Unable to create new paste.")
+                try:
+                    paster: asyncpg.Record | None = await connection.fetchrow(
+                        paste_query,
+                        identifier,
+                        expiry,
+                        password,
+                        safety,
+                    )
+                except asyncpg.exceptions.UniqueViolationError:
+                    continue
+                else:
+                    break
+
+            assert paster
 
             paste: PasteModel = PasteModel(paster)
             async with connection.transaction():
