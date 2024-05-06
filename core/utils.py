@@ -33,7 +33,7 @@ from core import CONFIG
 TOKEN_REGEX = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
 
 
-async def generate_id() -> str:
+def generate_id() -> str:
     return secrets.token_hex(8)
 
 

@@ -130,7 +130,7 @@ class Database:
 
         async with self.pool.acquire() as connection:
             while True:
-                identifier: str = await utils.generate_id()
+                identifier: str = utils.generate_id()
                 safety: str = utils.generate_safety_token()
 
                 try:
