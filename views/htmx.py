@@ -190,13 +190,13 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             tzinfo=datetime.timezone.utc
         )
 
-        url: str = f"{CONFIG['SERVER']['domain']}/{identifier}"
-        raw_url: str = f"{CONFIG['SERVER']['domain']}/raw/{identifier}"
+        url: str = f"/{identifier}"
+        raw_url: str = f"/raw/{identifier}"
         security_html: str = ""
 
         stored: list[str] = request.session.get("pastes", [])
         if identifier in stored:
-            security_url: str = f"{CONFIG['SERVER']['domain']}/api/security/info/{data['safety']}"
+            security_url: str = f"/api/security/info/{data['safety']}"
 
             security_html = f"""
             <div class="identifierHeaderSection">
@@ -281,7 +281,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         identifier: str = to_return["id"]
 
-        url: str = f"{CONFIG['SERVER']['domain']}/{identifier}"
+        url: str = f"/{identifier}"
 
         try:
             (request.session["pastes"].append(identifier))
