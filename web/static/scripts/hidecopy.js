@@ -12,7 +12,7 @@ function hideFile(button, index) {
         pastea.style.flexGrow = "0";
     } else {
         button.textContent = "Hide";
-        pastec.style.display = "block";
+        pastec.style.display = "flex";
         pastea.style.flexGrow = "1";
     }
 }

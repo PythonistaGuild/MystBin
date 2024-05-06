@@ -58,7 +58,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                 </div>
             </div>
             {annotations}
-            <pre id="__paste_c_{index}" class="fileContent"><code>{content}</code></pre>
+            <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;"><code>{content}</code></pre>
         </div>"""
 
     def check_discord(self, request: starlette_plus.Request) -> starlette_plus.Response | None:
