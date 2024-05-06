@@ -6,7 +6,7 @@ Easily share code and text.
 [Staging Website](https://staging.mystb.in)
 
 
-### Running Locally
+### Running without Docker
 **Requirements:**
 - Postgres
 
@@ -20,3 +20,17 @@ Easily share code and text.
 - Install dependencies (Preferably to a `venv`): `pip install -Ur requirements.txt`
 - Optionally in `core/server.py` set `ignore_localhost=` to `False` in the RateLimit Middleware for testing.
 - Run: `python launcher.py`
+
+### Running with Docker
+**Requirements**
+- Docker
+- Docker Compose
+
+**Setup:**
+- Clone
+- Copy `config.template.toml` into `config.toml`
+  - The default config for database (and redis) should work Out of Box.
+- Optionally in `core/server.py` set `ignore_localhost=` to `False` in the RateLimit Middleware for testing.
+- Run `docker compose up -d` to start the services.
+  - If you want to use redis for session/limit handling, run with the redis profile: `docker compose --profile redis up -d`
+  - The redis container doesn't expose connections outside of the network, but for added security edit `redis.conf` and change the password.

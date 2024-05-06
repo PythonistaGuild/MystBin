@@ -1,7 +1,7 @@
 [tool.ruff]
 line-length = 120
 indent-width = 4
-exclude = ["venv"]
+exclude = ["venv", ".venv"]
 
 [tool.ruff.lint]
 select = [
@@ -34,7 +34,7 @@ ignore = [
     "ANN401",
     "UP031",
     "PTH123",
-    "E203", 
+    "E203",
     "E501",
 ]
 
@@ -56,7 +56,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-exclude = ["venv"]
+exclude = ["venv", ".venv"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false

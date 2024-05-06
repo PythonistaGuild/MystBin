@@ -2,21 +2,21 @@
 host = "localhost"
 port = 8181
 domain = "https://mystb.in"
-session_secret = ""  # Run: import secrets; print(secrets.token_urlsafe(64))
+session_secret = ""         # Run: import secrets; print(secrets.token_urlsafe(64))
 
 [DATABASE]
-dsn = "postgres://USER:PASSWORD@localhost:5432/mystbin"
+dsn = "postgres://mystbin:mystbin@database:5432/mystbin"
 
 [REDIS]
-limiter = ""  # Optional
-sessions = ""  # Optional
+limiter = "redis://redis:6739/0"  # Optional
+sessions = "redis://redis:6739/1" # Optional
 
 [LIMITS]
-paste_get = {rate=30, per=60, priority=1, bucket="ip"}
-paste_get_day = {rate=7200, per=86400, priority=2, bucket="ip"}
-paste_post = {rate=10, per=60, priority=1, bucket="ip"}
-paste_post_day = {rate=1440, per=86400, priority=2, bucket="ip"}
-global_limit = {rate=21600, per=86400, priority=1, bucket="ip"}
+paste_get = { rate = 30, per = 60, priority = 1, bucket = "ip" }
+paste_get_day = { rate = 7200, per = 86400, priority = 2, bucket = "ip" }
+paste_post = { rate = 10, per = 60, priority = 1, bucket = "ip" }
+paste_post_day = { rate = 1440, per = 86400, priority = 2, bucket = "ip" }
+global_limit = { rate = 21600, per = 86400, priority = 1, bucket = "ip" }
 
 [PASTES]
 char_limit = 300_000
