@@ -38,7 +38,7 @@ class BaseModel(Mapping[str, Any]):
     def __len__(self) -> int:
         return len(self.record)
 
-    def serialize(self, *, exclude: list[str] = ["index"]) -> dict[str, Any]:
+    def serialize(self, *, exclude: list[str] = ["file_index"]) -> dict[str, Any]:
         new: dict[str, Any] = {}
 
         for key, value in self.record.items():
@@ -65,7 +65,7 @@ class FileModel(BaseModel):
         self.filename: str = record["filename"]
         self.loc: int = record["loc"]
         self.charcount: int = record["charcount"]
-        self.index: int = record["index"]
+        self.index: int = record["file_index"]
         self.annotation: str = record["annotation"]
 
 
