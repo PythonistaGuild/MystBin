@@ -16,9 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import tomllib
 
-from types_.config import Config
+
+if TYPE_CHECKING:
+    from types_.config import Config
 
 
 __all__ = ("CONFIG",)
