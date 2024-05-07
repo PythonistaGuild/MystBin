@@ -80,10 +80,10 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         if resp := self.check_discord(request=request):
             return resp
 
-        identifier: str = request.path_params.get("id", "")
-        headers = {"Link": f'</htmx/fetch?id=%2F{identifier}>; rel="preload"; as="fetch" crossorigin="anonymous"'}
+        # identifier: str = request.path_params.get("id", "")
+        # headers = {"Link": f'</htmx/fetch?id=%2F{identifier}>; rel="preload"; as="fetch" crossorigin="anonymous"'}
 
-        return starlette_plus.FileResponse("web/paste.html", headers=headers)
+        return starlette_plus.FileResponse("web/paste.html")
 
     @starlette_plus.route("/raw/{id}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
