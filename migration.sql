@@ -14,7 +14,7 @@ SAVEPOINT files;
 ALTER TABLE files ALTER COLUMN filename SET NOT NULL;  -- always require filename
 ALTER TABLE files DROP COLUMN IF EXISTS attachment;  -- we don't have these anymore
 ALTER TABLE files ADD COLUMN IF NOT EXISTS annotation TEXT;
-ALTER TABLE files RENAME index TO file_index;  -- bad column name
+ALTER TABLE files RENAME COLUMN index TO file_index;  -- bad column name
 
 SAVEPOINT drops;
 DROP TABLE IF EXISTS bans CASCADE; -- no longer needed
