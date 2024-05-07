@@ -91,20 +91,20 @@ class APIView(starlette_plus.View, prefix="api"):
                                 files:
                                     type: array
                                     items:
-                                    type: object
-                                    properties:
-                                        parent_id:
-                                            type: string
-                                        content:
-                                            type: string
-                                        filename:
-                                            type: string
-                                        loc:
-                                            type: integer
-                                        charcount:
-                                            type: integer
-                                        annotation:
-                                            type: string
+                                        type: object
+                                        properties:
+                                            parent_id:
+                                                type: string
+                                            content:
+                                                type: string
+                                            filename:
+                                                type: string
+                                            loc:
+                                                type: integer
+                                            charcount:
+                                                type: integer
+                                            annotation:
+                                                type: string
 
             404:
                 description: The paste does not exist or has been previously deleted.
@@ -181,14 +181,14 @@ class APIView(starlette_plus.View, prefix="api"):
                             files:
                                 type: array
                                 items:
-                                type: object
-                                properties:
-                                    filename:
-                                        type: string
-                                        required: false
-                                    content:
-                                        type: string
-                                        required: true
+                                    type: object
+                                    properties:
+                                        filename:
+                                            type: string
+                                            required: false
+                                        content:
+                                            type: string
+                                            required: true
                                 example:
                                     - filename: thing.py
                                       content: print(\"Hello World!\")
