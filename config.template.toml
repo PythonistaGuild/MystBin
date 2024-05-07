@@ -9,8 +9,8 @@ maintenance = false
 dsn = "postgres://mystbin:mystbin@database:5432/mystbin"
 
 [REDIS]
-limiter = "redis://redis:6739/0"  # Optional
-sessions = "redis://redis:6739/1" # Optional
+limiter = "redis://redis:6379/0"  # Optional
+sessions = "redis://redis:6379/1" # Optional
 
 [LIMITS]
 paste_get = { rate = 30, per = 60, priority = 1, bucket = "ip" }
