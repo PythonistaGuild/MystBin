@@ -47,6 +47,8 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
     def highlight_code(self, filename: str, content: str, *, index: int, raw_url: str, annotation: str) -> str:
         filename = bleach.clean(filename, attributes=[], tags=[])
+        filename = "_".join(filename.splitlines())
+
         content = bleach.clean(content, attributes=[], tags=[])
 
         annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
