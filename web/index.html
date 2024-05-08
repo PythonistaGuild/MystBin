@@ -17,7 +17,7 @@
   <!-- SCRIPTS -->
   <script src="/static/scripts/initialTheme.js?v=1"></script>
   <script src="/static/scripts/themes.js?v=1" defer></script>
-  <script src="/static/scripts/files.js?v=1" defer></script>
+  <script src="/static/scripts/files.js?v=2" defer></script>
 
   <!-- STYLESHEETS -->
   <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
@@ -54,14 +54,24 @@
   <form id="content" class="content" hx-swap-oob="true" hx-swap="outerHTML"
     hx-include="[name='fileName'] [name='fileContent'] [name='pastePassword']">
     <div id="pastecontainer" class="pasteContainer">
-      <div class="pasteArea" id="__file0">
+      <div class="pasteArea" id="__file0" data-position="0">
         <div class="pasteHeader">
           <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
             spellcheck="false"></textarea>
           <span class="deleteFile disabled" onclick="deleteFile('__file0')">Delete File</span>
         </div>
+        <textarea name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text...
+Filling in all current files will create a new one (Up to 5)" maxlength="300000" onkeyup="addFile(0)"></textarea>
+      </div>
+
+      <div class="pasteArea smallArea" id="__file1" data-position="1">
+        <div class="pasteHeader">
+          <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
+            spellcheck="false"></textarea>
+          <span class="deleteFile disabled" onclick="deleteFile('__file1')">Delete File</span>
+        </div>
         <textarea name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..."
-          maxlength="300000"></textarea>
+          maxlength="300000" onkeyup="addFile(1)"></textarea>
       </div>
     </div>
 
@@ -73,7 +83,6 @@
           type="password" autocomplete="off" />
       </div>
       <span id="errorResponse"></span>
-      <div class="addPaste">Add extra file...</div>
     </div>
   </form>
 
