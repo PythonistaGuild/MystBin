@@ -49,8 +49,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         filename = bleach.clean(filename, attributes=[], tags=[])
         filename = "_".join(filename.splitlines())
 
-        content = bleach.clean(content, attributes=[], tags=[])
-
+        content = bleach.clean(content.replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False)
         annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
 
         return f"""
