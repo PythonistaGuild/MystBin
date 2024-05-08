@@ -11,8 +11,8 @@ document.addEventListener("htmx:afterRequest", function (evt) {
         for (let code of codes) {
             pasteStores.push(code.textContent);
         }
-
+        
         hljs.highlightAll();
-        hljs.initLineNumbersOnLoad();
+        hljs.initLineNumbersOnLoad({ singleLine: true });
     }
 });

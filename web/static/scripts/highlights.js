@@ -7,4 +7,4 @@ for (let code of codes) {
 }
 
 hljs.highlightAll();
-hljs.initLineNumbersOnLoad();
+hljs.initLineNumbersOnLoad({ singleLine: true });
