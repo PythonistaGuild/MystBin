@@ -3,9 +3,9 @@
   --color-accent: #9069a7;
   --color-error: #dd374d;
   --color-security: #004ac0;
-  --color-background: #eff2f7;
-  --color-background--header: #fff;
-  --color-background--pastes: #fff;
+  --color-background: #e5eef8;
+  --color-background--header: #fefefe;
+  --color-background--pastes: #fefefe;
   --color-background--resizer: rgb(255, 255, 255, 0.9);
   --color-background--button: #eff2f7;
   --color-foreground: #2e2e33;
@@ -510,5 +510,8 @@ textarea {
 
   .header {
     padding: 1rem 0.5rem;
+  }
+  .pasteArea>textarea {
+    font-size: 0.8em;
   }
 }
