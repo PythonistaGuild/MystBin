@@ -25,6 +25,7 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
+import aiohttp
 import starlette_plus
 
 from core import CONFIG
@@ -98,19 +99,20 @@ class APIView(starlette_plus.View, prefix="api"):
             filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
             json_payload["files"][filename] = {"content": tokens}
 
-        async with self.app.session.post(
-            "https://api.github.com/gists", headers=github_headers, json=json_payload
-        ) as resp:
-            if not resp.ok:
-                response_body = await resp.text()
-                LOGGER.error(
-                    "Failed to create gist with token bucket with response status code %s and request body:-\n\n",
-                    resp.status,
-                    response_body,
-                )
-                self.__tokens_bucket.update(current_tokens)
-                return
-
+        try:
+            async with self.app.session.post(
+                "https://api.github.com/gists", headers=github_headers, json=json_payload
+            ) as resp:
+                if not resp.ok:
+                    response_body = await resp.text()
+                    LOGGER.error(
+                        "Failed to create gist with token bucket with response status code %s and request body:-\n\n",
+                        resp.status,
+                        response_body,
+                    )
+                    self.__tokens_bucket.update(current_tokens)
+                    return
+        except (aiohttp.ClientError, aiohttp.ClientOSError):
             LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
