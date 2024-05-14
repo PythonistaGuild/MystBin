@@ -206,6 +206,9 @@ class APIView(starlette_plus.View, prefix="api"):
 
             Max file limit is `5`.\n\n
 
+            If the paste is regarded as public, and contains Discord authorization tokens,
+            then these will be invalidated upon paste creation.\n\n
+
         requestBody:
             description: The paste data. `password` and `expires` are optional.
             content:
