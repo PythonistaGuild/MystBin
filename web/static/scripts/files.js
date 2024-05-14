@@ -1,6 +1,5 @@
 let pasteContainer = document.querySelector(".pasteContainer");
-let addButton = document.querySelector(".addPaste");
-let count = 0;
+let count = 1;
 
 
 function addFile(number) {

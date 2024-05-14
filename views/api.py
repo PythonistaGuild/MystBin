@@ -37,6 +37,7 @@ class APIView(starlette_plus.View, prefix="api"):
         self.app: Application = app
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
+    @starlette_plus.route("/pastes/{id}", methods=["GET"], include_in_schema=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste_get(self, request: starlette_plus.Request) -> starlette_plus.Response:
@@ -91,20 +92,20 @@ class APIView(starlette_plus.View, prefix="api"):
                                 files:
                                     type: array
                                     items:
-                                    type: object
-                                    properties:
-                                        parent_id:
-                                            type: string
-                                        content:
-                                            type: string
-                                        filename:
-                                            type: string
-                                        loc:
-                                            type: integer
-                                        charcount:
-                                            type: integer
-                                        annotation:
-                                            type: string
+                                        type: object
+                                        properties:
+                                            parent_id:
+                                                type: string
+                                            content:
+                                                type: string
+                                            filename:
+                                                type: string
+                                            loc:
+                                                type: integer
+                                            charcount:
+                                                type: integer
+                                            annotation:
+                                                type: string
 
             404:
                 description: The paste does not exist or has been previously deleted.
@@ -154,6 +155,7 @@ class APIView(starlette_plus.View, prefix="api"):
         return starlette_plus.JSONResponse(to_return)
 
     @starlette_plus.route("/paste", methods=["POST"])
+    @starlette_plus.route("/pastes", methods=["POST"], include_in_schema=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post_day"])
     async def paste_post(self, request: starlette_plus.Request) -> starlette_plus.Response:
@@ -181,14 +183,14 @@ class APIView(starlette_plus.View, prefix="api"):
                             files:
                                 type: array
                                 items:
-                                type: object
-                                properties:
-                                    filename:
-                                        type: string
-                                        required: false
-                                    content:
-                                        type: string
-                                        required: true
+                                    type: object
+                                    properties:
+                                        filename:
+                                            type: string
+                                            required: false
+                                        content:
+                                            type: string
+                                            required: true
                                 example:
                                     - filename: thing.py
                                       content: print(\"Hello World!\")

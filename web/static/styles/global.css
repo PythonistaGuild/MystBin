@@ -210,6 +210,17 @@ input[type="password"] {
   min-height: 32rem;
 }
 
+.smallArea {
+  flex-grow: 0;
+  height: 7rem;
+  margin: 0 0 6rem 0;
+}
+
+.smallArea>textarea {
+  min-height: 7rem;
+  height: 7rem;
+}
+
 textarea::-webkit-resizer {
   background-color: var(--color-background--resizer);
 }
@@ -478,6 +489,11 @@ textarea {
     font-size: 0.8em;
   }
 
+  .deleteFile {
+    padding: 1rem;
+    font-size: 0.8em;
+  }
+
   .footer {
     flex-direction: column;
     padding: 0 0 1rem 0;
@@ -502,7 +518,6 @@ textarea {
   .header {
     padding: 1rem 0.5rem;
   }
-
   .pasteArea>textarea {
     font-size: 0.8em;
   }

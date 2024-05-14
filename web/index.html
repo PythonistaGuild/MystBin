@@ -8,13 +8,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Easily share code and text." />
 
-    <!-- PACKAGES -->
-    <link rel="preload" href="static/packages/htmx.min.js" as="script">
-    <link rel="preload" href="static/packages/highlight.min.js" as="script">
-    <link rel="preload" href="static/packages/highlight-ln.min.js" as="script">
-    <script src="static/packages/htmx.min.js"></script>
-    <script src="static/packages/highlight.min.js"></script>
-    <script src="static/packages/highlight-ln.min.js"></script>
+  <!-- PACKAGES -->
+  <!-- <link rel="preload" href="static/packages/htmx.min.js" as="script"> -->
+  <!-- <link rel="preload" href="static/packages/highlight.min.js" as="script"> -->
+  <!-- <link rel="preload" href="static/packages/highlight-ln.min.js" as="script"> -->
+  <script src="static/packages/htmx.min.js"></script>
 
   <!-- SCRIPTS -->
   <script src="/static/scripts/initialTheme.js?v=1"></script>
@@ -38,7 +36,7 @@
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
     rel="stylesheet">
 
-  <link rel="icon" href="static/images/favicon.png" />
+  <link rel="icon" href="/static/images/favicon.ico" />
 </head>
 
 <body>
@@ -56,7 +54,7 @@
   <form id="content" class="content" hx-swap-oob="true" hx-swap="outerHTML"
     hx-include="[name='fileName'] [name='fileContent'] [name='pastePassword']">
     <div id="pastecontainer" class="pasteContainer">
-      <div class="pasteArea" id="__file0">
+      <div class="pasteArea" id="__file0" data-position="0">
         <div class="pasteHeader">
           <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
             spellcheck="false"></textarea>
@@ -85,7 +83,6 @@ Filling in all current files will create a new one (Up to 5)" maxlength="300000"
           type="password" autocomplete="off" />
       </div>
       <span id="errorResponse"></span>
-      <div class="addPaste">Add extra file...</div>
     </div>
   </form>
 
