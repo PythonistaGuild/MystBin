@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import json
 import re
@@ -31,6 +32,7 @@ from core.utils import validate_paste
 
 if TYPE_CHECKING:
     from core import Application
+    from types_.github import PostGist
 
 DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
 
@@ -38,38 +40,54 @@ DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-
 class APIView(starlette_plus.View, prefix="api"):
     def __init__(self, app: Application) -> None:
         self.app: Application = app
+        self._handling_tokens = bool(self.app.session and self.app._gist_token)
+        if self._handling_tokens:
+            # tokens bucket for gist posting: {paste_id: token\ntoken}
+            self.__tokens_bucket: dict[str, str] = {}
+            self.__token_lock = asyncio.Lock()
+            self.__token_task = asyncio.create_task(self._token_task())
 
-    async def _handle_discord_tokens(self, *bodies: dict[str, str]) -> None:
-        # bodies is tuple[{content: ..., filename: ...}]
-        if not self.app._gist_token or not self.app.session:
-            return
+    async def _token_task(self) -> None:
+        # won't run unless pre-reqs are met in __init__
+        while True:
+            if self.__tokens_bucket:
+                async with self.__token_lock:
+                    await self._post_gist_of_tokens()
 
+            await asyncio.sleep(10)
+
+    async def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
         formatted_bodies = "\n".join(b["content"] for b in bodies)
 
         tokens = list(DISCORD_TOKEN_REGEX.finditer(formatted_bodies))
 
         if not tokens:
             return
+
         tokens = "\n".join([m[0] for m in tokens])
+        self.__tokens_bucket[paste_id] = tokens
 
-        await self._post_gist_of_tokens(tokens)
-
-    async def _post_gist_of_tokens(self, tokens: str, /) -> None:
+    async def _post_gist_of_tokens(self) -> None:
         assert self.app.session  # guarded in caller
-
-        filename = str(datetime.datetime.now(datetime.UTC)) + "-tokens.txt"
-        json_payload = {
+        json_payload: PostGist = {
             "description": "MystBin found these Discord tokens in a public paste, and posted them here to invalidate them. If you intended to share these, please apply a password to the paste.",
-            "files": {filename: {"content": tokens}},
+            "files": {},
             "public": True,
         }
+
         github_headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {self.app._gist_token}",
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
+        for paste_id, tokens in self.__tokens_bucket.items():
+            filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
+            json_payload["files"][filename] = {"content": tokens}
+
         await self.app.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload)
+
+        self.__tokens_bucket = {}
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
@@ -312,12 +330,13 @@ class APIView(starlette_plus.View, prefix="api"):
         password = data.get("password")
         data["password"] = password
 
+        paste = await self.app.database.create_paste(data=data)
+
         if not password:
             # if the user didn't provide a password (a public paste)
             # we check for discord tokens
-            await self._handle_discord_tokens(*data["files"])
+            await self._handle_discord_tokens(*data["files"], paste_id=paste.id)
 
-        paste = await self.app.database.create_paste(data=data)
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         to_return.pop("files", None)
 
