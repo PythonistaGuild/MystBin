@@ -432,9 +432,11 @@ textarea {
 }
 
 .annotations {
+  padding-bottom: 0.25rem;
   font-size: 0.9em;
   color: var(--color-annotation);
   padding-left: 1rem;
+  background-color: var(--color-second-paste);
 }
 
 .security {
@@ -484,6 +486,10 @@ textarea {
 }
 
 @media screen and (max-width: 600px) {
+  .annotations {
+    font-size: 0.8em;
+  }
+  
   .savePaste {
     padding: 1rem;
     font-size: 0.8em;
