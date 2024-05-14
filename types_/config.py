@@ -54,6 +54,7 @@ class Pastes(TypedDict):
 
 class Github(TypedDict):
     token: str
+    timeout: float
 
 
 class Config(TypedDict):

@@ -39,9 +39,12 @@ class Application(starlette_plus.Application):
         self.database: Database = database
         self.session: aiohttp.ClientSession | None = session
         self.schemas: SchemaGenerator | None = None
-        self._gist_token: str | None = CONFIG.get("GITHUB", {}).get("token")
 
-        views: list[starlette_plus.View] = [HTMXView(self), APIView(self), DocsView(self)]
+        views: list[starlette_plus.View] = [
+            HTMXView(self),
+            APIView(self, github_config=CONFIG.get("GITHUB")),
+            DocsView(self),
+        ]
         routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
 
         limit_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["limiter"]) if CONFIG["REDIS"]["limiter"] else None

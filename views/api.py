@@ -32,16 +32,23 @@ from core.utils import validate_paste
 
 if TYPE_CHECKING:
     from core import Application
+    from types_.config import Github
     from types_.github import PostGist
+
 
 DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
 
 
 class APIView(starlette_plus.View, prefix="api"):
-    def __init__(self, app: Application) -> None:
+    def __init__(self, app: Application, *, github_config: Github | None) -> None:
         self.app: Application = app
-        self._handling_tokens = bool(self.app.session and self.app._gist_token)
+        self._handling_tokens = bool(self.app.session and github_config)
+
         if self._handling_tokens:
+            assert github_config  # guarded by if here
+
+            self._gist_token = github_config["token"]
+            self._gist_timeout = github_config["timeout"]
             # tokens bucket for gist posting: {paste_id: token\ntoken}
             self.__tokens_bucket: dict[str, str] = {}
             self.__token_lock = asyncio.Lock()
@@ -54,7 +61,7 @@ class APIView(starlette_plus.View, prefix="api"):
                 async with self.__token_lock:
                     await self._post_gist_of_tokens()
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(self._gist_timeout)
 
     async def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
         formatted_bodies = "\n".join(b["content"] for b in bodies)
@@ -77,7 +84,7 @@ class APIView(starlette_plus.View, prefix="api"):
 
         github_headers = {
             "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {self.app._gist_token}",
+            "Authorization": f"Bearer {self._gist_token}",
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
