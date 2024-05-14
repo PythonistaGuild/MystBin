@@ -92,9 +92,9 @@ class APIView(starlette_plus.View, prefix="api"):
             filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
             json_payload["files"][filename] = {"content": tokens}
 
-        await self.app.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload)
-
         self.__tokens_bucket = {}
+
+        await self.app.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload)
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
