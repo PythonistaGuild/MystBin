@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import asyncio
 import logging
 
+import aiohttp
 import starlette_plus
 import uvicorn
 
@@ -31,8 +32,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    async with core.Database(dsn=core.CONFIG["DATABASE"]["dsn"]) as database:
-        app: core.Application = core.Application(database=database)
+    async with core.Database(dsn=core.CONFIG["DATABASE"]["dsn"]) as database, aiohttp.ClientSession() as session:
+        app: core.Application = core.Application(database=database, session=session)
 
         host: str = core.CONFIG["SERVER"]["host"]
         port: int = core.CONFIG["SERVER"]["port"]

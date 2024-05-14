@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import re
 from typing import TYPE_CHECKING, Any
 
 import starlette_plus
@@ -31,10 +32,44 @@ from core.utils import validate_paste
 if TYPE_CHECKING:
     from core import Application
 
+DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
+
 
 class APIView(starlette_plus.View, prefix="api"):
     def __init__(self, app: Application) -> None:
         self.app: Application = app
+
+    async def _handle_discord_tokens(self, *bodies: dict[str, str]) -> None:
+        # bodies is tuple[{content: ..., filename: ...}]
+        if not self.app._gist_token or not self.app.session:
+            return
+
+        formatted_bodies = "\n".join(b["content"] for b in bodies)
+
+        tokens = list(DISCORD_TOKEN_REGEX.finditer(formatted_bodies))
+
+        if not tokens:
+            return
+        tokens = "\n".join([m[0] for m in tokens])
+
+        await self._post_gist_of_tokens(tokens)
+
+    async def _post_gist_of_tokens(self, tokens: str, /) -> None:
+        assert self.app.session  # guarded in caller
+
+        filename = str(datetime.datetime.now(datetime.UTC)) + "-tokens.txt"
+        json_payload = {
+            "description": "MystBin found these Discord tokens in a public paste, and posted them here to invalidate them. If you intended to share these, please apply a password to the paste.",
+            "files": {filename: {"content": tokens}},
+            "public": True,
+        }
+        github_headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {self.app._gist_token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+
+        await self.app.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload)
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
@@ -259,6 +294,9 @@ class APIView(starlette_plus.View, prefix="api"):
             body = (await request.body()).decode(encoding="UTF-8")
 
         data = {"files": [{"content": body, "filename": None}]} if isinstance(body, str) else body
+
+        await self._handle_discord_tokens(*data["files"])
+
         if resp := validate_paste(data):
             return resp
 

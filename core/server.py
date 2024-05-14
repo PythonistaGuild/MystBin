@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
+import aiohttp
 import starlette_plus
 from starlette.middleware import Middleware
 from starlette.routing import Mount, Route
@@ -34,9 +35,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Application(starlette_plus.Application):
-    def __init__(self, *, database: Database) -> None:
+    def __init__(self, *, database: Database, session: aiohttp.ClientSession | None = None) -> None:
         self.database: Database = database
+        self.session: aiohttp.ClientSession | None = session
         self.schemas: SchemaGenerator | None = None
+        self._gist_token: str | None = CONFIG.get("GITHUB", {}).get("token")
 
         views: list[starlette_plus.View] = [HTMXView(self), APIView(self), DocsView(self)]
         routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
