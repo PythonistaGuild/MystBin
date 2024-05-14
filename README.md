@@ -2,8 +2,10 @@
 
 Easily share code and text.
 
+[Website](https://mystb.in)
+[API Documentation](https://mystb.in/api/documentation)
 
-[Staging Website](https://staging.mystb.in)
+[Install on VSCode](vscode:extension/PythonistaGuild.mystbin)
 
 
 ### Running without Docker
