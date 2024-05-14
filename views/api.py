@@ -18,14 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
-import asyncio
 import datetime
 import json
-import logging
-import re
 from typing import TYPE_CHECKING, Any
 
-import aiohttp
 import starlette_plus
 
 from core import CONFIG
@@ -34,94 +30,11 @@ from core.utils import validate_paste
 
 if TYPE_CHECKING:
     from core import Application
-    from types_.config import Github
-    from types_.github import PostGist
-
-
-DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
-
-LOGGER = logging.getLogger(__name__)
 
 
 class APIView(starlette_plus.View, prefix="api"):
-    def __init__(self, app: Application, *, github_config: Github | None) -> None:
+    def __init__(self, app: Application) -> None:
         self.app: Application = app
-        self._handling_tokens = bool(self.app.session and github_config)
-
-        if self._handling_tokens:
-            assert github_config  # guarded by if here
-
-            self._gist_token = github_config["token"]
-            self._gist_timeout = github_config["timeout"]
-            # tokens bucket for gist posting: {paste_id: token\ntoken}
-            self.__tokens_bucket: dict[str, str] = {}
-            self.__token_lock = asyncio.Lock()
-            self.__token_task = asyncio.create_task(self._token_task())
-
-    async def _token_task(self) -> None:
-        # won't run unless pre-reqs are met in __init__
-        while True:
-            if self.__tokens_bucket:
-                async with self.__token_lock:
-                    await self._post_gist_of_tokens()
-
-            await asyncio.sleep(self._gist_timeout)
-
-    def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
-        formatted_bodies = "\n".join(b["content"] for b in bodies)
-
-        tokens = list(DISCORD_TOKEN_REGEX.finditer(formatted_bodies))
-
-        if not tokens:
-            return
-
-        tokens = "\n".join([m[0] for m in tokens])
-        self.__tokens_bucket[paste_id] = tokens
-
-    async def _post_gist_of_tokens(self) -> None:
-        assert self.app.session  # guarded in caller
-        json_payload: PostGist = {
-            "description": "MystBin found these Discord tokens in a public paste, and posted them here to invalidate them. If you intended to share these, please apply a password to the paste.",
-            "files": {},
-            "public": True,
-        }
-
-        github_headers = {
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {self._gist_token}",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-
-        current_tokens = self.__tokens_bucket
-        self.__tokens_bucket = {}
-
-        for paste_id, tokens in current_tokens.items():
-            filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
-            json_payload["files"][filename] = {"content": tokens}
-
-        success = False
-
-        try:
-            async with self.app.session.post(
-                "https://api.github.com/gists", headers=github_headers, json=json_payload
-            ) as resp:
-                success = resp.ok
-
-                if not success:
-                    response_body = await resp.text()
-                    LOGGER.error(
-                        "Failed to create gist with token bucket with response status code %s and response body:\n\n%s",
-                        resp.status,
-                        response_body,
-                    )
-        except (aiohttp.ClientError, aiohttp.ClientOSError) as error:
-            success = False
-            LOGGER.error("Failed to handle gist creation due to a client or operating system error", exc_info=error)
-
-        if success:
-            LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
-        else:
-            self.__tokens_bucket.update(current_tokens)
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
@@ -335,7 +248,6 @@ class APIView(starlette_plus.View, prefix="api"):
                                     type: string
                                     example: You are requesting too fast.
         """
-
         content_type: str | None = request.headers.get("content-type", None)
         body: dict[str, Any] | str
         data: dict[str, Any]
@@ -365,11 +277,6 @@ class APIView(starlette_plus.View, prefix="api"):
         data["password"] = password
 
         paste = await self.app.database.create_paste(data=data)
-
-        if not password:
-            # if the user didn't provide a password (a public paste)
-            # we check for discord tokens
-            self._handle_discord_tokens(*data["files"], paste_id=paste.id)
 
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         to_return.pop("files", None)

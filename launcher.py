@@ -32,8 +32,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    async with core.Database(dsn=core.CONFIG["DATABASE"]["dsn"]) as database, aiohttp.ClientSession() as session:
-        app: core.Application = core.Application(database=database, session=session)
+    async with aiohttp.ClientSession() as session, core.Database(
+        dsn=core.CONFIG["DATABASE"]["dsn"], session=session, github_config=core.CONFIG.get("GITHUB")
+    ) as database:
+        app: core.Application = core.Application(database=database)
 
         host: str = core.CONFIG["SERVER"]["host"]
         port: int = core.CONFIG["SERVER"]["port"]

@@ -42,7 +42,7 @@ class Application(starlette_plus.Application):
 
         views: list[starlette_plus.View] = [
             HTMXView(self),
-            APIView(self, github_config=CONFIG.get("GITHUB")),
+            APIView(self),
             DocsView(self),
         ]
         routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
