@@ -295,8 +295,6 @@ class APIView(starlette_plus.View, prefix="api"):
 
         data = {"files": [{"content": body, "filename": None}]} if isinstance(body, str) else body
 
-        await self._handle_discord_tokens(*data["files"])
-
         if resp := validate_paste(data):
             return resp
 
@@ -308,7 +306,13 @@ class APIView(starlette_plus.View, prefix="api"):
             return starlette_plus.JSONResponse({"error": f'Unable to parse "expiry" parameter: {e}'}, status_code=400)
 
         data["expires"] = expiry
-        data["password"] = data.get("password", None)
+        password = data.get("password")
+        data["password"] = password
+
+        if not password:
+            # if the user didn't provide a password (a public paste)
+            # we check for discord tokens
+            await self._handle_discord_tokens(*data["files"])
 
         paste = await self.app.database.create_paste(data=data)
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
