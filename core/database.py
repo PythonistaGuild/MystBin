@@ -116,8 +116,8 @@ class Database:
         self.__tokens_bucket = {}
 
         for paste_id, tokens in current_tokens.items():
-            filename = str(datetime.datetime.now(datetime.UTC)) + f"__{paste_id}-tokens.txt"
-            json_payload["files"][filename] = {"content": tokens}
+            filename = str(datetime.datetime.now(datetime.UTC)) + "-tokens.txt"
+            json_payload["files"][filename] = {"content": f"https://mystb.in/{paste_id}:\n{tokens}"}
 
         success = False
 
@@ -251,6 +251,8 @@ class Database:
                     tokens = [t for t in utils.TOKEN_REGEX.findall(content) if utils.validate_discord_token(t)]
                     if tokens:
                         annotation = "Contains possibly sensitive information: Discord Token(s)"
+                        if not password:
+                            annotation += ", which have now been invalidated."
 
                     row: asyncpg.Record | None = await connection.fetchrow(
                         file_query, paste.id, content, name, loc, annotation
