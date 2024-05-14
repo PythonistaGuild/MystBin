@@ -26,3 +26,4 @@ name_limit = 25
 
 [GITHUB] # optional key
 token = "..." # a github token capable of creating gists, non-optional if the above key is provided
+timeout = 10  # how long to wait between posting gists if there's an influx of tokens posted. Non-optional
