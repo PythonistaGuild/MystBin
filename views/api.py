@@ -63,7 +63,7 @@ class APIView(starlette_plus.View, prefix="api"):
 
             await asyncio.sleep(self._gist_timeout)
 
-    async def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
+    def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
         formatted_bodies = "\n".join(b["content"] for b in bodies)
 
         tokens = list(DISCORD_TOKEN_REGEX.finditer(formatted_bodies))
@@ -342,7 +342,7 @@ class APIView(starlette_plus.View, prefix="api"):
         if not password:
             # if the user didn't provide a password (a public paste)
             # we check for discord tokens
-            await self._handle_discord_tokens(*data["files"], paste_id=paste.id)
+            self._handle_discord_tokens(*data["files"], paste_id=paste.id)
 
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         to_return.pop("files", None)
