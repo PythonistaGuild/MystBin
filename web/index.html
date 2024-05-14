@@ -16,17 +16,15 @@
     <script src="static/packages/highlight.min.js"></script>
     <script src="static/packages/highlight-ln.min.js"></script>
 
-    <!-- SCRIPTS -->
-    <script src="static/scripts/themes.js" defer></script>
-    <script src="static/scripts/files.js" defer></script>
-    <script src="static/scripts/hidecopy.js"></script>
-    <script src="static/scripts/highlights.js"></script>
+  <!-- SCRIPTS -->
+  <script src="/static/scripts/initialTheme.js?v=1"></script>
+  <script src="/static/scripts/themes.js?v=1" defer></script>
+  <script src="/static/scripts/files.js?v=3" defer></script>
 
-    <!-- STYLESHEETS -->
-    <link rel="preload" href="static/styles/global.css" as="style" />
-    <link rel="preload" href="static/styles/highlights.css" as="style" />
-    <link rel="stylesheet" type="text/css" href="static/styles/global.css" />
-    <link rel="stylesheet" type="text/css" href="static/styles/highlights.css" />
+  <!-- STYLESHEETS -->
+  <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
+  <!-- <link rel="preload" href="static/styles/highlights.css" as="style" /> -->
+  <link rel="stylesheet" type="text/css" href="/static/styles/global.css?v=3" />
 
   <!-- FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,10 +60,20 @@
         <div class="pasteHeader">
           <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
             spellcheck="false"></textarea>
-          <span class="deleteFile disabled" onclick="deleteFile('__file0')">Delete File</span>
+          <span class="deleteFile" onclick="deleteFile('__file0')">Delete File</span>
         </div>
-        <textarea name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..."
-          maxlength="300000"></textarea>
+        <textarea class="fileContent" name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text...
+Filling in all current files will create a new one (Up to 5)" maxlength="300000" onkeyup="addFile(0)"></textarea>
+      </div>
+
+      <div class="pasteArea smallArea" id="__file1" data-position="1">
+        <div class="pasteHeader">
+          <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
+            spellcheck="false"></textarea>
+          <span class="deleteFile" onclick="deleteFile('__file1')">Delete File</span>
+        </div>
+        <textarea class="fileContent" name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..."
+          maxlength="300000" onkeyup="addFile(1)"></textarea>
       </div>
     </div>
 
@@ -85,7 +93,7 @@
     <div class="footerSection">
       <img src="/static/images/logo.svg" class="logo" />
       <span class="footerText">
-        MystBin - Copyright © 2020-current PythonistaGuild
+        MystBin - Copyright &copy; 2020-current PythonistaGuild
       </span>
     </div>
     <div class="footerSection">

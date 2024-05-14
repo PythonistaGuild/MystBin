@@ -2,50 +2,97 @@ let pasteContainer = document.querySelector(".pasteContainer");
 let addButton = document.querySelector(".addPaste");
 let count = 0;
 
-addButton.addEventListener("click", (e) => {
-    let files = pasteContainer.getElementsByClassName("pasteArea");
 
-    if (files.length >= 5) {
-        return;
+function addFile(number) {
+    let canContinue = true;
+    let pasteAreas = pasteContainer.getElementsByClassName("pasteArea");
+    let files = pasteContainer.querySelectorAll("[name='fileContent']");
+
+    for (let area of pasteAreas) {
+        let file = area.querySelector("[name='fileContent']");
+
+        if (!file.value) {
+            canContinue = false;
+
+            if (file !== files[0]) {
+                area.classList.add("smallArea");
+            }
+        }
+
+        else if (file.value) {
+            area.classList.remove("smallArea");
+        }
     }
+
+    if (!canContinue) { return }
+    if (files.length === 5) { return }
 
     count += 1;
 
-    const pasteHTML = `<div class="pasteArea" id="__file${count}">
-<div class="pasteHeader">
-  <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"></textarea>
-  <span class="deleteFile" onclick="deleteFile('__file${count}')">Delete File</span>
-</div>
-<textarea name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..." maxlength="300000"></textarea>
-</div>`;
+    const pasteHTML = `
+    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}">
+        <div class="pasteHeader">
+            <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"></textarea>
+            <span class="deleteFile" onclick="deleteFile('__file${count}')">Delete File</span>
+        </div>
+        <textarea class="fileContent" name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..." maxlength="300000" onkeyup="addFile(${count})"></textarea>
+    </div>`;
 
     pasteContainer.insertAdjacentHTML("beforeend", pasteHTML);
-
-    files = pasteContainer.getElementsByClassName("pasteArea");
-    for (let file of files) {
-        file.querySelector(".pasteHeader .deleteFile").classList.remove("disabled");
-    }
-
-    if (files.length >= 5) {
-        addButton.style.display = "none";
-    }
-});
+}
 
 function deleteFile(identifier) {
-    let files = pasteContainer.getElementsByClassName("pasteArea");
+    let pasteAreas = pasteContainer.getElementsByClassName("pasteArea");
+    let files = pasteContainer.querySelectorAll("[name='fileContent']");
+    let area = document.getElementById(identifier);
+    let file = area.querySelector("[name='fileContent']")
 
-    if (files.length == 1) {
-        return;
-    } else {
-        addButton.style.display = "flex";
+    if (pasteAreas.length == 2) {
+        file.value = "";
+
+        if (file === files[1]) {
+            area.classList.add("smallArea");
+        }
+        return
     }
 
-    document.getElementById(identifier).remove();
-
-    files = pasteContainer.getElementsByClassName("pasteArea");
-    if (files.length == 1) {
-        files[0]
-            .querySelector(".pasteHeader .deleteFile")
-            .classList.add("disabled");
+    if (files.length === 5 && file === files[4]) {
+        file.value = "";
+        area.classList.add("smallArea");
+        return
     }
+
+    area.remove();
+    let canContinue = true;
+    let newAreas = pasteContainer.getElementsByClassName("pasteArea");
+
+    for (let newArea of newAreas) {
+        let newFile = newArea.querySelector("[name='fileContent']");
+
+        if (!newFile.value) {
+            canContinue = false;
+
+            if (newFile !== files[0]) {
+                newArea.classList.add("smallArea");
+            }
+        }
+
+        else if (newFile.value) {
+            newArea.classList.remove("smallArea");
+        }
+    }
+
+    if (!canContinue) { return }
+
+    const pasteHTML = `
+    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}">
+        <div class="pasteHeader">
+            <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"></textarea>
+            <span class="deleteFile" onclick="deleteFile('__file${count}')">Delete File</span>
+        </div>
+        <textarea class="fileContent" name="fileContent" required autofocus spellcheck="false" placeholder="Paste code or text..." maxlength="300000" onkeyup="addFile(${count})"></textarea>
+    </div>`;
+
+    pasteContainer.insertAdjacentHTML("beforeend", pasteHTML);
+    
 }

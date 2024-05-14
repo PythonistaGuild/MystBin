@@ -1,0 +1,9 @@
+.pasteArea:nth-of-type(even)>.pasteHeader {
+    background-color: var(--color-second-paste);
+    border-radius: 0.25rem 0.2rem 0 0;
+}
+
+.pasteArea:nth-of-type(odd)>.pasteHeader {
+    background-color: unset;
+    border-radius: 0.25rem 0.2rem 0 0;
+}

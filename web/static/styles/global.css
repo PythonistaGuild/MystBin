@@ -3,15 +3,16 @@
   --color-accent: #9069a7;
   --color-error: #dd374d;
   --color-security: #004ac0;
-  --color-background: #eff2f7;
-  --color-background--header: #fff;
-  --color-background--pastes: #fff;
+  --color-background: #ffe5ee;
+  --color-background--header: #fefefe;
+  --color-background--pastes: #fefefe;
   --color-background--resizer: rgb(255, 255, 255, 0.9);
   --color-background--button: #eff2f7;
   --color-foreground: #2e2e33;
   --color-foreground--dim: rgb(46, 46, 51, 0.6);
   --color-foreground--border: rgb(46, 46, 51, 0.2);
   --color-annotation: rgb(185, 52, 69);
+  --color-second-paste: rgba(199, 199, 199, 0.6);
   --button--brightness: brightness(0.95);
   --button--brightness-hover: brightness(0.85);
   --button--brightness-active: brightness(0.95);
@@ -31,6 +32,7 @@
   --color-foreground--dim: rgb(201, 201, 209, 0.6);
   --color-foreground--border: rgb(201, 201, 209, 0.2);
   --color-annotation: rgb(192, 99, 112, 0.8);
+  --color-second-paste: rgba(127, 97, 175, 0.05);
   --button--brightness: brightness(1.2);
   --button--brightness-hover: brightness(1.1);
   --button--brightness-active: brightness(1.1);
@@ -136,6 +138,11 @@ a {
   height: 100%;
   background-color: var(--color-background--pastes);
   border-radius: 0.25rem;
+}
+
+.pasteArea:nth-of-type(odd)>.pasteHeader {
+  background-color: var(--color-second-paste);
+  border-radius: 0.25rem 0.2rem 0 0;
 }
 
 .pasteContainer {
@@ -494,5 +501,9 @@ textarea {
 
   .header {
     padding: 1rem 0.5rem;
+  }
+
+  .pasteArea>textarea {
+    font-size: 0.8em;
   }
 }
