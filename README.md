@@ -3,9 +3,10 @@
 Easily share code and text.
 
 [Website](https://mystb.in)
+
 [API Documentation](https://mystb.in/api/documentation)
 
-[Install on VSCode](vscode:extension/PythonistaGuild.mystbin)
+[Install on VSCode](https://marketplace.visualstudio.com/items?itemName=PythonistaGuild.mystbin)
 
 
 ### Running without Docker
