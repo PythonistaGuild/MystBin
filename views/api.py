@@ -116,10 +116,7 @@ class APIView(starlette_plus.View, prefix="api"):
                     )
         except (aiohttp.ClientError, aiohttp.ClientOSError) as error:
             success = False
-            LOGGER.error(
-                "Failed to create gist with token bucket with response status code %s and request body:\n\n%s",
-                error
-            )
+            LOGGER.error("Failed to handle gist creation due to a client or operating system error", exc_info=error)
 
         if success:
             LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
