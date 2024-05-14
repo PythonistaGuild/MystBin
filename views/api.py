@@ -92,28 +92,39 @@ class APIView(starlette_plus.View, prefix="api"):
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
-        current_tokens = self.__tokens_bucket.copy()
+        current_tokens = self.__tokens_bucket
         self.__tokens_bucket = {}
 
         for paste_id, tokens in current_tokens.items():
             filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
             json_payload["files"][filename] = {"content": tokens}
 
+        success = False
+
         try:
             async with self.app.session.post(
                 "https://api.github.com/gists", headers=github_headers, json=json_payload
             ) as resp:
-                if not resp.ok:
+                success = resp.ok
+
+                if not success:
                     response_body = await resp.text()
                     LOGGER.error(
-                        "Failed to create gist with token bucket with response status code %s and request body:-\n\n",
+                        "Failed to create gist with token bucket with response status code %s and response body:\n\n%s",
                         resp.status,
                         response_body,
                     )
-                    self.__tokens_bucket.update(current_tokens)
-                    return
-        except (aiohttp.ClientError, aiohttp.ClientOSError):
+        except (aiohttp.ClientError, aiohttp.ClientOSError) as error:
+            success = False
+            LOGGER.error(
+                "Failed to create gist with token bucket with response status code %s and request body:\n\n%s",
+                error
+            )
+
+        if success:
             LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
+        else:
+            self.__tokens_bucket.update(current_tokens)
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
