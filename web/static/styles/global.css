@@ -12,7 +12,7 @@
   --color-foreground--dim: rgb(46, 46, 51, 0.6);
   --color-foreground--border: rgb(46, 46, 51, 0.2);
   --color-annotation: rgb(185, 52, 69);
-  --color-second-paste: rgba(199, 199, 199, 0.6);
+  --color-second-paste: #f6f8fa;
   --button--brightness: brightness(0.95);
   --button--brightness-hover: brightness(0.85);
   --button--brightness-active: brightness(0.95);
@@ -140,7 +140,7 @@ a {
   border-radius: 0.25rem;
 }
 
-.pasteArea:nth-of-type(odd)>.pasteHeader {
+.pasteHeader {
   background-color: var(--color-second-paste);
   border-radius: 0.25rem 0.2rem 0 0;
 }
