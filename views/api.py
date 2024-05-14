@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import json
+import logging
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -37,6 +38,8 @@ if TYPE_CHECKING:
 
 
 DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
+
+LOGGER = logging.getLogger(__name__)
 
 
 class APIView(starlette_plus.View, prefix="api"):
@@ -88,13 +91,27 @@ class APIView(starlette_plus.View, prefix="api"):
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
-        for paste_id, tokens in self.__tokens_bucket.items():
+        current_tokens = self.__tokens_bucket.copy()
+        self.__tokens_bucket = {}
+
+        for paste_id, tokens in current_tokens.items():
             filename = str(datetime.datetime.now(datetime.UTC)) + f"/{paste_id}-tokens.txt"
             json_payload["files"][filename] = {"content": tokens}
 
-        self.__tokens_bucket = {}
+        async with self.app.session.post(
+            "https://api.github.com/gists", headers=github_headers, json=json_payload
+        ) as resp:
+            if not resp.ok:
+                response_body = await resp.text()
+                LOGGER.error(
+                    "Failed to create gist with token bucket with response status code %s and request body:-\n\n",
+                    resp.status,
+                    response_body,
+                )
+                self.__tokens_bucket.update(current_tokens)
+                return
 
-        await self.app.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload)
+            LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
 
     @starlette_plus.route("/paste/{id}", methods=["GET"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
