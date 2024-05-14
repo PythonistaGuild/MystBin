@@ -273,8 +273,7 @@ class APIView(starlette_plus.View, prefix="api"):
             return starlette_plus.JSONResponse({"error": f'Unable to parse "expiry" parameter: {e}'}, status_code=400)
 
         data["expires"] = expiry
-        password = data.get("password")
-        data["password"] = password
+        data["password"] = data.get("password")
 
         paste = await self.app.database.create_paste(data=data)
 
