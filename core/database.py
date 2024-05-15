@@ -244,6 +244,8 @@ class Database:
             async with connection.transaction():
                 for index, file in enumerate(files, 1):
                     name: str = (file.get("filename") or f"file_{index}")[-CONFIG["PASTES"]["name_limit"] :]
+                    name = "_".join(name.splitlines())
+
                     content: str = file["content"]
                     loc: int = file["content"].count("\n") + 1
                     annotation: str = ""

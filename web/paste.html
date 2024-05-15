@@ -9,23 +9,23 @@
     <meta name="description" content="Easily share code and text." />
 
     <!-- PACKAGES -->
-    <link rel="preload" href="static/packages/htmx.min.js" as="script">
-    <link rel="preload" href="static/packages/highlight.min.js" as="script">
-    <link rel="preload" href="static/packages/highlight-ln.min.js" as="script">
-    <script src="static/packages/htmx.min.js"></script>
-    <script src="static/packages/highlight.min.js"></script>
-    <script src="static/packages/highlight-ln.min.js"></script>
+    <!-- <link rel="preload" href="static/packages/htmx.min.js" as="script"> -->
+    <!-- <link rel="preload" href="static/packages/highlight.min.js" as="script"> -->
+    <!-- <link rel="preload" href="static/packages/highlight-ln.min.js" as="script"> -->
+    <script src="/static/packages/highlight.min.js"></script>
+    <script src="/static/packages/highlight-ln.min.js"></script>
 
     <!-- SCRIPTS -->
-    <script src="static/scripts/themes.js" defer></script>
-    <script src="static/scripts/hidecopy.js"></script>
-    <script src="static/scripts/highlights.js"></script>
+    <script src="/static/scripts/initialTheme.js?v=1"></script>
+    <script src="/static/scripts/themes.js?v=1" defer></script>
+    <script src="/static/scripts/hidecopy.js?v=1" defer></script>
+    <script src="/static/scripts/highlights.js?v=3" defer></script>
 
     <!-- STYLESHEETS -->
-    <link rel="preload" href="static/styles/global.css" as="style" />
-    <link rel="preload" href="static/styles/highlights.css" as="style" />
-    <link rel="stylesheet" type="text/css" href="static/styles/global.css" />
-    <link rel="stylesheet" type="text/css" href="static/styles/highlights.css" />
+    <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
+    <!-- <link rel="preload" href="static/styles/highlights.css" as="style" /> -->
+    <link rel="stylesheet" type="text/css" href="/static/styles/global.css?v=3" />
+    <link rel="stylesheet" type="text/css" href="/static/styles/highlights.css" />
 
     <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
         rel="stylesheet">
 
-    <link rel="icon" href="static/images/favicon.png" />
+    <link rel="icon" href="/static/images/favicon.ico" />
 </head>
 
 <body>
@@ -55,15 +55,14 @@
     </div>
 
     <div id="content" class="content">
-        <div id="pastecontainer" class="pasteContainer" hx-trigger="load" hx-get="/htmx/fetch"
-            hx-vals="js:{id: window.location.pathname}"></div>
+        <div id="pastecontainer" class="pasteContainer">{__PASTES__}</div>
     </div>
 
     <div class="footer">
         <div class="footerSection">
             <img src="/static/images/logo.svg" class="logo" />
             <span class="footerText">
-                MystBin - Copyright © 2020-current PythonistaGuild
+                MystBin - Copyright &copy; 2020-current PythonistaGuild
             </span>
         </div>
         <div class="footerSection">
