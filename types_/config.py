@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 import starlette_plus
 
@@ -52,9 +52,15 @@ class Pastes(TypedDict):
     name_limit: int
 
 
+class Github(TypedDict):
+    token: str
+    timeout: float
+
+
 class Config(TypedDict):
     SERVER: Server
     DATABASE: Database
     REDIS: Redis
     LIMITS: Limits
     PASTES: Pastes
+    GITHUB: NotRequired[Github]
