@@ -6,3 +6,4 @@ bleach
 humanize
 python-multipart
 pyyaml
+aiohttp

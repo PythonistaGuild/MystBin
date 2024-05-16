@@ -544,7 +544,7 @@ textarea {
   .annotations {
     font-size: 0.8em;
   }
-
+  
   .savePaste {
     padding: 0.75rem;
     font-size: 0.8em;
@@ -552,6 +552,11 @@ textarea {
 
   .deleteFile {
     padding: 0.5rem 1rem;
+    font-size: 0.8em;
+  }
+
+  .deleteFile {
+    padding: 1rem;
     font-size: 0.8em;
   }
 

@@ -174,6 +174,9 @@ class APIView(starlette_plus.View, prefix="api"):
 
             Max file limit is `5`.\n\n
 
+            If the paste is regarded as public, and contains Discord authorization tokens,
+            then these will be invalidated upon paste creation.\n\n
+
         requestBody:
             description: The paste data. `password` and `expires` are optional.
             content:
@@ -248,7 +251,6 @@ class APIView(starlette_plus.View, prefix="api"):
                                     type: string
                                     example: You are requesting too fast.
         """
-
         content_type: str | None = request.headers.get("content-type", None)
         body: dict[str, Any] | str
         data: dict[str, Any]
@@ -262,6 +264,7 @@ class APIView(starlette_plus.View, prefix="api"):
             body = (await request.body()).decode(encoding="UTF-8")
 
         data = {"files": [{"content": body, "filename": None}]} if isinstance(body, str) else body
+
         if resp := validate_paste(data):
             return resp
 
@@ -273,7 +276,7 @@ class APIView(starlette_plus.View, prefix="api"):
             return starlette_plus.JSONResponse({"error": f'Unable to parse "expiry" parameter: {e}'}, status_code=400)
 
         data["expires"] = expiry
-        data["password"] = data.get("password", None)
+        data["password"] = data.get("password")
 
         try:
             paste = await self.app.database.create_paste(data=data)
