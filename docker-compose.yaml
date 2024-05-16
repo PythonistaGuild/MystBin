@@ -1,8 +1,6 @@
 services:
   mystbin:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/pythonistaguild/mystbin
     container_name: mystbin
     ports:
       - 8181:8181
@@ -11,6 +9,8 @@ services:
       database:
         condition: service_healthy
         restart: true
+    volumes:
+      - ./config.toml:/app/config.toml:ro
 
   database:
     image: postgres:latest

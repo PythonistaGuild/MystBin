@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source=https://github.com/pythonistaguild/mystbin-backend
-LABEL org.opencontainers.image.description="Mystbin's Python Backend"
+LABEL org.opencontainers.image.source=https://github.com/pythonistaguild/mystbin
+LABEL org.opencontainers.image.description="Container for running MystB.in"
 LABEL org.opencontainers.image.licenses=GPLv3
 
 RUN mkdir -p /etc/apt/keyrings \
