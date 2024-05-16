@@ -18,6 +18,7 @@
   <script src="/static/scripts/initialTheme.js?v=1"></script>
   <script src="/static/scripts/themes.js?v=1" defer></script>
   <script src="/static/scripts/files.js?v=3" defer></script>
+  <script src="/static/scripts/dragDrop.js?v=1"></script>
 
   <!-- STYLESHEETS -->
   <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
@@ -54,7 +55,7 @@
   <form id="content" class="content" hx-swap-oob="true" hx-swap="outerHTML"
     hx-include="[name='fileName'] [name='fileContent'] [name='pastePassword']">
     <div id="pastecontainer" class="pasteContainer">
-      <div class="pasteArea" id="__file0" data-position="0">
+      <div class="pasteArea" id="__file0" data-position="0" ondrop="fileDrop(event, this)" ondragover="fileDragOver(event, this)" ondragenter="fileDragStart(event, this)" ondragleave="fileDragEnd(event, this)">
         <div class="pasteHeader">
           <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
             spellcheck="false"></textarea>
@@ -64,7 +65,7 @@
 Filling in all current files will create a new one (Up to 5)" maxlength="300000" onkeyup="addFile(0)"></textarea>
       </div>
 
-      <div class="pasteArea smallArea" id="__file1" data-position="1">
+      <div class="pasteArea smallArea" id="__file1" data-position="1" ondrop="fileDrop(event, this)" ondragover="fileDragOver(event, this)" ondragenter="fileDragStart(event, this)" ondragleave="fileDragEnd(event, this)">
         <div class="pasteHeader">
           <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"
             spellcheck="false"></textarea>
