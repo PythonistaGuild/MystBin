@@ -23,6 +23,7 @@ import json
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import unquote, urlsplit
 
+import asyncpg
 import bleach
 import humanize
 import starlette_plus
@@ -257,8 +258,14 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
             inner: dict[str, str | None] = {}
 
-            inner["filename"] = names[n] or None
-            inner["content"] = contents[n]
+            try:
+                inner["filename"] = names[n].encode("UTF-8").decode("UTF-8") or None
+                inner["content"] = contents[n].encode("UTF-8").decode("UTF-8")
+            except Exception:
+                return starlette_plus.HTMLResponse(
+                    """<span id="errorResponse">400: File/Filename contains invalid characters.</span>""",
+                    headers=error_headers,
+                )
             data["files"].append(inner)
 
         if not data["files"]:
@@ -277,7 +284,14 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         data["expires"] = None  # TODO: Add this to Frontend...
         data["password"] = password or None
 
-        paste = await self.app.database.create_paste(data=data)
+        try:
+            paste = await self.app.database.create_paste(data=data)
+        except asyncpg.CharacterNotInRepertoireError:
+            return starlette_plus.HTMLResponse(
+                """<span id="errorResponse">400: File/Filename contains invalid characters.</span>""",
+                headers=error_headers,
+            )
+
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         identifier: str = to_return["id"]
 
