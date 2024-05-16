@@ -16,6 +16,34 @@
   --button--brightness: brightness(0.95);
   --button--brightness-hover: brightness(0.85);
   --button--brightness-active: brightness(0.95);
+
+  .deleteFile {
+    background-color: var(--color-background);
+    filter: brightness(0.99);
+  }
+
+  .deleteFile:hover {
+    cursor: pointer;
+    filter: brightness(0.97);
+  }
+
+  .deleteFile:active {
+    filter: brightness(0.99);
+  }
+
+  .savePaste {
+    background-color: var(--color-background);
+    filter: brightness(0.99);
+  }
+
+  .savePaste:hover {
+    cursor: pointer;
+    filter: brightness(0.97);
+  }
+
+  .savePaste:active {
+    filter: brightness(0.99);
+  }
 }
 
 [data-theme="dark"] {
@@ -138,30 +166,58 @@ a {
   height: 100%;
   background-color: var(--color-background--pastes);
   border-radius: 0.25rem;
+  border: 1px solid transparent;
+
+}
+
+.dragging {
+  opacity: 0.5;
+  border: 1px dashed var(--color-accent);
+  position: relative;
+  cursor: copy;
+  background-color: var(--color-background--pastes);
+}
+
+.dragging::after {
+  pointer-events: none;
+  content: "Drop File to Paste...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.prevented {
+  border: 1px dashed var(--color-error);
+  cursor: no-drop;
+}
+
+.prevented::after {
+  content: "File is not allowed...";
+  color: var(--color-error);
+  font-weight: 700;
+  font-size: larger;
 }
 
 .pasteHeader {
   background-color: var(--color-second-paste);
   border-radius: 0.25rem 0.2rem 0 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  width: 100%;
 }
 
 .pasteContainer {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   flex-grow: 1;
   width: 100%;
   max-width: 100%;
   border-radius: 0.25rem;
-}
-
-.pasteHeader {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  width: 100%;
 }
 
 input[type="password"] {
@@ -212,13 +268,12 @@ input[type="password"] {
 
 .smallArea {
   flex-grow: 0;
-  height: 7rem;
-  margin: 0 0 6rem 0;
+  height: 9rem;
 }
 
 .smallArea>textarea {
-  min-height: 7rem;
-  height: 7rem;
+  min-height: 4rem;
+  height: 4rem;
 }
 
 textarea::-webkit-resizer {
@@ -252,7 +307,7 @@ textarea {
 
 .deleteFile {
   display: flex;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   background-color: var(--color-background--header);
   filter: brightness(0.8);
@@ -318,7 +373,7 @@ textarea {
 
 .savePaste {
   display: flex;
-  padding: 1rem 4rem;
+  padding: 0.75rem 4rem;
   border-radius: 0.25rem;
   background-color: var(--color-background--button);
   filter: var(--button--brightness);
@@ -489,14 +544,14 @@ textarea {
   .annotations {
     font-size: 0.8em;
   }
-  
+
   .savePaste {
-    padding: 1rem;
+    padding: 0.75rem;
     font-size: 0.8em;
   }
 
   .deleteFile {
-    padding: 1rem;
+    padding: 0.5rem 1rem;
     font-size: 0.8em;
   }
 
@@ -524,6 +579,7 @@ textarea {
   .header {
     padding: 1rem 0.5rem;
   }
+
   .pasteArea>textarea {
     font-size: 0.8em;
   }
