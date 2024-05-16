@@ -1,8 +1,6 @@
 services:
   mystbin:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/pythonista-guild/mystbin
     container_name: mystbin
     ports:
       - 8181:8181
