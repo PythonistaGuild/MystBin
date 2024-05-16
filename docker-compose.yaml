@@ -1,6 +1,6 @@
 services:
   mystbin:
-    image: ghcr.io/pythonista-guild/mystbin
+    image: ghcr.io/pythonistaguild/mystbin
     container_name: mystbin
     ports:
       - 8181:8181
