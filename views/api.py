@@ -22,6 +22,7 @@ import datetime
 import json
 from typing import TYPE_CHECKING, Any
 
+import asyncpg
 import starlette_plus
 
 from core import CONFIG
@@ -277,7 +278,11 @@ class APIView(starlette_plus.View, prefix="api"):
         data["expires"] = expiry
         data["password"] = data.get("password")
 
-        paste = await self.app.database.create_paste(data=data)
+        try:
+            paste = await self.app.database.create_paste(data=data)
+        except asyncpg.CharacterNotInRepertoireError:
+            message: str = "File(s)/Filename(s) contain invalid characters or byte sequences."
+            return starlette_plus.JSONResponse({"error": message}, status_code=400)
 
         to_return: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         to_return.pop("files", None)

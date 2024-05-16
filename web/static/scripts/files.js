@@ -29,7 +29,8 @@ function addFile(number) {
     count += 1;
 
     const pasteHTML = `
-    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}">
+    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}" ondrop="fileDrop(event, this)" ondragover="fileDragOver(event, this)" ondragenter="fileDragStart(event, this)" ondragleave="fileDragEnd(event, this)">
+
         <div class="pasteHeader">
             <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"></textarea>
             <span class="deleteFile" onclick="deleteFile('__file${count}')">Delete File</span>
@@ -84,7 +85,8 @@ function deleteFile(identifier) {
     if (!canContinue) { return }
 
     const pasteHTML = `
-    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}">
+    <div class="pasteArea smallArea" id="__file${count}" data-position="${count}" ondrop="fileDrop(event, this)" ondragover="fileDragOver(event, this)" ondragenter="fileDragStart(event, this)" ondragleave="fileDragEnd(event, this)">
+
         <div class="pasteHeader">
             <textarea name="fileName" class="filenameArea" rows="1" placeholder="Optional Filename..." maxlength="25"></textarea>
             <span class="deleteFile" onclick="deleteFile('__file${count}')">Delete File</span>
@@ -93,5 +95,4 @@ function deleteFile(identifier) {
     </div>`;
 
     pasteContainer.insertAdjacentHTML("beforeend", pasteHTML);
-    
 }
