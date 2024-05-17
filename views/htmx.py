@@ -56,7 +56,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         return f"""
         <div id="__paste_a_{index}" class="pasteArea">
             <div class="pasteHeader">
-                <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <span class="filenameArea">{filename}</span>
                     <span class="pasteButton" onclick="hideFile(this, {index})">Hide</span>
                     <span id="__paste_copy_{index}" class="pasteButton" onclick="copyFile({index})">Copy</span>

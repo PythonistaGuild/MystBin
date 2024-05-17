@@ -34,7 +34,7 @@ TOKEN_REGEX = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_
 
 
 def generate_id() -> str:
-    return secrets.token_hex(8)
+    return secrets.token_hex(9)
 
 
 def generate_safety_token() -> str:
