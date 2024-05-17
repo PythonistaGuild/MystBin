@@ -20,7 +20,6 @@ on:
       - '**.js'
       - '**.py'
       - '**.toml'
-      - '**.sql'
     paths-ignore:
       - '**.template.toml'
 
