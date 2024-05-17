@@ -14,6 +14,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**.html'
+      - '**.css'
+      - '**.js'
+      - '**.py'
+      - '**.toml'
+      - '**.svg'
+    paths-ignore:
+      - '**.template.toml'
 
 concurrency:
   cancel-in-progress: true
