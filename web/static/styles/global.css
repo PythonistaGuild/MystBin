@@ -607,7 +607,7 @@ textarea {
   }
 
   .filenameArea {
-    font-size: 0.7em;
+    font-size: 0.6em;
   }
 
   .content {
@@ -624,9 +624,15 @@ textarea {
 
   .langSelectContainer>label {
     max-width: 6rem;
+    padding: 0;
   }
 
   .langSelectContainer>label>input {
     max-width: 6rem;
+    font-size: 0.7em;
+  }
+
+  .pasteHeader {
+    padding: 0.5rem;
   }
 }
