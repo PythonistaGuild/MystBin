@@ -400,7 +400,8 @@ textarea {
 .identifierHeader {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  gap: 1rem;
+  align-items: baseline;
 }
 
 .identifierHeaderLeft {
@@ -411,6 +412,7 @@ textarea {
 
 .identifierHeaderLeft>a {
   font-weight: 600;
+  text-decoration: none;
 }
 
 .identifierHeaderLeft>span {
@@ -498,6 +500,37 @@ textarea {
   color: var(--color-security);
 }
 
+.langSelectContainer {
+  display: flex;
+  align-items: center;
+}
+
+.langSelectContainer>label {
+  background-color: var(--color-background--resizer);
+  color: var(--color-foreground);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-foreground--border);
+  outline: none;
+}
+
+.langSelectContainer>label>input {
+  background-color: transparent;
+  color: var(--color-foreground--dim);
+  outline: none;
+  border: none;
+  padding: 0.25rem;
+}
+
+.langSelectContainer>label:hover {
+  cursor: pointer;
+  filter: brightness(1.1);
+}
+
+.langSelectContainer>label>input:hover {
+  cursor: pointer;
+}
+
 /* Theme Switch */
 .themeSwitch {
   --size: 1.5rem;
@@ -544,7 +577,7 @@ textarea {
   .annotations {
     font-size: 0.8em;
   }
-  
+
   .savePaste {
     padding: 0.75rem;
     font-size: 0.8em;
@@ -587,5 +620,13 @@ textarea {
 
   .pasteArea>textarea {
     font-size: 0.8em;
+  }
+
+  .langSelectContainer>label {
+    max-width: 6rem;
+  }
+
+  .langSelectContainer>label>input {
+    max-width: 6rem;
   }
 }
