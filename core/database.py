@@ -266,7 +266,6 @@ class Database:
         if not password:
             # if the user didn't provide a password (a public paste)
             # we check for discord tokens
-            LOGGER.info("Located tokens")
             self._handle_discord_tokens(*data["files"], paste_id=paste.id)
 
         return paste
