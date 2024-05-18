@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import json
 from typing import TYPE_CHECKING, Any, cast
@@ -155,13 +156,16 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         """
 
         for i, file in enumerate(files):
-            html += self.highlight_code(
+            sanitized: str = await asyncio.to_thread(
+                self.highlight_code,
                 file["filename"],
                 file["content"],
                 index=i,
                 raw_url=raw_url,
                 annotation=file["annotation"],
             )
+
+            html += sanitized
 
         if htmx_url and password:
             return starlette_plus.HTMLResponse(html, headers={"HX-Replace-Url": f"{url}?pastePassword={password}"})
