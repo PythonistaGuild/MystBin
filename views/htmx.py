@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import json
 from typing import TYPE_CHECKING, Any, cast
@@ -46,26 +47,36 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     def __init__(self, app: Application) -> None:
         self.app: Application = app
 
-    def highlight_code(self, filename: str, content: str, *, index: int, raw_url: str, annotation: str) -> str:
-        filename = bleach.clean(filename, attributes=[], tags=[])
-        filename = "_".join(filename.splitlines())
+    def highlight_code(self, *, files: list[dict[str, Any]]) -> str:
+        html: str = ""
 
-        content = bleach.clean(content.replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False)
-        annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
+        for index, file in enumerate(files):
+            filename = bleach.clean(file["filename"], attributes=[], tags=[])
+            filename = "_".join(filename.splitlines())
 
-        return f"""
-        <div id="__paste_a_{index}" class="pasteArea">
-            <div class="pasteHeader">
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span class="filenameArea">{filename}</span>
-                    <span class="pasteButton" onclick="hideFile(this, {index})">Hide</span>
-                    <span id="__paste_copy_{index}" class="pasteButton" onclick="copyFile({index})">Copy</span>
-                    <a class="pasteButton" href="{raw_url}/{index + 1}">Raw</a>
+            raw_url: str = f'/raw/{file["parent_id"]}'
+            annotation: str = file["annotation"]
+
+            content = bleach.clean(
+                file["content"].replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False
+            )
+            annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
+
+            html += f"""
+            <div id="__paste_a_{index}" class="pasteArea">
+                <div class="pasteHeader">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span class="filenameArea">{filename}</span>
+                        <span class="pasteButton" onclick="hideFile(this, {index})">Hide</span>
+                        <span id="__paste_copy_{index}" class="pasteButton" onclick="copyFile({index})">Copy</span>
+                        <a class="pasteButton" href="{raw_url}/{index + 1}">Raw</a>
+                    </div>
                 </div>
-            </div>
-            {annotations}
-            <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;"><code>{content}</code></pre>
-        </div>"""
+                {annotations}
+                <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;"><code>{content}</code></pre>
+            </div>"""
+
+        return html
 
     def check_discord(self, request: starlette_plus.Request) -> starlette_plus.Response | None:
         agent: str = request.headers.get("user-agent", "")
@@ -154,15 +165,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         </div>
         """
 
-        for i, file in enumerate(files):
-            html += self.highlight_code(
-                file["filename"],
-                file["content"],
-                index=i,
-                raw_url=raw_url,
-                annotation=file["annotation"],
-            )
-
+        html += await asyncio.to_thread(self.highlight_code, files=files)
         if htmx_url and password:
             return starlette_plus.HTMLResponse(html, headers={"HX-Replace-Url": f"{url}?pastePassword={password}"})
 
