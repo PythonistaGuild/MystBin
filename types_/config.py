@@ -60,7 +60,7 @@ class Github(TypedDict):
 class Config(TypedDict):
     SERVER: Server
     DATABASE: Database
-    REDIS: Redis
+    REDIS: NotRequired[Redis]
     LIMITS: Limits
     PASTES: Pastes
     GITHUB: NotRequired[Github]
