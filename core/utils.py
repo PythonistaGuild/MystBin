@@ -109,7 +109,7 @@ def natural_time(
 ) -> str:
     now = source or datetime.datetime.now(datetime.UTC)
 
-    then = now + td
+    then = now - td
     future = then > now
 
     ago = "{delta} from now" if future else "{delta} ago"
@@ -129,7 +129,7 @@ def natural_time(
     if hours:
         ret += f"{hours} hours,"
     if minutes:
-        ret += f"{minutes} minutes and"
+        ret += f"{minutes} minutes and "
     ret += f"{seconds} seconds"
 
-    return ago.format(ret)
+    return ago.format(delta=ret)
