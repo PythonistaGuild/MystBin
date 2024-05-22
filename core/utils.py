@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import datetime
 import json
 import re
 import secrets
@@ -98,3 +99,37 @@ def validate_discord_token(token: str) -> bool:
         return False
     else:
         return True
+
+
+def natural_time(
+    td: datetime.timedelta,
+    /,
+    *,
+    source: datetime.datetime | None = None,
+) -> str:
+    now = source or datetime.datetime.now(datetime.UTC)
+
+    then = now - td
+    future = then > now
+
+    ago = "{delta} from now" if future else "{delta} ago"
+
+    seconds = round(td.total_seconds())
+    weeks, seconds = divmod(seconds, 60 * 60 * 24 * 7)
+    days, seconds = divmod(seconds, 60 * 60 * 24)
+    hours, seconds = divmod(seconds, 60 * 60)
+    minutes, seconds = divmod(seconds, 60)
+
+    ret = ""
+
+    if weeks:
+        ret += f"{weeks} weeks,"
+    if days:
+        ret += f"{days} days,"
+    if hours:
+        ret += f"{hours} hours,"
+    if minutes:
+        ret += f"{minutes} minutes and "
+    ret += f"{seconds} seconds"
+
+    return ago.format(delta=ret)
