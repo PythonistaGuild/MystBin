@@ -26,11 +26,10 @@ from urllib.parse import unquote, urlsplit
 
 import asyncpg
 import bleach
-import humanize
 import starlette_plus
 
 from core import CONFIG
-from core.utils import validate_paste
+from core.utils import natural_time, validate_paste
 
 
 if TYPE_CHECKING:
@@ -155,7 +154,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         <div class="identifierHeader">
             <div class="identifierHeaderLeft">
                 <a href="{url}">/{identifier}</a>
-                <span>Created {humanize.naturaltime(created_delta)}...</span>
+                <span>Created {natural_time(created_delta)}...</span>
             </div>
             {security_html}
             <div class="identifierHeaderSection">
