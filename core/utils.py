@@ -100,6 +100,8 @@ def validate_discord_token(token: str) -> bool:
     else:
         return True
 
+def pluralize(count: int, singular: str) -> str:
+    return singular if count == 1 else singular + "s"
 
 def natural_time(
     td: datetime.timedelta,
@@ -113,8 +115,9 @@ def natural_time(
     future = then > now
 
     ago = "{delta} from now" if future else "{delta} ago"
-
     seconds = round(td.total_seconds())
+    years, seconds = divmod(seconds, 60 * 60 * 24 * 365)
+    months, seconds = divmod(seconds, 60 * 60 * 24 * 30)
     weeks, seconds = divmod(seconds, 60 * 60 * 24 * 7)
     days, seconds = divmod(seconds, 60 * 60 * 24)
     hours, seconds = divmod(seconds, 60 * 60)
@@ -122,14 +125,35 @@ def natural_time(
 
     ret = ""
 
-    if weeks:
-        ret += f"{weeks} weeks,"
-    if days:
-        ret += f"{days} days,"
-    if hours:
-        ret += f"{hours} hours,"
-    if minutes:
-        ret += f"{minutes} minutes and "
-    ret += f"{seconds} seconds"
+    if years:
+        ret += f"{years} {pluralize(years, 'year')}"
+        if months:
+            ret += f", {months} {pluralize(months, 'month')}"
+    elif months:
+        ret += f"{months} {pluralize(months, 'month')}"
+    elif weeks:
+        ret += f"{weeks} {pluralize(weeks, 'week')}"
+        if days:
+            ret += f", {days} {pluralize(days, 'day')}"
+    elif days:
+        ret += f"{days} {pluralize(days, 'day')}"
 
-    return ago.format(delta=ret)
+    if hours and not years and not months and not weeks and not days:
+        if ret:
+            ret += ", "
+        ret += f"{hours} {pluralize(hours, 'hour')}"
+    if (
+        minutes
+        and not years
+        and not months
+        and not weeks
+        and not days
+        and not hours
+    ):
+        if ret:
+            ret += ", "
+        ret += f"{minutes} {pluralize(minutes, 'minute')}"
+
+    formatted_ret = ", ".join(ret.split(", ")[:2])
+
+    return ago.format(delta=formatted_ret)
