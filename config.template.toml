@@ -8,10 +8,6 @@ maintenance = false
 [DATABASE]
 dsn = "postgres://mystbin:mystbin@database:5432/mystbin"
 
-[REDIS]
-limiter = "redis://redis:6379/0"  # Optional
-sessions = "redis://redis:6379/1" # Optional
-
 [LIMITS]
 paste_get = { rate = 30, per = 60, priority = 1, bucket = "ip" }
 paste_get_day = { rate = 7200, per = 86400, priority = 2, bucket = "ip" }
@@ -23,6 +19,10 @@ global_limit = { rate = 21600, per = 86400, priority = 1, bucket = "ip" }
 char_limit = 300_000
 file_limit = 5
 name_limit = 25
+
+[REDIS] # optional key
+limiter = "redis://redis:6379/0"  # required if key present
+sessions = "redis://redis:6379/1" # required if key present
 
 [GITHUB] # optional key
 token = "..." # a github token capable of creating gists, non-optional if the above key is provided

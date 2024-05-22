@@ -47,8 +47,15 @@ class Application(starlette_plus.Application):
         ]
         routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
 
-        limit_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["limiter"]) if CONFIG["REDIS"]["limiter"] else None
-        sess_redis = starlette_plus.Redis(url=CONFIG["REDIS"]["sessions"]) if CONFIG["REDIS"]["sessions"] else None
+        if redis_key := CONFIG.get("REDIS"):
+            limit_url = redis_key["limiter"]
+            session_url = redis_key["sessions"]
+        else:
+            limit_url = None
+            session_url = None
+
+        limit_redis = starlette_plus.Redis(url=limit_url)
+        sess_redis = starlette_plus.Redis(url=session_url)
 
         global_limits = [CONFIG["LIMITS"]["global_limit"]]
         middleware = [
