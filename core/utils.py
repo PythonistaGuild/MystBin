@@ -116,7 +116,7 @@ def natural_time(
 
     seconds = round(td.total_seconds())
     weeks, seconds = divmod(seconds, 60 * 60 * 24 * 7)
-    days, seconds = divmod(seconds, 60 * 60 * 7)
+    days, seconds = divmod(seconds, 60 * 60 * 24)
     hours, seconds = divmod(seconds, 60 * 60)
     minutes, seconds = divmod(seconds, 60)
 
