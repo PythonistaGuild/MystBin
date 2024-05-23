@@ -100,8 +100,10 @@ def validate_discord_token(token: str) -> bool:
     else:
         return True
 
+
 def pluralize(count: int, singular: str) -> str:
     return singular if count == 1 else singular + "s"
+
 
 def natural_time(
     td: datetime.timedelta,
@@ -114,8 +116,13 @@ def natural_time(
     then = now - td
     future = then > now
 
-    ago = "{delta} from now" if future else "{delta} ago"
     seconds = round(td.total_seconds())
+
+    if seconds < 60 and not future:
+        return "now"
+
+    ago = "{delta} from now" if future else "{delta} ago"
+
     years, seconds = divmod(seconds, 60 * 60 * 24 * 365)
     months, seconds = divmod(seconds, 60 * 60 * 24 * 30)
     weeks, seconds = divmod(seconds, 60 * 60 * 24 * 7)
@@ -142,14 +149,7 @@ def natural_time(
         if ret:
             ret += ", "
         ret += f"{hours} {pluralize(hours, 'hour')}"
-    if (
-        minutes
-        and not years
-        and not months
-        and not weeks
-        and not days
-        and not hours
-    ):
+    if minutes and not years and not months and not weeks and not days and not hours:
         if ret:
             ret += ", "
         ret += f"{minutes} {pluralize(minutes, 'minute')}"
