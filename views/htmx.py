@@ -55,12 +55,34 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
             raw_url: str = f'/raw/{file["parent_id"]}'
             annotation: str = file["annotation"]
+            positions: list[int] = file.get("warning_positions", [])
 
             content = bleach.clean(
                 file["content"].replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False
             )
             annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
 
+            position: int = 0
+            next_pos: int | None = positions.pop(0) if positions else None
+
+            numbers: list[str] = []
+            for n, line in enumerate(content.splitlines(), 1):
+                length: int = len(line)
+
+                if next_pos is not None and next_pos in range(position, position + length):
+                    numbers.append(f"""<tr><td class="lineNumRow">{n}</td><td class="lineWarn"></td></tr>""")
+
+                    try:
+                        next_pos = positions.pop(0)
+                    except IndexError:
+                        next_pos = None
+
+                else:
+                    numbers.append(f"""<tr><td class="lineNumRow">{n}</td></tr>""")
+
+                position += length + 1
+
+            lines: str = f"""<table class="lineNums"><tbody>\n{"".join(numbers)}\n</tbody></table>"""
             html += f"""
             <div id="__paste_a_{index}" class="pasteArea">
                 <div class="pasteHeader">
@@ -72,7 +94,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                     </div>
                 </div>
                 {annotations}
-                <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;"><code>{content}</code></pre>
+                <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;">{lines}<code>{content}</code></pre>
             </div>"""
 
         return html

@@ -22,9 +22,6 @@ document.addEventListener("htmx:afterRequest", function (evt) {
 
             code.innerHTML = details.value;
 
-            // Add Line Numbers...
-            hljs.lineNumbersBlock(code, { singleLine: true });
-
             let header = area.querySelector(".pasteHeader");
             let langOpts = "";
 
@@ -63,8 +60,4 @@ function changeLang(inp, area, index) {
     let code = area.querySelector("pre > code");
     let highlighted = hljs.highlight(pasteStores[index], { language: chosen });
     code.innerHTML = highlighted.value;
-
-    // Add Line Numbers...
-    hljs.lineNumbersBlock(code, { singleLine: true });
-    inp.placeholder = chosen;
 }

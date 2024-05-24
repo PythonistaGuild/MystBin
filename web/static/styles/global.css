@@ -395,6 +395,7 @@ textarea {
 .fileContent {
   padding: 0.5rem;
   overflow-x: auto;
+  position: relative;
 }
 
 .identifierHeader {
@@ -529,6 +530,36 @@ textarea {
 
 .langSelectContainer>label>input:hover {
   cursor: pointer;
+}
+
+.lineNums {
+  display: block;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8em;
+  user-select: none;
+}
+
+.lineNumRow {
+  padding: 0;
+  padding-right: 16px!important;
+  opacity: 0.7;
+}
+
+.lineWarn {
+  background: var(--color-error);
+  position: absolute;
+  width: 100%;
+  z-index: 999;
+  height: 1rem;
+  opacity: 0.4;
+}
+
+code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8em;
 }
 
 /* Theme Switch */
