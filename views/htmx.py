@@ -56,20 +56,18 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             raw_url: str = f'/raw/{file["parent_id"]}'
             annotation: str = file["annotation"]
             positions: list[int] = file.get("warning_positions", [])
+            original: str = file["content"]
 
-            content = bleach.clean(
-                file["content"].replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False
-            )
             annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
 
             position: int = 0
             next_pos: int | None = positions.pop(0) if positions else None
 
             numbers: list[str] = []
-            for n, line in enumerate(content.splitlines(), 1):
+            for n, line in enumerate(original.splitlines(), 1):
                 length: int = len(line)
 
-                if next_pos is not None and next_pos in range(position, position + length):
+                if next_pos is not None and position <= next_pos <= position + length:
                     numbers.append(f"""<tr><td class="lineNumRow">{n}</td><td class="lineWarn"></td></tr>""")
 
                     try:
@@ -81,6 +79,8 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                     numbers.append(f"""<tr><td class="lineNumRow">{n}</td></tr>""")
 
                 position += length + 1
+
+            content = bleach.clean(original.replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False)
 
             lines: str = f"""<table class="lineNums"><tbody>\n{"".join(numbers)}\n</tbody></table>"""
             html += f"""
