@@ -27,4 +27,4 @@ if TYPE_CHECKING:
 
 class ScannerSecret(TypedDict):
     service: Services
-    tokens: set[str]
+    tokens: list[tuple[int, str]]

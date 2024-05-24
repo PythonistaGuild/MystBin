@@ -41,9 +41,11 @@ class BaseScanner:
 
     @classmethod
     def match(cls, content: str) -> ScannerSecret:
+        matches: list[tuple[int, str]] = [(m.start(0), m.group(0)) for m in cls.REGEX.finditer(content)]
+
         payload: ScannerSecret = {
             "service": cls.SERVICE,
-            "tokens": set(cls.REGEX.findall(content)),
+            "tokens": matches,
         }
 
         return payload
@@ -66,9 +68,13 @@ class DiscordScanner(BaseScanner):
 
     @classmethod
     def match(cls, content: str) -> ScannerSecret:
+        matches: list[tuple[int, str]] = [
+            (m.start(0), m.group(0)) for m in cls.REGEX.finditer(content) if cls.validate_discord_token(m.group(0))
+        ]
+
         payload: ScannerSecret = {
             "service": cls.SERVICE,
-            "tokens": {t for t in cls.REGEX.findall(content) if cls.validate_discord_token(t)},
+            "tokens": matches,
         }
 
         return payload
@@ -82,15 +88,6 @@ class PyPiScanner(BaseScanner):
 class GitHubScanner(BaseScanner):
     REGEX = re.compile(r"((ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36})")
     SERVICE = Services.github
-
-    @classmethod
-    def match(cls, content: str) -> ScannerSecret:
-        payload: ScannerSecret = {
-            "service": cls.SERVICE,
-            "tokens": {t[0] for t in cls.REGEX.findall(content)},
-        }
-
-        return payload
 
 
 class SecurityInfo:
