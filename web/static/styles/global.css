@@ -554,7 +554,7 @@ textarea {
   background: var(--color-error);
   position: absolute;
   width: 100%;
-  z-index: 999;
+  z-index: 1;
   height: 1rem;
   opacity: 0.4;
 }
@@ -562,6 +562,7 @@ textarea {
 code {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.8em;
+  z-index: 2;
 }
 
 .annotationSecond {
