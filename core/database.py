@@ -260,7 +260,7 @@ class Database:
                             self._handle_discord_tokens(tokens=[t[1] for t in payload["tokens"]], paste_id=paste.id)
 
                     extra = extra.removesuffix(", ")
-                    annotation = f"Contains possibly sensitive information or tokens from: {extra}" if extra else ""
+                    annotation = f"Contains possibly sensitive data from: {extra}" if extra else ""
 
                     row: asyncpg.Record | None = await connection.fetchrow(
                         file_query,

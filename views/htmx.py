@@ -58,7 +58,19 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             positions: list[int] = file.get("warning_positions", [])
             original: str = file["content"]
 
-            annotations: str = f'<small class="annotations">❌ {annotation}</small>' if annotation else ""
+            parts: list[str] = annotation.split(":")
+            annotation = parts.pop(0)
+
+            extra: str = (
+                f"""<span class="annotationSecond" data-text="Discord tokens will be invalidated automatically">{parts[0]}"""
+                if parts
+                else ""
+            )
+            annotations: str = (
+                f'<small class="annotations">❌ {annotation}{": " + extra if extra else ""}</small>'
+                if annotation
+                else ""
+            )
 
             position: int = 0
             next_pos: int | None = positions.pop(0) if positions else None
