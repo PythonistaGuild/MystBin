@@ -16,14 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from __future__ import annotations
+
 import base64
 import binascii
 import enum
 import logging
 import re
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
-from types_.scanner import ScannerSecret
+
+if TYPE_CHECKING:
+    from types_.scanner import ScannerSecret
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -37,7 +41,7 @@ class Services(enum.Enum):
 
 class BaseScanner:
     REGEX: ClassVar[re.Pattern[str]]
-    SERVICE: Services
+    SERVICE: ClassVar[Services]
 
     @classmethod
     def match(cls, content: str) -> ScannerSecret:
@@ -103,15 +107,17 @@ class SecurityInfo:
         file: str,
         /,
         *,
-        allowed: list[Services] = [],
-        disallowed: list[Services] = [],
+        allowed: list[Services] | None = None,
+        disallowed: list[Services] | None = None,
     ) -> list[ScannerSecret]:
         """Scan for tokens in a given files content.
 
         You may pass a list of allowed or disallowed Services.
         If both lists are empty (Default) all available services will be scanned.
         """
-        allowed = allowed if allowed else list(Services)
+        disallowed = disallowed or []
+        allowed = allowed or list(Services)
+
         services: list[Services] = [s for s in allowed if s not in disallowed]
         secrets: list[ScannerSecret] = []
 
