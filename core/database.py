@@ -85,7 +85,7 @@ class Database:
             await asyncio.sleep(self._gist_timeout)
 
     def _handle_discord_tokens(self, tokens: list[str], paste_id: str) -> None:
-        if not tokens:
+        if not self._handling_tokens or not tokens:
             return
 
         LOGGER.info(
