@@ -54,7 +54,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             filename = "_".join(filename.splitlines())
 
             raw_url: str = f'/raw/{file["parent_id"]}'
-            annotation: str = file["annotation"]
+            annotation: str = file["annotation"] or ""
             positions: list[int] = file.get("warning_positions", [])
             original: str = file["content"]
 

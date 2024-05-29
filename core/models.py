@@ -66,7 +66,7 @@ class FileModel(BaseModel):
         self.loc: int = record["loc"]
         self.charcount: int = record["charcount"]
         self.index: int = record["file_index"]
-        self.annotation: str = record["annotation"]
+        self.annotation: str | None = record["annotation"]
         self.warning_positions: list[int] = record["warning_positions"]
 
 
