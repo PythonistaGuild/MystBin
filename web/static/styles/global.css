@@ -3,6 +3,7 @@
   --color-accent: #9069a7;
   --color-error: #dd374d;
   --color-security: #004ac0;
+  --color-warning: #004ac0;
   --color-background: #ffe5ee;
   --color-background--header: #fefefe;
   --color-background--pastes: #fff;
@@ -51,6 +52,7 @@
   --color-accent: #c89ee0;
   --color-error: #dd374d;
   --color-security: #c8e09e;
+  --color-warning: #feff99;
   --color-background: #15151c;
   --color-background--header: #1d1d26;
   --color-background--pastes: rgb(29, 29, 38, 0.9);
@@ -395,6 +397,7 @@ textarea {
 .fileContent {
   padding: 0.5rem;
   overflow-x: auto;
+  position: relative;
 }
 
 .identifierHeader {
@@ -531,6 +534,48 @@ textarea {
   cursor: pointer;
 }
 
+.lineNums {
+  display: block;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8em;
+  user-select: none;
+}
+
+.lineNumRow {
+  padding: 0;
+  padding-right: 16px!important;
+  opacity: 0.7;
+}
+
+.lineWarn {
+  background: var(--color-error);
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+  height: 1rem;
+  opacity: 0.4;
+}
+
+code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8em;
+  z-index: 2;
+}
+
+.annotationSecond {
+  color: var(--color-warning);
+  opacity: 0.9;
+  padding-left: 0.125rem;
+  font-weight: 400;
+}
+
+.annotationSecond:hover {
+  cursor: help;
+}
+
 /* Theme Switch */
 .themeSwitch {
   --size: 1.5rem;
@@ -571,6 +616,30 @@ textarea {
   flex-direction: column;
   gap: 0.5rem;
   align-self: center;
+}
+
+.annotationSecond {
+  position:relative;
+}
+
+.annotationSecond:after {
+  position:absolute;
+  content: attr(data-text);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  top:50%;
+  transform:translateY(-50%);
+  left:100%;
+  width: max-content;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+  padding: 0.5rem;
+  display:none; /* hide by default */
+  opacity: 1;
+}
+
+.annotationSecond:hover:after {
+  display:block;
 }
 
 @media screen and (max-width: 600px) {

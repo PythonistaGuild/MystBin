@@ -21,7 +21,6 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
-import re
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
@@ -31,16 +30,18 @@ from core import CONFIG
 
 from . import utils
 from .models import FileModel, PasteModel
+from .scanners import SecurityInfo, Services
 
 
 if TYPE_CHECKING:
     _Pool = asyncpg.Pool[asyncpg.Record]
     from types_.config import Github
     from types_.github import PostGist
+    from types_.scanner import ScannerSecret
 else:
     _Pool = asyncpg.Pool
 
-DISCORD_TOKEN_REGEX: re.Pattern[str] = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
+
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
@@ -53,7 +54,7 @@ class Database:
         self._handling_tokens = bool(self.session and github_config)
 
         if self._handling_tokens:
-            LOGGER.info("Will handle compromised discord info.")
+            LOGGER.info("Setup to handle Discord Tokens.")
             assert github_config  # guarded by if here
 
             self._gist_token = github_config["token"]
@@ -83,20 +84,15 @@ class Database:
 
             await asyncio.sleep(self._gist_timeout)
 
-    def _handle_discord_tokens(self, *bodies: dict[str, str], paste_id: str) -> None:
-        formatted_bodies = "\n".join(b["content"] for b in bodies)
-
-        tokens = list(DISCORD_TOKEN_REGEX.finditer(formatted_bodies))
-
-        if not tokens:
+    def _handle_discord_tokens(self, tokens: list[str], paste_id: str) -> None:
+        if not self._handling_tokens or not tokens:
             return
 
         LOGGER.info(
             "Discord bot token located and added to token bucket. Current bucket size is: %s", len(self.__tokens_bucket)
         )
 
-        tokens = "\n".join([m[0] for m in tokens])
-        self.__tokens_bucket[paste_id] = tokens
+        self.__tokens_bucket[paste_id] = "\n".join(tokens)
 
     async def _post_gist_of_tokens(self) -> None:
         assert self.session  # guarded in caller
@@ -211,8 +207,8 @@ class Database:
         """
 
         file_query: str = """
-            INSERT INTO files (parent_id, content, filename, loc, annotation)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO files (parent_id, content, filename, loc, annotation, warning_positions)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
         """
 
@@ -246,27 +242,38 @@ class Database:
                     name: str = (file.get("filename") or f"file_{index}")[-CONFIG["PASTES"]["name_limit"] :]
                     name = "_".join(name.splitlines())
 
-                    content: str = file["content"]
+                    # Normalise newlines...
+                    content: str = file["content"].replace("\r\n", "\n").replace("\r", "\n")
                     loc: int = file["content"].count("\n") + 1
-                    annotation: str = ""
 
-                    tokens = [t for t in utils.TOKEN_REGEX.findall(content) if utils.validate_discord_token(t)]
-                    if tokens:
-                        annotation = "Contains possibly sensitive information: Discord Token(s)"
-                        if not password:
-                            annotation += ", which have now been invalidated."
+                    positions: list[int] = []
+                    extra: str = ""
+
+                    secrets: list[ScannerSecret] = SecurityInfo.scan_file(content)
+                    for payload in secrets:
+                        service: Services = payload["service"]
+
+                        extra += f"{service.value}, "
+                        positions += [t[0] for t in payload["tokens"]]
+
+                        if not password and self._handling_tokens and service is Services.discord:
+                            self._handle_discord_tokens(tokens=[t[1] for t in payload["tokens"]], paste_id=paste.id)
+
+                    extra = extra.removesuffix(", ")
+                    annotation = f"Contains possibly sensitive data from: {extra}" if extra else ""
 
                     row: asyncpg.Record | None = await connection.fetchrow(
-                        file_query, paste.id, content, name, loc, annotation
+                        file_query,
+                        paste.id,
+                        content,
+                        name,
+                        loc,
+                        annotation,
+                        sorted(positions),
                     )
 
                     if row:
                         paste.files.append(FileModel(row))
-
-        if not password:
-            # if the user didn't provide a password (a public paste)
-            # we check for discord tokens
-            self._handle_discord_tokens(*data["files"], paste_id=paste.id)
 
         return paste
 

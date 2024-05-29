@@ -20,5 +20,6 @@ CREATE TABLE IF NOT EXISTS files (
     charcount INTEGER GENERATED ALWAYS AS (LENGTH(content)) STORED,
     file_index SERIAL NOT NULL,
     annotation TEXT,
+    warning_positions INTEGER[],
     PRIMARY KEY (parent_id, file_index)
 );
