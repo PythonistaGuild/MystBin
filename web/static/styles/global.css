@@ -18,6 +18,10 @@
   --button--brightness-hover: brightness(0.85);
   --button--brightness-active: brightness(0.95);
 
+  .keyboardLight {
+    display: none !important;
+  }
+
   .deleteFile {
     background-color: var(--color-background);
     filter: brightness(0.99);
@@ -66,6 +70,10 @@
   --button--brightness: brightness(1.2);
   --button--brightness-hover: brightness(1.1);
   --button--brightness-active: brightness(1.1);
+
+  .keyboardDark {
+    display: none !important;
+  }
 }
 
 * {
@@ -121,6 +129,22 @@ a {
   text-decoration: none;
 }
 
+.headerRight {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.keyboard {
+  width: 1.6rem;
+  height: auto;
+  opacity: 0.8;
+}
+
+.keyboard:hover {
+  cursor: help;
+}
+
 .footer {
   display: flex;
   flex-direction: row;
@@ -169,7 +193,6 @@ a {
   background-color: var(--color-background--pastes);
   border-radius: 0.25rem;
   border: 1px solid transparent;
-
 }
 
 .dragging {
@@ -546,7 +569,7 @@ textarea {
 
 .lineNumRow {
   padding: 0;
-  padding-right: 16px!important;
+  padding-right: 16px !important;
   opacity: 0.7;
 }
 
@@ -619,27 +642,53 @@ code {
 }
 
 .annotationSecond {
-  position:relative;
+  position: relative;
 }
 
 .annotationSecond:after {
-  position:absolute;
+  position: absolute;
   content: attr(data-text);
   color: var(--color-foreground);
   background-color: var(--color-background);
-  top:50%;
-  transform:translateY(-50%);
-  left:100%;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 100%;
   width: max-content;
   border-radius: 0.25rem;
   margin-left: 0.5rem;
   padding: 0.5rem;
-  display:none; /* hide by default */
+  display: none;
+  /* hide by default */
   opacity: 1;
 }
 
 .annotationSecond:hover:after {
-  display:block;
+  display: block;
+}
+
+.keyboardTool {
+  position: relative;
+}
+
+.keyboardTool:after {
+  position: absolute;
+  content: attr(data-text);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  width: max-content;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  display: none;
+  /* hide by default */
+  opacity: 1;
+  right: 0;
+  white-space: pre;
+  z-index: 9;
+  cursor: help;
+}
+
+.keyboardTool:hover:after {
+  display: inline-block;
 }
 
 @media screen and (max-width: 600px) {
