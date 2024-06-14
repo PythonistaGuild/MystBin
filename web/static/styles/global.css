@@ -566,7 +566,8 @@ textarea {
   border-spacing: 0;
   border: none;
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.8em;
+  font-size: 0.8rem;
+  line-height: 1.2rem;
   user-select: none;
 }
 
@@ -587,7 +588,8 @@ textarea {
 
 code {
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.8em;
+  font-size: 0.8rem;
+  line-height: 1.2rem;
   z-index: 2;
 }
 

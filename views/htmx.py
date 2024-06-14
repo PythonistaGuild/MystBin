@@ -92,7 +92,12 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
                 position += length + 1
 
-            content = bleach.clean(original.replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False)
+            content = bleach.clean(
+                original.replace("<!", "&lt;&#33;").replace("&#xa;", "&amp;#xa;"),
+                attributes=[],
+                tags=[],
+                strip_comments=False,
+            )
 
             lines: str = f"""<table class="lineNums"><tbody>\n{"".join(numbers)}\n</tbody></table>"""
             html += f"""
