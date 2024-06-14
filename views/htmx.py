@@ -92,7 +92,12 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
                 position += length + 1
 
-            content = bleach.clean(original.replace("<!", "&lt;&#33;"), attributes=[], tags=[], strip_comments=False)
+            content = bleach.clean(
+                original.replace("<!", "&lt;&#33;").replace("&#xa;", "&amp;#xa;"),
+                attributes=[],
+                tags=[],
+                strip_comments=False,
+            )
 
             lines: str = f"""<table class="lineNums"><tbody>\n{"".join(numbers)}\n</tbody></table>"""
             html += f"""
@@ -214,23 +219,31 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
         password: str | None = request.headers.get("authorization", None)
         identifier: str = request.path_params["id"]
 
+        htmx_url: str | None = request.headers.get("HX-Current-URL", None)
+        if identifier == "0" and htmx_url:
+            identifier = htmx_url.removeprefix(f'{CONFIG["SERVER"]["domain"]}/')
+
+        headers: dict[str, str] = {"HX-Redirect": f"/raw/{identifier}"}
         paste = await self.app.database.fetch_paste(identifier, password=password)
+
         if not paste:
             return starlette_plus.JSONResponse(
                 {"error": f'A paste with the id "{identifier}" could not be found or has expired.'},
                 status_code=404,
+                headers=headers,
             )
 
         if paste.has_password and not paste.password_ok:
             return starlette_plus.JSONResponse(
                 {"error": "Unauthorized. Raw pastes can not be viewed when protected by passwords."},
                 status_code=401,
+                headers=headers,
             )
 
         to_return: dict[str, Any] = paste.serialize(exclude=["safety", "password", "password_ok"])
         text: str = "\n\n\n\n".join([f"# MystBin ! - {f['filename']}\n{f['content']}" for f in to_return["files"]])
 
-        return starlette_plus.PlainTextResponse(text)
+        return starlette_plus.PlainTextResponse(text, headers=headers)
 
     @starlette_plus.route("/raw/{id}/{page:int}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])

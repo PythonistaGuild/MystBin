@@ -8,14 +8,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Easily share code and text." />
 
-    <!-- PACKAGES -->
-    <!-- SCRIPTS -->
-    <script src="static/scripts/initialTheme.js?v=1"></script>
-    <script src="static/scripts/themes.js?v=1" defer></script>
+  <!-- PACKAGES -->
+  <!-- SCRIPTS -->
+  <script src="static/scripts/initialTheme.js?v=1"></script>
+  <script src="static/scripts/themes.js?v=1" defer></script>
 
-    <!-- STYLESHEETS -->
-    <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
-    <link rel="stylesheet" type="text/css" href="static/styles/global.css?v=6" />
+  <!-- STYLESHEETS -->
+  <!-- <link rel="preload" href="static/styles/global.css" as="style" /> -->
+  <link rel="stylesheet" type="text/css" href="static/styles/global.css?v=7" />
 
 
   <!-- FONTS -->
@@ -39,7 +39,13 @@
       <img src="/static/images/logo.svg" class="logo" />
       MystBin
     </a>
-    <div>
+    <div class="headerRight">
+      <span class="keyboardTool keyboardLight"
+        data-text="Ctrl + S&#xa;  Save Paste&#xa;&#xa;Ctrl + Shift + R&#xa;  View Raw"><img
+          src="/static/images/keyboard-light.svg" class="keyboard" /></span>
+      <span class="keyboardTool keyboardDark"
+        data-text="Ctrl + S&#xa;  Save Paste&#xa;&#xa;Ctrl + Shift + R&#xa;  View Raw"><img
+          src="/static/images/keyboard.svg" class="keyboard" /></span>
       <input id="themeSwitch" class="themeSwitch" type="checkbox" />
       <label for="themeSwitch"></label>
     </div>
