@@ -136,9 +136,11 @@ a {
 }
 
 .keyboard {
-  width: 1.6rem;
+  user-select: none;
+  width: 2.75rem;
+  padding-top: 0.19rem;
   height: auto;
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .keyboard:hover {
@@ -258,6 +260,7 @@ input[type="password"] {
   font-family: "JetBrains Mono", monospace;
   font-optical-sizing: auto;
   font-style: normal;
+  font-size: smaller;
   outline: none;
   border: var(--color-foreground--border) 1px solid;
   padding: 0.25rem;
