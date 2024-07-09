@@ -64,7 +64,7 @@ class DiscordScanner(BaseScanner):
         try:
             # Just check if the first part validates as a user ID
             (user_id, _, _) = token.split(".")
-            user_id = int(base64.b64decode(user_id + "==", validate=True))
+            user_id = int(base64.b64decode(user_id + "=" * (len(user_id) % 4), validate=True))
         except (ValueError, binascii.Error):
             return False
         else:

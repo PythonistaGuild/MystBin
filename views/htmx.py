@@ -80,7 +80,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                 length: int = len(line)
 
                 if next_pos is not None and position <= next_pos <= position + length:
-                    numbers.append(f"""<tr><td class="lineNumRow">{n}</td><td class="lineWarn"></td></tr>""")
+                    numbers.append(
+                        f"""<tr data-ln="{n}"><td class="lineNumRow" onclick="highlightLine(event, '{index}', '{n}')">{n}</td><td class="lineWarn"></td></tr>"""
+                    )
 
                     try:
                         next_pos = positions.pop(0)
@@ -88,7 +90,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                         next_pos = None
 
                 else:
-                    numbers.append(f"""<tr><td class="lineNumRow">{n}</td></tr>""")
+                    numbers.append(
+                        f"""<tr data-ln="{n}"><td class="lineNumRow" onclick="highlightLine(event, '{index}', '{n}')">{n}</td></tr>"""
+                    )
 
                 position += length + 1
 
