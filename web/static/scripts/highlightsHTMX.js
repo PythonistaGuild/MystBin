@@ -14,11 +14,21 @@ document.addEventListener("htmx:afterRequest", function (evt) {
 
         for (let area of HIGHLIGHT_AREAS) {
             let code = area.querySelector("pre > code");
+            let name = area.querySelector(".pasteHeader > div > .filenameArea");
             pasteStores.push(code.textContent);
 
             // Highlight Code Block and get Language Details...
-            let details = hljs.highlightAuto(code.textContent);
-            let highlightedLang = details.language ? details.language : "plaintext";
+            let nameLang = getLangByName(name.textContent);
+            let highlightedLang;
+            let details;
+
+            if (!nameLang) {
+                details = hljs.highlightAuto(code.textContent);
+                highlightedLang = details.language ? details.language : "plaintext";
+            } else {
+                details = hljs.highlight(code.textContent, { "language": nameLang })
+                highlightedLang = nameLang.toLowerCase();
+            }
 
             code.innerHTML = details.value;
 
