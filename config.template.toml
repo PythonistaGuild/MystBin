@@ -1,7 +1,6 @@
 [SERVER]
 host = "localhost"
 port = 8181
-domain = "https://mystb.in"
 session_secret = ""         # Run: import secrets; print(secrets.token_urlsafe(64))
 maintenance = false
 

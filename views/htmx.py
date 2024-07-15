@@ -225,7 +225,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
         htmx_url: str | None = request.headers.get("HX-Current-URL", None)
         if identifier == "0" and htmx_url:
-            identifier = htmx_url.removeprefix(f'{CONFIG["SERVER"]["domain"]}/')
+            identifier = htmx_url.removeprefix(f"https://{request.url.hostname}/")
 
         headers: dict[str, str] = {"HX-Redirect": f"/raw/{identifier}"}
         paste = await self.app.database.fetch_paste(identifier, password=password)

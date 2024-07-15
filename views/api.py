@@ -302,8 +302,8 @@ class APIView(starlette_plus.View, prefix="api"):
                 status_code=404,
             )
 
-        delete: str = f"{CONFIG['SERVER']['domain']}/api/security/delete/{token}"
-        info: str = f"{CONFIG['SERVER']['domain']}/api/security/info/{token}"
+        delete: str = f"https://{request.url.hostname}/api/security/delete/{token}"
+        info: str = f"https://{request.url.hostname}/api/security/info/{token}"
         data: dict[str, str] = {
             "token": paste.safety,
             "delete": delete,
