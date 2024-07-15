@@ -16,7 +16,6 @@ Easily share code and text.
 **Setup:**
 - Clone
 - Copy `config.template.toml` into `config.toml`
- - For local testing `[SERVER] > domain` can be set to `http://localhost:PORT` (Default Port `8181`)
  - Set Database connection DSN.
  - Optionally set URLs to a running Redis Instance.
 - ! If you haven't already: Create a Database in `postgres` (Default `mystbin`)
