@@ -24,7 +24,7 @@ document.addEventListener("htmx:afterRequest", function (evt) {
 
             if (!nameLang) {
                 details = hljs.highlightAuto(code.textContent);
-                highlightedLang = details.language ? details.language : "plaintext";
+                highlightedLang = details.language || "plaintext";
             } else {
                 details = hljs.highlight(code.textContent, { "language": nameLang })
                 highlightedLang = nameLang.toLowerCase();
