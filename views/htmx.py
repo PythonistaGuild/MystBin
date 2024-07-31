@@ -328,7 +328,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             )
 
         if resp := validate_paste(data):
-            json_: dict[str, Any] = json.loads(resp.body)  # type: ignore; Can only be memoryview when specifically used.
+            json_: dict[str, Any] = json.loads(resp.body)  # type: ignore Can only be memoryview when specifically used.
             return starlette_plus.HTMLResponse(
                 f"""<span id="errorResponse">{resp.status_code}: {json_["error"]}</span>""",
                 headers=error_headers,
