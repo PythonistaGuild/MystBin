@@ -4,5 +4,5 @@ asyncpg==0.29.0
 asyncpg-stubs==0.29.1
 bleach==6.1.0
 python-multipart==0.0.9
-aiohttp==3.9.5
+aiohttp==3.10.5
 pyyaml==6.0.1
