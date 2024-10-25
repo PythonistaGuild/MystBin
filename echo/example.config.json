@@ -1,0 +1,3 @@
+{
+  "allowed_hosts": ["http://localhost:1234", "https://mystb.in"]
+}

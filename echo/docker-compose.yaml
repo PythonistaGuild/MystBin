@@ -1,0 +1,53 @@
+name: echo
+
+services:
+  echo:
+    build:
+      context: .
+      args:
+        - PROFILE
+    cap_drop:
+      - ALL
+    networks:
+      - public
+      - hidden
+    ports:
+      - 127.0.0.1:${PORT:-8000}:8000
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    configs:
+      - source: echo
+        target: /etc/opt/echo/config.json
+    environment:
+      - ECHO_CONFIG=/etc/opt/echo/config.json
+    develop:
+      watch:
+        - path: src/
+          action: rebuild
+
+  db:
+    image: postgres:17-alpine
+    networks:
+      - hidden
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./schema:/docker-entrypoint-initdb.d
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "echo"]
+      interval: 5s
+      timeout: 5s
+      start_period: 1m
+
+networks:
+  public:
+  hidden:
+    internal: true
+
+configs:
+  echo:
+    file: config.json
