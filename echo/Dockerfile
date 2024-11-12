@@ -10,7 +10,6 @@ RUN mkdir bin && \
 
 # Mounting src using bind mount is slower for some reason
 COPY src src
-ENV RUSTFLAGS='-C target-feature=+crt-static'
 
 # NOTE: Due to caching this is actually faster than using
 # Two separate cargo builds (one without source present).

@@ -8,20 +8,22 @@ services:
         - PROFILE
     cap_drop:
       - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges=true
     networks:
       - public
       - hidden
     ports:
-      - 127.0.0.1:${PORT:-8000}:8000
-    restart: unless-stopped
+      - ${HOST:-127.0.0.1}:${PORT:-8000}:8000
+    restart: always
     depends_on:
       db:
         condition: service_healthy
-    configs:
-      - source: echo
-        target: /etc/opt/echo/config.json
     environment:
       - ECHO_CONFIG=/etc/opt/echo/config.json
+    volumes:
+      - ./config.json:/etc/opt/echo/config.json:ro
     develop:
       watch:
         - path: src/
@@ -29,14 +31,28 @@ services:
 
   db:
     image: postgres:17-alpine
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      - FOWNER
+      - SETGID
+      - SETUID
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges=true
     networks:
       - hidden
-    restart: unless-stopped
+    restart: always
+    tmpfs:
+      - /tmp
+      - /run/postgresql
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
-      - ./schema:/docker-entrypoint-initdb.d
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./schema:/docker-entrypoint-initdb.d:ro
+      - ./data/postgres:/var/lib/postgresql/data:rw
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "echo"]
       interval: 5s
@@ -47,7 +63,3 @@ networks:
   public:
   hidden:
     internal: true
-
-configs:
-  echo:
-    file: config.json

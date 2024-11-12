@@ -3,5 +3,5 @@
 Run development environment:
 
 ```sh
-PROFILE=dev docker compose up --watch
+PROFILE=dev sh -c 'docker compose up --watch'
 ```

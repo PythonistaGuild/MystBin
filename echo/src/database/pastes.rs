@@ -189,7 +189,8 @@ impl Annotation {
             SELECT head, tail, content
             FROM annotations
             WHERE file_id = $1
-            ORDER BY id ASC",
+            ORDER BY id ASC
+            ",
         )
         .bind(file_id)
         .fetch_all(&mut ***conn)
