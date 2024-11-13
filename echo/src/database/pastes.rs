@@ -159,10 +159,10 @@ impl File {
     ) -> Result<Self> {
         let result = sqlx::query(
             "
-                INSERT INTO files (paste_id, name, content)
-                VALUES ($1, $2, $3)
-                RETURNING id, name, content, lines, characters
-                ",
+            INSERT INTO files (paste_id, name, content)
+            VALUES ($1, $2, $3)
+            RETURNING id, name, content, lines, characters
+            ",
         )
         .bind(paste_id)
         .bind(file.name().or(Some("unknown")))
