@@ -89,11 +89,20 @@ impl Paste {
 
 #[derive(Deserialize, Serialize, Validate)]
 pub struct CreateFile<'r> {
-    #[validate(length(min = 1, max = 32))]
+    #[validate(length(min = 1, max = 32), custom(function = "validate_name"))]
     name: Option<&'r str>,
     #[validate(length(min = 1, max = 300_000))]
-    // Using str here doesn't validate if the supplied data contains newlines ...
+    // Using String instead of str because of newlines:
+    // https://github.com/somehowchris/rocket-validation/issues/41
     content: String,
+}
+
+fn validate_name(name: &str) -> result::Result<(), ValidationError> {
+    if !name.contains("\n") {
+        Ok(())
+    } else {
+        Err(ValidationError::new("Newline in file name."))
+    }
 }
 
 impl<'r> CreateFile<'r> {
