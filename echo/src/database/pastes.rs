@@ -1,13 +1,14 @@
 use crate::{
-    models::pastes::{Annotation, CreatePaste, File, Paste},
+    models::pastes::{Annotation, CreateFile, CreatePaste, File, Paste},
     result::{HTTPError, Result},
+    scanners::scan_file,
     utils::generate_id,
 };
 use rocket_db_pools::{
     sqlx::{self, Row},
     Connection,
 };
-use sqlx::{postgres::PgRow, Acquire};
+use sqlx::{postgres::PgRow, Acquire, Postgres, Transaction};
 
 use super::PgDatabase;
 
@@ -99,28 +100,8 @@ impl Paste {
         };
 
         for file in data.files() {
-            let result = sqlx::query(
-                "
-                INSERT INTO files (paste_id, name, content)
-                VALUES ($1, $2, $3)
-                RETURNING id, name, content, lines, characters
-                ",
-            )
-            .bind(paste.id())
-            .bind(file.name().or(Some("unknown")))
-            .bind(file.content())
-            .fetch_one(&mut *tx)
-            .await;
-
-            match result {
-                Ok(row) => {
-                    let _id: i64 = row.get("id");
-                    let annotations = Vec::new(); // TODO: Create and insert annotations
-
-                    paste.add_file(File::from_row(row, annotations));
-                }
-                Err(_) => return Err(HTTPError::new(500, "Failed to create paste.")),
-            }
+            let file = File::create(&mut tx, paste.id(), file).await?;
+            paste.add_file(file);
         }
 
         match tx.commit().await {
@@ -171,6 +152,35 @@ impl File {
         Ok(files)
     }
 
+    async fn create<'r>(
+        tx: &mut Transaction<'_, Postgres>,
+        paste_id: &str,
+        file: &'r CreateFile<'r>,
+    ) -> Result<Self> {
+        let result = sqlx::query(
+            "
+                INSERT INTO files (paste_id, name, content)
+                VALUES ($1, $2, $3)
+                RETURNING id, name, content, lines, characters
+                ",
+        )
+        .bind(paste_id)
+        .bind(file.name().or(Some("unknown")))
+        .bind(file.content())
+        .fetch_one(&mut **tx)
+        .await;
+
+        match result {
+            Ok(row) => {
+                let id: i64 = row.get("id");
+                let annotations = Annotation::create(tx, id, file.content()).await?;
+
+                return Ok(File::from_row(row, annotations));
+            }
+            Err(_) => return Err(HTTPError::new(500, "Failed to create paste.")),
+        }
+    }
+
     fn from_row(row: PgRow, annotations: Vec<Annotation>) -> Self {
         let name = row.get("name");
         let content = row.get("content");
@@ -186,7 +196,7 @@ impl Annotation {
     async fn fetch(conn: &mut Connection<PgDatabase>, file_id: &i64) -> Result<Vec<Self>> {
         let result = sqlx::query_as::<_, Annotation>(
             "
-            SELECT head, tail, content
+            SELECT head_line, head_char, head_char, tail_line, tail_char, content
             FROM annotations
             WHERE file_id = $1
             ORDER BY id ASC
@@ -200,5 +210,47 @@ impl Annotation {
             Ok(annotations) => Ok(annotations),
             Err(_) => return Err(HTTPError::new(500, "Unable to fetch file annotations.")),
         }
+    }
+
+    async fn create(
+        tx: &mut Transaction<'_, Postgres>,
+        file_id: i64,
+        content: &str,
+    ) -> Result<Vec<Self>> {
+        let scans = scan_file(content);
+        let mut annotations = Vec::with_capacity(scans.len());
+
+        for scan in scans {
+            let content = format!("Contains potentially sensitive data from {}.", scan.service);
+
+            let result = sqlx::query(
+                "
+                INSERT INTO annotations (file_id, head_line, head_char, tail_line, tail_char, content)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                ",
+            )
+            .bind(file_id)
+            .bind(scan.head.line)
+            .bind(scan.head.char)
+            .bind(scan.tail.line)
+            .bind(scan.tail.char)
+            .bind(&content)
+            .execute(&mut **tx)
+            .await;
+
+            match result {
+                Ok(_) => {
+                    let value = Annotation {
+                        head: scan.head,
+                        tail: scan.tail,
+                        content,
+                    };
+                    annotations.push(value)
+                }
+                Err(_) => return Err(HTTPError::new(500, "Failed to create paste.")),
+            };
+        }
+
+        Ok(annotations)
     }
 }

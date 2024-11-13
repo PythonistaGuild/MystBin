@@ -7,6 +7,7 @@ use figment::providers::{Format, Json};
 use rocket::{catchers, fairing::AdHoc, figment, routes};
 use rocket_db_pools::Database;
 use routes::{health, pastes, security};
+use scanners::InitScanners;
 
 pub mod config;
 pub mod cors;
@@ -14,6 +15,7 @@ pub mod database;
 pub mod models;
 pub mod result;
 pub mod routes;
+pub mod scanners;
 pub mod utils;
 
 #[rocket::launch]
@@ -43,9 +45,10 @@ fn rocket() -> _ {
     rocket::custom(provider)
         .manage(client)
         .mount("/", routes)
+        .attach(AdHoc::config::<Config>())
         .attach(PgDatabase::init())
         .attach(CorsHeaders)
+        .attach(InitScanners)
         .attach(BackgroundTask)
-        .attach(AdHoc::config::<Config>())
         .register("/", catchers![rocket_validation::validation_catcher])
 }

@@ -1,15 +1,52 @@
+use std::result;
+
 use chrono::{DateTime, Utc};
 use rocket_validation::Validate;
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
+use sqlx::{postgres::PgRow, FromRow, Row};
+use validator::ValidationError;
 
 use crate::result::{HTTPError, Result};
 
-#[derive(FromRow, Serialize)]
+#[derive(Serialize)]
+pub struct Position {
+    pub line: i32,
+    pub char: i32,
+}
+
+#[derive(Serialize)]
 pub struct Annotation {
-    head: i32,
-    tail: i32,
-    content: String,
+    pub head: Position,
+    pub tail: Position,
+    pub content: String,
+}
+
+impl FromRow<'_, PgRow> for Annotation {
+    fn from_row(row: &PgRow) -> std::result::Result<Self, sqlx::Error> {
+        let head_line = row.get("head_line");
+        let head_char = row.get("head_char");
+
+        let tail_line = row.get("tail_line");
+        let tail_char = row.get("tail_char");
+
+        let content = row.get("content");
+
+        let head = Position {
+            line: head_line,
+            char: head_char,
+        };
+
+        let tail = Position {
+            line: tail_line,
+            char: tail_char,
+        };
+
+        Ok(Annotation {
+            head,
+            tail,
+            content,
+        })
+    }
 }
 
 #[derive(Serialize)]

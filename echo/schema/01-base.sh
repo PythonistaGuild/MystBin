@@ -29,8 +29,10 @@ psql -v ON_ERROR_STOP=1 --username "echo" --dbname "echo" <<-EOSQL
     CREATE TABLE IF NOT EXISTS annotations (
         id BIGSERIAL PRIMARY KEY NOT NULL,
         file_id BIGINT REFERENCES files(id) ON DELETE CASCADE,
-        head INTEGER NOT NULL,
-        tail INTEGER NOT NULL,
+        head_line INTEGER NOT NULL,
+        head_char INTEGER NOT NULL,
+        tail_line INTEGER NOT NULL,
+        tail_char INTEGER NOT NULL,
         content TEXT NOT NULL
     );
 EOSQL

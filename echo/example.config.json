@@ -1,3 +1,7 @@
 {
-  "allowed_hosts": ["http://localhost:1234", "https://mystb.in"]
+  "allowed_hosts": ["http://localhost:1234", "https://mystb.in"],
+  "extra_scanners": [
+    { "name": "PyPi", "pattern": "pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{70,}" },
+    { "name": "GitHub", "pattern": "((ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36})" }
+  ]
 }
