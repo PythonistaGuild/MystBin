@@ -139,10 +139,9 @@ impl Fairing for InitScanners {
             active.push(Box::new(GenericScanner::new(value)));
         }
 
-        match SCANNERS.set(active) {
-            Ok(_) => {}
-            Err(_) => panic!("failed to set up scanners!"),
-        };
+        if let Err(_) = SCANNERS.set(active) {
+            panic!("failed to set up scanners!")
+        }
 
         Ok(rocket)
     }
