@@ -10,15 +10,39 @@ use crate::result::{HTTPError, Result};
 
 #[derive(Serialize)]
 pub struct Position {
-    pub line: i32,
-    pub char: i32,
+    line: i32,
+    char: i32,
+}
+
+impl Position {
+    pub fn line(&self) -> i32 {
+        self.line
+    }
+
+    pub fn char(&self) -> i32 {
+        self.char
+    }
+
+    pub fn new(line: i32, char: i32) -> Self {
+        Position { line, char }
+    }
 }
 
 #[derive(Serialize)]
 pub struct Annotation {
-    pub head: Position,
-    pub tail: Position,
-    pub content: String,
+    head: Position,
+    tail: Position,
+    content: String,
+}
+
+impl Annotation {
+    pub fn new(head: Position, tail: Position, content: String) -> Self {
+        Annotation {
+            head,
+            tail,
+            content,
+        }
+    }
 }
 
 impl FromRow<'_, PgRow> for Annotation {

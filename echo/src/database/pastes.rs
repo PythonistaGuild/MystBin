@@ -230,23 +230,16 @@ impl Annotation {
                 ",
             )
             .bind(file_id)
-            .bind(scan.head.line)
-            .bind(scan.head.char)
-            .bind(scan.tail.line)
-            .bind(scan.tail.char)
+            .bind(scan.head.line())
+            .bind(scan.head.char())
+            .bind(scan.tail.line())
+            .bind(scan.tail.char())
             .bind(&content)
             .execute(&mut **tx)
             .await;
 
             match result {
-                Ok(_) => {
-                    let value = Annotation {
-                        head: scan.head,
-                        tail: scan.tail,
-                        content,
-                    };
-                    annotations.push(value)
-                }
+                Ok(_) => annotations.push(Annotation::new(scan.head, scan.tail, content)),
                 Err(_) => return Err(HTTPError::new(500, "Failed to create paste.")),
             };
         }

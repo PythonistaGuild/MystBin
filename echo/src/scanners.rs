@@ -17,10 +17,7 @@ fn find_position(content: &str, position: usize) -> Position {
     let haystack = &content[0..position];
     let (idx, line) = haystack.split('\n').enumerate().last().unwrap();
 
-    Position {
-        line: idx as i32,
-        char: line.len() as i32,
-    }
+    Position::new(idx as i32, line.len() as i32)
 }
 
 pub struct ScanResult<'r> {
