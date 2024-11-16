@@ -8,17 +8,15 @@ RUN mkdir bin && \
     apt update -y && apt upgrade -y && apt install -y musl-tools && \
     rustup target add x86_64-unknown-linux-musl
 
-# Mounting src using bind mount is slower for some reason
-COPY src src
-
 # NOTE: Due to caching this is actually faster than using
 # Two separate cargo builds (one without source present).
 RUN --mount=type=cache,target=target \
     --mount=type=cache,target=/usr/local/cargo/git \
     --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=bind,source=src,target=src \
+    --mount=type=bind,source=openapi.json,target=openapi.json \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml,readwrite \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock,readwrite \
-    --mount=type=bind,source=openapi.json,target=openapi.json,readwrite \
     # Use musl target as the binary is about 1MiB smaller
     cargo build --profile $PROFILE --target x86_64-unknown-linux-musl && \
     # The "dev" target directory is named "debug" instead
