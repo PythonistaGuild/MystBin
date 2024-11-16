@@ -21,6 +21,7 @@ pub mod utils;
 #[rocket::launch]
 fn rocket() -> _ {
     let routes = routes![
+        routes::get_root,
         cors::snatcher,
         docs::get_docs,
         docs::get_spec,
