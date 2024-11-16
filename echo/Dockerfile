@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=target \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=bind,source=Cargo.toml,target=Cargo.toml,readwrite \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock,readwrite \
+    --mount=type=bind,source=openapi.json,target=openapi.json,readwrite \
     # Use musl target as the binary is about 1MiB smaller
     cargo build --profile $PROFILE --target x86_64-unknown-linux-musl && \
     # The "dev" target directory is named "debug" instead

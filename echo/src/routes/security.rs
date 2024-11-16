@@ -1,4 +1,4 @@
-use rocket::{get, serde::json::Json};
+use rocket::{delete, get, serde::json::Json};
 use rocket_db_pools::Connection;
 
 use crate::{database::PgDatabase, models::security::SparsePasteInfo, result::Result};
@@ -11,7 +11,7 @@ pub async fn get_security(
     Ok(Json(SparsePasteInfo::get(conn, token).await?))
 }
 
-#[get("/security/<token>/delete")]
+#[delete("/security/<token>")]
 pub async fn delete_security(
     conn: Connection<PgDatabase>,
     token: &str,

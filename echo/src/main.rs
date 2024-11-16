@@ -6,7 +6,7 @@ use database::{background_task::BackgroundTask, PgDatabase};
 use figment::providers::{Format, Json};
 use rocket::{catchers, fairing::AdHoc, figment, routes};
 use rocket_db_pools::Database;
-use routes::{health, pastes, security};
+use routes::{docs, health, pastes, security};
 use scanners::InitScanners;
 
 pub mod config;
@@ -22,6 +22,8 @@ pub mod utils;
 fn rocket() -> _ {
     let routes = routes![
         cors::snatcher,
+        docs::get_docs,
+        docs::get_spec,
         health::health,
         pastes::get_paste,
         pastes::create_paste_simple,
