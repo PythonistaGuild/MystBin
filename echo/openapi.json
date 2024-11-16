@@ -3,7 +3,7 @@
   "info": {
     "title": "MystBin API",
     "description": "MystBin API endpoints and types.",
-    "version": "1.0.0",
+    "version": "5.0.0",
     "contact": {
       "name": "MystBin",
       "email": "support@mystb.in"
@@ -26,7 +26,7 @@
     }
   ],
   "paths": {
-    "/paste": {
+    "/pastes": {
       "post": {
         "summary": "Create New Paste",
         "description": "Create a new Paste containing up to five files.",
@@ -88,7 +88,7 @@
         }
       }
     },
-    "/paste/{id}": {
+    "/pastes/{id}": {
       "parameters": [
         {
           "schema": {
