@@ -2,7 +2,7 @@
 set -euf -o pipefail
 
 psql -v ON_ERROR_STOP=1 --username "echo" --dbname "echo" <<-EOSQL
-	CREATE EXTENSION IF NOT EXISTS pgcrypto;
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
     CREATE TABLE IF NOT EXISTS pastes (
         id TEXT PRIMARY KEY,
