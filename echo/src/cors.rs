@@ -41,5 +41,6 @@ impl Fairing for CorsHeaders {
         ));
         response.set_header(Header::new("Access-Control-Max-Age", "86400"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"));
     }
 }
