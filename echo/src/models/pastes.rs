@@ -77,6 +77,7 @@ impl FromRow<'_, PgRow> for Annotation {
 pub struct File {
     name: String,
     content: String,
+    language: Option<String>,
 
     lines: i32,
     characters: i32,
@@ -88,6 +89,7 @@ impl File {
     pub fn new(
         name: String,
         content: String,
+        language: Option<String>,
         lines: i32,
         characters: i32,
         annotations: Vec<Annotation>,
@@ -95,6 +97,7 @@ impl File {
         File {
             name,
             content,
+            language,
             lines,
             characters,
             annotations,
@@ -150,19 +153,21 @@ impl Paste {
 
 #[derive(Deserialize, Serialize, Validate)]
 pub struct CreateFile<'r> {
-    #[validate(length(min = 1, max = 32), custom(function = "validate_name"))]
+    #[validate(length(min = 1, max = 32), custom(function = "no_newlines"))]
     name: Option<&'r str>,
     #[validate(length(min = 1, max = 300_000))]
     // Using String instead of str because of newlines:
     // https://github.com/somehowchris/rocket-validation/issues/41
     content: String,
+    #[validate(length(min = 1, max = 32), custom(function = "no_newlines"))]
+    language: Option<&'r str>,
 }
 
-fn validate_name(name: &str) -> result::Result<(), ValidationError> {
+fn no_newlines(name: &str) -> result::Result<(), ValidationError> {
     if !name.contains("\n") {
         Ok(())
     } else {
-        Err(ValidationError::new("Newline in file name."))
+        Err(ValidationError::new("Found newline in unsupported field."))
     }
 }
 
@@ -173,6 +178,10 @@ impl<'r> CreateFile<'r> {
 
     pub fn content(&self) -> &str {
         &self.content
+    }
+
+    pub fn language(&self) -> Option<&'r str> {
+        self.language
     }
 }
 
@@ -215,6 +224,7 @@ impl<'r> CreatePaste<'r> {
         let file = CreateFile {
             name: None,
             content,
+            language: None,
         };
 
         Ok(CreatePaste {

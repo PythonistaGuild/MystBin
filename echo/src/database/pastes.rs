@@ -125,7 +125,7 @@ impl File {
     async fn fetch(conn: &mut Connection<PgDatabase>, paste_id: &str) -> Result<Vec<Self>> {
         let result = sqlx::query(
             "
-            SELECT id, name, content, lines, characters
+            SELECT id, name, content, language, lines, characters
             FROM files
             WHERE paste_id = $1
             ORDER BY id ASC
@@ -159,14 +159,15 @@ impl File {
     ) -> Result<Self> {
         let result = sqlx::query(
             "
-            INSERT INTO files (paste_id, name, content)
-            VALUES ($1, $2, $3)
-            RETURNING id, name, content, lines, characters
+            INSERT INTO files (paste_id, name, content, language)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, name, content, language, lines, characters
             ",
         )
         .bind(paste_id)
         .bind(file.name().or(Some("unknown")))
         .bind(file.content())
+        .bind(file.language())
         .fetch_one(&mut **tx)
         .await;
 
@@ -184,11 +185,12 @@ impl File {
     fn from_row(row: PgRow, annotations: Vec<Annotation>) -> Self {
         let name = row.get("name");
         let content = row.get("content");
+        let language = row.get("language");
 
         let lines = row.get("lines");
         let characters = row.get("characters");
 
-        File::new(name, content, lines, characters, annotations)
+        File::new(name, content, language, lines, characters, annotations)
     }
 }
 

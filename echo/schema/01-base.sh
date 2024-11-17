@@ -22,6 +22,7 @@ psql -v ON_ERROR_STOP=1 --username "echo" --dbname "echo" <<-EOSQL
         paste_id TEXT REFERENCES pastes(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         content TEXT NOT NULL,
+        language TEXT, -- highlight.js syntax highlighting language
         lines INTEGER NOT NULL GENERATED ALWAYS AS (LENGTH(REGEXP_REPLACE(content, '[^\n]', '', 'g')) + 1) STORED,
         characters INTEGER NOT NULL GENERATED ALWAYS AS (LENGTH(content)) STORED
     );

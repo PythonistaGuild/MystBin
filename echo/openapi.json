@@ -278,6 +278,11 @@
             "type": "string",
             "description": "The File's content."
           },
+          "language": {
+            "type": "string",
+            "nullable": true,
+            "description": "Syntax highlighting language for the File."
+          },
           "lines": {
             "type": "integer",
             "description": "Amount of newlines the content has."
@@ -288,7 +293,7 @@
           },
           "annotations": {
             "type": "array",
-            "description": "Auto-generated notices about the File content.",
+            "description": "Auto-generated notices about File content.",
             "items": {
               "$ref": "#/components/schemas/Annotation"
             }
@@ -297,6 +302,7 @@
         "example": {
           "name": "beaver.txt",
           "content": "Beavers are soo cute!",
+          "language": "plaintext",
           "lines": 1,
           "characters": 21,
           "annotations": []
@@ -372,6 +378,10 @@
             "minLength": 1,
             "maxLength": 300000,
             "description": "The File's content."
+          },
+          "language": {
+            "type": "string",
+            "description": "Syntax highlighting language for the File."
           }
         },
         "required": ["content"],
