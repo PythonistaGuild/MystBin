@@ -20,17 +20,28 @@ impl Paste {
     ) -> Result<Paste> {
         let query = format!(
             "
-            UPDATE
+            WITH _ AS (
+                UPDATE
+                    pastes
+                SET
+                    views = views + 1
+                WHERE
+                    id = $1 AND {}
+            )
+            SELECT
+                created_at,
+                expires_at,
+                views + 1 AS views, -- account for in-progress update above
+                max_views,
+                CASE WHEN password IS NULL THEN true ELSE
+                    CASE WHEN $2 IS NULL THEN false ELSE password = CRYPT($2, password) END
+                END AS authenticated
+            FROM
                 pastes
-            SET
-                views = views + 1
             WHERE
                 id = $1 AND
                 CASE WHEN max_views IS NULL THEN true ELSE views <= max_views END AND
-                CASE WHEN expires_at IS NULL THEN true ELSE expires_at > CURRENT_TIMESTAMP END AND
-                {}
-            RETURNING
-                created_at, expires_at, views, max_views
+                CASE WHEN expires_at IS NULL THEN true ELSE expires_at > CURRENT_TIMESTAMP END
             ",
             match password {
                 None => "password IS NULL",
@@ -46,10 +57,21 @@ impl Paste {
 
         match result {
             Ok(row) => {
-                let files = File::fetch(conn, &id).await?;
-                Ok(Paste::from_row(row, id, files, None))
+                let authenticated = row.get("authenticated");
+
+                if authenticated {
+                    let files = File::fetch(conn, &id).await?;
+                    Ok(Paste::from_row(row, id, files, None))
+                } else {
+                    Err(HTTPError::new(401, "Provided password is not valid."))
+                }
             }
-            Err(_) => return Err(HTTPError::new(404, "Unknown paste or invalid password.")),
+            Err(_) => {
+                return Err(HTTPError::new(
+                    404,
+                    "Requested paste does not exist, has too many views, or has expired.",
+                ))
+            }
         }
     }
 

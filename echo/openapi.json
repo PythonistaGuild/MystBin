@@ -128,8 +128,18 @@
               }
             }
           },
+          "401": {
+            "description": "You are not authorized to view the requested Paste.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
-            "description": "The requested Paste does not exist or you are not authorized to view it.",
+            "description": "The requested Paste does not exist, has too many views, or has expired.",
             "content": {
               "application/json": {
                 "schema": {
