@@ -110,7 +110,7 @@
             "schema": {
               "type": "string",
               "format": "password",
-              "description": "A password to access the Paste. Must be provided for secret Pastes."
+              "description": "A password to access a secret Paste. Must have `password:` prefix."
             },
             "required": false,
             "in": "header",
