@@ -1,9 +1,0 @@
-.git/
-.github/
-types_/
-config.template.toml
-Dockerfile
-LICENSE
-migration.sql
-pyproject.toml
-README.md
