@@ -34,7 +34,7 @@ impl<'r> FromRequest<'r> for PasswordHeader<'r> {
             None => return Outcome::Error((Status::Unauthorized, "Missing Authorization header.")),
         };
 
-        static PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i:password): .+").unwrap());
+        static PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i:password) .+").unwrap());
 
         if !PATTERN.is_match(value) {
             return Outcome::Error((Status::Unauthorized, "Invalid Authorization header."));
