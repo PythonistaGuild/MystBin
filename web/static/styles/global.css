@@ -776,3 +776,13 @@ code {
     padding: 0.5rem;
   }
 }
+
+@media screen and (max-device-width: 480px){
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  code {
+    -webkit-text-size-adjust: 100%;
+  }
+}
