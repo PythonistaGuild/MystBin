@@ -1,4 +1,4 @@
-FROM rust:latest AS build
+FROM rust:1.82.0 AS build
 
 ARG PROFILE=release
 
