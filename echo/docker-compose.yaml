@@ -19,6 +19,7 @@ services:
     restart: always
     depends_on:
       db:
+        restart: true
         condition: service_healthy
     environment:
       - ECHO_CONFIG=/etc/opt/echo/config.json
