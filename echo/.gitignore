@@ -1,4 +1,5 @@
 .env
+compose.override.yaml
 config.json
 data/
 target/
