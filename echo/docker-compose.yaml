@@ -57,6 +57,8 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "echo"]
       interval: 5s
+      start_interval: 1s
+      retries: 1
       timeout: 5s
       start_period: 1m
 

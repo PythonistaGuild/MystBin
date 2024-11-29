@@ -48,7 +48,7 @@ COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Copy last so prior steps are cached doing many rebuilds
 COPY --from=build /build/bin bin
 
-HEALTHCHECK --interval=5s --timeout=5s --retries=1 CMD ["healthcheck"]
+HEALTHCHECK --interval=5s --start-interval=1s --retries=1 --timeout=5s --start-period=1m CMD ["healthcheck"]
 
 USER 101:101
 CMD ["echo"]
