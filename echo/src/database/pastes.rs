@@ -121,8 +121,10 @@ impl Paste {
             }
         };
 
+        let invalidate_secrets = data.password().is_none();
+
         for file in data.files() {
-            let file = File::create(&mut tx, paste.id(), file).await?;
+            let file = File::create(&mut tx, paste.id(), file, invalidate_secrets).await?;
             paste.add_file(file);
         }
 
@@ -178,6 +180,7 @@ impl File {
         tx: &mut Transaction<'_, Postgres>,
         paste_id: &str,
         file: &'r CreateFile<'r>,
+        invalidate_secrets: bool,
     ) -> Result<Self> {
         let result = sqlx::query(
             "
@@ -196,7 +199,8 @@ impl File {
         match result {
             Ok(row) => {
                 let id: i64 = row.get("id");
-                let annotations = Annotation::create(tx, id, file.content()).await?;
+                let annotations =
+                    Annotation::create(tx, id, file.content(), invalidate_secrets).await?;
 
                 return Ok(File::from_row(row, annotations));
             }
@@ -240,12 +244,17 @@ impl Annotation {
         tx: &mut Transaction<'_, Postgres>,
         file_id: i64,
         content: &str,
+        invalidate_secrets: bool,
     ) -> Result<Vec<Self>> {
-        let scans = scan_file(content);
+        let scans = scan_file(content, invalidate_secrets).await;
         let mut annotations = Vec::with_capacity(scans.len());
 
         for scan in scans {
-            let content = format!("Contains potentially sensitive data from {}.", scan.service);
+            let mut content = format!("Mystb.in found a secret for {}.", scan.service);
+
+            if invalidate_secrets {
+                content += " This secret has been invalidated.";
+            }
 
             let result = sqlx::query(
                 "

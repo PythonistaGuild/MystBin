@@ -33,20 +33,10 @@ fn rocket() -> _ {
         security::delete_security,
     ];
 
-    let version = env!("CARGO_PKG_VERSION");
-    let user_agent = format!("Echo/{} (+https://mystb.in)", version);
-
-    let client = reqwest::Client::builder()
-        .https_only(true)
-        .user_agent(user_agent)
-        .build()
-        .unwrap();
-
     let path = env::var("ECHO_CONFIG").expect("ECHO_CONFIG not set");
     let provider = rocket::Config::figment().merge(Json::file(path));
 
     rocket::custom(provider)
-        .manage(client)
         .mount("/", routes)
         .attach(AdHoc::config::<Config>())
         .attach(PgDatabase::init())
