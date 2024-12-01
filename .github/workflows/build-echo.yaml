@@ -1,0 +1,26 @@
+name: build-echo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - echo/**
+  pull_request:
+    paths:
+      - echo/**
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: set up buildx
+        uses: docker/setup-buildx-action@v3
+      - name: build and push
+        uses: docker/build-push-action@v6
+        with:
+          # push: true
+          tags: echo:latest
+          context: "{{defaultContext}}:echo"
+        env:
+          SOURCE_DATE_EPOCH: 0
