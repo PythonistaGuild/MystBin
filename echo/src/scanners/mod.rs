@@ -24,6 +24,7 @@ pub struct ScanResult<'r> {
     pub tail: Position,
 
     pub content: &'r str,
+    pub invalidated: bool,
     pub service: Arc<String>,
 }
 
@@ -35,16 +36,19 @@ pub async fn scan_file<'r>(content: &'r str, invalidate_secrets: bool) -> Vec<Sc
 
     for scanner in SCANNERS.get().unwrap() {
         for finding in scanner.execute(content) {
+            let do_invalidate = scanner.nullify() && invalidate_secrets;
+
             let result = ScanResult {
                 service: scanner.service(),
                 content: finding.as_str(),
+                invalidated: do_invalidate,
                 head: find_position(content, finding.start()),
                 tail: find_position(content, finding.end()),
             };
 
             results.push(result);
 
-            if scanner.nullify() && invalidate_secrets {
+            if do_invalidate {
                 REPORTER.get().unwrap().add(finding.as_str()).await;
             }
         }

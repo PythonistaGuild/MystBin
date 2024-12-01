@@ -252,7 +252,7 @@ impl Annotation {
         for scan in scans {
             let mut content = format!("Mystb.in found a secret for {}.", scan.service);
 
-            if invalidate_secrets {
+            if scan.invalidated {
                 content += " This secret has been invalidated.";
             }
 
