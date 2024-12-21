@@ -1,4 +1,4 @@
-function getLangByNameT(name) {
+function getLangByName(name) {
     splat = name.split(".");
     if (splat.length <= 1) {
         return null
