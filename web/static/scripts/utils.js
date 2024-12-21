@@ -1,4 +1,4 @@
-function getLangByName(name) {
+function getLangByNameT(name) {
     splat = name.split(".");
     if (splat.length <= 1) {
         return null
@@ -12,5 +12,6 @@ function getLangByName(name) {
     }
 
     let lname = lang.name.replace(/\s+/g, '').toLowerCase();
-    return lname;
+    let lastN = lname.split(",")[0];
+    return lastN;
 }
