@@ -1,0 +1,68 @@
+name: echo
+
+services:
+  echo:
+    build:
+      context: .
+      args:
+        - PROFILE
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges=true
+    networks:
+      - public
+      - hidden
+    ports:
+      - ${HOST:-127.0.0.1}:${PORT:-8000}:8000
+    restart: always
+    depends_on:
+      db:
+        restart: true
+        condition: service_healthy
+    environment:
+      - ECHO_CONFIG=/etc/opt/echo/config.json
+    volumes:
+      - ./config.json:/etc/opt/echo/config.json:ro
+    develop:
+      watch:
+        - path: src/
+          action: rebuild
+
+  db:
+    image: postgres:17-alpine
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      - FOWNER
+      - SETGID
+      - SETUID
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges=true
+    networks:
+      - hidden
+    restart: always
+    tmpfs:
+      - /tmp
+      - /run/postgresql
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./schema:/docker-entrypoint-initdb.d:ro
+      - ./data/postgres:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "echo"]
+      interval: 5s
+      start_interval: 1s
+      retries: 1
+      timeout: 5s
+      start_period: 1m
+
+networks:
+  public:
+  hidden:
+    internal: true

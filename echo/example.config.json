@@ -1,0 +1,8 @@
+{
+  "allowed_hosts": ["http://localhost:1234", "https://mystb.in"],
+  "github_token": "github_pat_KOBfYbSdPtOGcvSMdkoUye_IWEadGCSJxVffBVHZZRSCXBqvhKzKTaddmyBaZcHxWLdJQIOhJbpsbiEWx",
+  "extra_scanners": [
+    { "name": "PyPi", "pattern": "pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{70,}", "invalidate": true },
+    { "name": "GitHub", "pattern": "((ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36})", "invalidate": true }
+  ]
+}
