@@ -32,6 +32,7 @@ Easily share code and text.
 - Clone
 - Copy `config.template.toml` into `config.toml`
   - The default config for database (and redis) should work Out of Box.
+  - Ensure you change the `host` key to `0.0.0.0` from `localhost`
 - Copy `.env.example` into `.env`
   - The default config should work Out of Box
   - The database container doesn't expose connections outside of the network, but for added security edit `.env` and change the password.
