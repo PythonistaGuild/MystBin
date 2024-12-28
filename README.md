@@ -32,6 +32,9 @@ Easily share code and text.
 - Clone
 - Copy `config.template.toml` into `config.toml`
   - The default config for database (and redis) should work Out of Box.
+- Copy `.env.example` into `.env`
+  - The default config should work Out of Box
+  - The database container doesn't expose connections outside of the network, but for added security edit `.env` and change the password.
 - Optionally in `core/server.py` set `ignore_localhost=` to `False` in the RateLimit Middleware for testing.
 - Run `docker compose up -d` to start the services.
   - If you want to use redis for session/limit handling, run with the redis profile: `docker compose --profile redis up -d`
