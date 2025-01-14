@@ -26,6 +26,7 @@ fn rocket() -> _ {
         meta::get_docs,
         meta::get_spec,
         meta::get_health,
+        meta::get_version,
         pastes::get_paste,
         pastes::create_paste_simple,
         pastes::create_paste_structured,

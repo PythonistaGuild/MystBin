@@ -15,6 +15,7 @@ use scalar_doc::{Documentation, Theme};
 
 use crate::{
     database::PgDatabase,
+    models::meta::{Version, VERSION},
     result::{HTTPError, Result},
 };
 
@@ -46,4 +47,9 @@ pub async fn get_health(mut db: Connection<PgDatabase>) -> Result<String> {
         Ok(row) => Ok(row.get(0)),
         Err(_) => Err(HTTPError::new(503, "Database connection unhealthy.")),
     }
+}
+
+#[get("/version")]
+pub async fn get_version() -> Json<Version> {
+    Json(VERSION)
 }

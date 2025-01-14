@@ -1,6 +1,6 @@
 [package]
 name = "echo"
-version = "1.0.0"
+version = "5.0.0-alpha.1"
 publish = false
 edition = "2021"
 
