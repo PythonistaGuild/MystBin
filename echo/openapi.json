@@ -1,0 +1,466 @@
+{
+  "openapi": "3.1.3",
+  "info": {
+    "title": "MystBin API",
+    "description": "MystBin API endpoints and types.",
+    "version": "5.0.0",
+    "contact": {
+      "name": "MystBin",
+      "email": "support@mystb.in"
+    }
+  },
+  "tags": [
+    {
+      "name": "Paste",
+      "description": "Endpoints relating to Pastes."
+    },
+    {
+      "name": "Security",
+      "description": "Endpoints relating to Security tokens."
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api.mystb.in",
+      "description": "The MystBin production server."
+    }
+  ],
+  "paths": {
+    "/pastes": {
+      "post": {
+        "summary": "Create New Paste",
+        "description": "Create a new Paste containing up to five files.",
+        "operationId": "create-paste",
+        "tags": ["Paste"],
+        "requestBody": {
+          "description": "Data used to create a new Paste.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaste"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300000,
+                "description": "Content for a Paste containing a single File."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A new Paste has been created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Paste"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body malformed or incorrect.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request body contained semantic errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pastes/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The Paste id."
+        }
+      ],
+      "get": {
+        "summary": "Fetch Existing Paste",
+        "description": "View an existing Paste.",
+        "operationId": "get-paste",
+        "tags": ["Paste"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "password",
+              "description": "A password to access a secret Paste. Must have `Password` prefix."
+            },
+            "required": false,
+            "in": "header",
+            "name": "Authorization"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested Paste.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paste"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to view the requested Paste.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested Paste does not exist, has too many views, or has expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/{token}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "password",
+            "description": "The security token returned when creating the Paste."
+          },
+          "required": true,
+          "in": "path",
+          "name": "token"
+        }
+      ],
+      "get": {
+        "summary": "Security Token Info",
+        "description": "View which Paste a particular security token is associated with.",
+        "operationId": "security-info",
+        "tags": ["Security"],
+        "responses": {
+          "200": {
+            "description": "Information about the Paste associated with this token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasteInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The provided security token is not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Paste with Security Token",
+        "description": "Delete the Paste associated with this security token.",
+        "operationId": "security-delete",
+        "tags": ["Security"],
+        "responses": {
+          "200": {
+            "description": "The Paste has successfully been deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasteInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The provided security token is not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Position": {
+        "title": "Position",
+        "type": "object",
+        "description": "Describes a position inside a File.",
+        "properties": {
+          "line": {
+            "type": "integer",
+            "description": "A line inside a File."
+          },
+          "char": {
+            "type": "integer",
+            "description": "A specific character on the aforementioned line."
+          }
+        }
+      },
+      "Annotation": {
+        "title": "Annotation",
+        "type": "object",
+        "description": "Auto-generated notices about File contents. May disclose things such as authentication tokens that were accidentally included.",
+        "properties": {
+          "head": {
+            "type": "object",
+            "description": "Annotated area start.",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          },
+          "tail": {
+            "type": "object",
+            "description": "Annotated area end.",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          },
+          "content": {
+            "type": "string",
+            "description": "Reason this annotation was generated. Should be shown to the end user."
+          }
+        },
+        "example": {
+          "head": {
+            "line": 3,
+            "char": 5
+          },
+          "tail": {
+            "line": 3,
+            "char": 15
+          },
+          "content": "Contains a MystBin authentication token!"
+        }
+      },
+      "File": {
+        "title": "File",
+        "type": "object",
+        "description": "A File associated with a Paste.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A short name for the File."
+          },
+          "content": {
+            "type": "string",
+            "description": "The File's content."
+          },
+          "language": {
+            "type": "string",
+            "nullable": true,
+            "description": "Syntax highlighting language for the File."
+          },
+          "lines": {
+            "type": "integer",
+            "description": "Amount of newlines the content has."
+          },
+          "characters": {
+            "type": "integer",
+            "description": "Total character count inside the content."
+          },
+          "annotations": {
+            "type": "array",
+            "description": "Auto-generated notices about File content.",
+            "items": {
+              "$ref": "#/components/schemas/Annotation"
+            }
+          }
+        },
+        "example": {
+          "name": "beaver.txt",
+          "content": "Beavers are soo cute!",
+          "language": "plaintext",
+          "lines": 1,
+          "characters": 21,
+          "annotations": []
+        }
+      },
+      "Paste": {
+        "title": "Paste",
+        "type": "object",
+        "description": "A Paste containing one or more Files.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "An auto-generated unique identifier for this Paste."
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp at which this Paste was created.",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "Timestamp at which this Paste will automatically be deleted.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "views": {
+            "type": "integer",
+            "description": "Amount of times this Paste has been accessed after creation."
+          },
+          "max_views": {
+            "type": "integer",
+            "description": "Total amount of accesses before the Paste is automatically deleted.",
+            "nullable": true
+          },
+          "files": {
+            "type": "array",
+            "description": "The Files associated with this Paste.",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          },
+          "security": {
+            "type": "string",
+            "description": "A unique token that allows deleting the Paste. Present when creating a Paste only.",
+            "nullable": true
+          }
+        }
+      },
+      "PasteInfo": {
+        "title": "PasteInfo",
+        "type": "object",
+        "description": "Sparse information about a Paste.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the Paste."
+          }
+        }
+      },
+      "CreateFile": {
+        "title": "CreateFile",
+        "type": "object",
+        "description": "Data used to create a new File.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "description": "The File's name. Defaults to 'unknown'."
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300000,
+            "description": "The File's content."
+          },
+          "language": {
+            "type": "string",
+            "description": "Syntax highlighting language for the File."
+          }
+        },
+        "required": ["content"],
+        "example": {
+          "name": "beaver.txt",
+          "content": "Beavers are soo cute!"
+        }
+      },
+      "CreatePaste": {
+        "title": "CreatePaste",
+        "type": "object",
+        "description": "Data used to create a new Paste.",
+        "properties": {
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "Files to create inside this Paste.",
+            "items": {
+              "$ref": "#/components/schemas/CreateFile"
+            }
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 72,
+            "format": "password",
+            "description": "An optional secret required to view the Paste."
+          },
+          "max_views": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128,
+            "description": "The maximum amount of times this Paste may be accessed."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp at which this Paste will automatically be deleted."
+          }
+        },
+        "required": ["files"],
+        "example": {
+          "files": [
+            {
+              "name": "secret.txt",
+              "content": "This file disappears after you view it!"
+            }
+          ],
+          "password": "shh",
+          "max_views": 1
+        }
+      },
+      "ErrorResponse": {
+        "title": "ErrorResponse",
+        "type": "object",
+        "description": "Generic response when something went wrong.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The error message."
+          },
+          "errors": {
+            "type": "object",
+            "description": "Detailed information on the error. May not be present."
+          }
+        },
+        "required": ["message"]
+      }
+    }
+  }
+}

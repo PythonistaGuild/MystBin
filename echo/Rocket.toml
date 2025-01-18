@@ -1,0 +1,8 @@
+[default]
+ident = "Echo"
+
+address = "0.0.0.0"
+ip_header = "x-forwarded-for"
+
+[default.databases.postgres]
+url = "postgres://echo@db"
