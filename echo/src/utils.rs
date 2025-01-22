@@ -1,7 +1,5 @@
-use once_cell::sync::Lazy;
 use rand::{distributions::Alphanumeric, Rng};
 
-use regex::Regex;
 use rocket::{
     http::Status,
     request::{FromRequest, Outcome, Request},
@@ -34,14 +32,15 @@ impl<'r> FromRequest<'r> for PasswordHeader<'r> {
             None => return Outcome::Error((Status::Unauthorized, "Missing Authorization header.")),
         };
 
-        static PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i:password) .+").unwrap());
+        let (prefix, suffix) = match value.split_once(" ") {
+            Some(values) => values,
+            None => return Outcome::Error((Status::Unauthorized, "Invalid Authorization header.")),
+        };
 
-        if !PATTERN.is_match(value) {
-            return Outcome::Error((Status::Unauthorized, "Invalid Authorization header."));
+        if prefix.to_lowercase() == "password" {
+            Outcome::Success(PasswordHeader { value: suffix })
+        } else {
+            Outcome::Error((Status::Unauthorized, "Invalid Authorization header."))
         }
-
-        Outcome::Success(PasswordHeader {
-            value: value.split_once(" ").unwrap().1,
-        })
     }
 }
