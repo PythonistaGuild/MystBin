@@ -22,7 +22,7 @@ pub async fn get_paste<'r>(
     Ok(Json(Paste::fetch(&mut conn, id, password).await?))
 }
 
-#[post("/pastes", format = "text/plain", data = "<data>")]
+#[post("/pastes", data = "<data>", rank = 2)]
 pub async fn create_paste_simple<'r>(
     mut conn: Connection<PgDatabase>,
     data: String,
