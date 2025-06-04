@@ -1,4 +1,5 @@
 name: validate-signoff
+
 on:
   pull_request:
     types:
