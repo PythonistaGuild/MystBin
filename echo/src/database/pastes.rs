@@ -40,7 +40,7 @@ impl Paste {
                 pastes
             WHERE
                 id = $1 AND
-                CASE WHEN max_views IS NULL THEN true ELSE views <= max_views END AND
+                CASE WHEN max_views IS NULL THEN true ELSE views < max_views END AND
                 CASE WHEN expires_at IS NULL THEN true ELSE expires_at > CURRENT_TIMESTAMP END
             ",
             match password {
