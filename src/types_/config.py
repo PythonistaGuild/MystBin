@@ -25,6 +25,7 @@ __all__ = ()
 
 class Server(TypedDict):
     host: str
+    root_url: NotRequired[str]
     port: int
     domain: str
     session_secret: str
