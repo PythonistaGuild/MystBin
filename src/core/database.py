@@ -21,17 +21,17 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import pathlib
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
 import asyncpg
 
-from core import CONFIG
-
 from . import utils
+from .config import CONFIG
+from .errors import DatabaseError
 from .models import FileModel, PasteModel
 from .scanners import SecurityInfo, Services
-
 
 if TYPE_CHECKING:
     _Pool = asyncpg.Pool[asyncpg.Record]
@@ -42,20 +42,24 @@ else:
     _Pool = asyncpg.Pool
 
 
-LOGGER: logging.Logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+SCHEMA_FILE = pathlib.Path("schema.sql")
 
 
 class Database:
     pool: _Pool
 
-    def __init__(self, *, dsn: str, session: aiohttp.ClientSession | None = None, github_config: Github | None) -> None:
+    def __init__(self, *, dsn: str, session: aiohttp.ClientSession, github_config: Github | None) -> None:
         self._dsn: str = dsn
-        self.session: aiohttp.ClientSession | None = session
+        self.session: aiohttp.ClientSession = session
         self._handling_tokens = bool(self.session and github_config)
 
         if self._handling_tokens:
+            if not github_config:
+                msg_ = "Unreachable. We required the `GITHUB` config key to be populated."
+                raise RuntimeError(msg_)
+
             LOGGER.info("Setup to handle Discord Tokens.")
-            assert github_config  # guarded by if here
 
             self._gist_token = github_config["token"]
             self._gist_timeout = github_config["timeout"]
@@ -68,7 +72,7 @@ class Database:
         await self.connect()
         return self
 
-    async def __aexit__(self, *_: Any) -> None:
+    async def __aexit__(self, *_: object) -> None:
         task: asyncio.Task[None] | None = getattr(self, "__token_task", None)
         if task:
             task.cancel()
@@ -95,9 +99,11 @@ class Database:
         self.__tokens_bucket[paste_id] = "\n".join(tokens)
 
     async def _post_gist_of_tokens(self) -> None:
-        assert self.session  # guarded in caller
         json_payload: PostGist = {
-            "description": "MystBin found these Discord tokens in a public paste, and posted them here to invalidate them. If you intended to share these, please apply a password to the paste.",
+            "description": (
+                "MystBin found these Discord tokens in a public paste, and posted them here to invalidate them. "
+                "If you intended to share these, please apply a password to the paste."
+            ),
             "files": {},
             "public": True,
         }
@@ -118,9 +124,7 @@ class Database:
         success = False
 
         try:
-            async with self.session.post(
-                "https://api.github.com/gists", headers=github_headers, json=json_payload
-            ) as resp:
+            async with self.session.post("https://api.github.com/gists", headers=github_headers, json=json_payload) as resp:
                 success = resp.ok
 
                 if not success:
@@ -132,7 +136,7 @@ class Database:
                     )
         except (aiohttp.ClientError, aiohttp.ClientOSError) as error:
             success = False
-            LOGGER.error("Failed to handle gist creation due to a client or operating system error", exc_info=error)
+            LOGGER.exception("Failed to handle gist creation due to a client or operating system error", exc_info=error)
 
         if success:
             LOGGER.info("Gist created and invalidated tokens from %s pastes.", len(current_tokens))
@@ -146,9 +150,10 @@ class Database:
             raise RuntimeError from e
 
         if not pool:
-            raise RuntimeError("Failed to connect to the database... No additional information.")
+            msg_ = "Failed to connect to the database... No additional information."
+            raise RuntimeError(msg_)
 
-        with open("schema.sql") as fp:
+        with SCHEMA_FILE.open(encoding="utf-8") as fp:
             await pool.execute(fp.read())
 
         self.pool = pool
@@ -163,8 +168,6 @@ class Database:
             LOGGER.info("Successfully closed the database connection.")
 
     async def fetch_paste(self, identifier: str, *, password: str | None) -> PasteModel | None:
-        assert self.pool
-
         paste_query: str = """
             UPDATE pastes SET views = views + 1 WHERE id = $1
             RETURNING *,
@@ -182,12 +185,12 @@ class Database:
             record: asyncpg.Record | None = await connection.fetchrow(paste_query, identifier, password)
 
             if not record:
-                return
+                return None
 
             paste: PasteModel = PasteModel(record)
-            if paste.expires and paste.expires <= datetime.datetime.now(tz=datetime.timezone.utc):
+            if paste.expires and paste.expires <= datetime.datetime.now(tz=datetime.UTC):
                 await connection.execute("DELETE FROM pastes WHERE id = $1", identifier)
-                return
+                return None
 
             if paste.has_password and not paste.password_ok:
                 return paste
@@ -197,9 +200,7 @@ class Database:
 
         return paste
 
-    async def create_paste(self, *, data: dict[str, Any]) -> PasteModel:
-        assert self.pool
-
+    async def create_paste(self, *, data: dict[str, Any]) -> PasteModel:  # noqa: PLR0914 # builder pattern and formulation
         paste_query: str = """
             INSERT INTO pastes (id, expires, password, safety)
             VALUES ($1, $2, (SELECT crypt($3, gen_salt('bf')) WHERE $3 is not null), $4)
@@ -234,7 +235,9 @@ class Database:
                 else:
                     break
 
-            assert paster
+            if not paster:
+                msg_ = "Unable to insert paste data into database."
+                raise DatabaseError(msg_)
 
             paste: PasteModel = PasteModel(paster)
             async with connection.transaction():
@@ -283,12 +286,12 @@ class Database:
         async with self.pool.acquire() as connection:
             record: asyncpg.Record | None = await connection.fetchrow(query, token)
             if not record:
-                return
+                return None
 
         paste: PasteModel = PasteModel(record=record)
-        if paste.expires and paste.expires <= datetime.datetime.now(tz=datetime.timezone.utc):
+        if paste.expires and paste.expires <= datetime.datetime.now(tz=datetime.UTC):
             await connection.execute("DELETE FROM pastes WHERE id = $1", token)
-            return
+            return None
 
         return paste
 

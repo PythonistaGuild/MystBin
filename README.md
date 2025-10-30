@@ -36,3 +36,5 @@ Easily share code and text.
 - Run `docker compose up -d` to start the services.
   - If you want to use redis for session/limit handling, run with the redis profile: `docker compose --profile redis up -d`
   - The redis container doesn't expose connections outside of the network, but for added security edit `redis.conf` and change the password.
+
+  - Backing up the database to the host file system is **opt in**. You can use the `backup` profile with docker-compose to spin up the sidecar container for performing backups.

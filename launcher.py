@@ -23,18 +23,21 @@ import aiohttp
 import starlette_plus
 import uvicorn
 
-import core
-import core.config
-
+from src import core
 
 starlette_plus.setup_logging(level=logging.INFO)
-logger: logging.Logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
+__all__ = ()
 
 
 async def main() -> None:
-    async with aiohttp.ClientSession() as session, core.Database(
-        dsn=core.CONFIG["DATABASE"]["dsn"], session=session, github_config=core.CONFIG.get("GITHUB")
-    ) as database:
+    async with (
+        aiohttp.ClientSession() as session,
+        core.Database(
+            dsn=core.CONFIG["DATABASE"]["dsn"], session=session, github_config=core.CONFIG.get("GITHUB")
+        ) as database,
+    ):
         app: core.Application = core.Application(database=database)
 
         host: str = core.CONFIG["SERVER"]["host"]
@@ -55,4 +58,4 @@ async def main() -> None:
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
-    logger.info("Closing the MystBin application due to KeyboardInterrupt.")
+    LOGGER.info("Closing the MystBin application due to KeyboardInterrupt.")

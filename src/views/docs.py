@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 
 import starlette_plus
 
-
 if TYPE_CHECKING:
     from core import Application
 
@@ -32,12 +31,12 @@ class DocsView(starlette_plus.View, prefix="api"):
         self.app: Application = app
 
     @starlette_plus.route("/documentation")
-    async def documentation(self, request: starlette_plus.Request) -> starlette_plus.Response:
+    async def documentation(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
         headers = {"Access-Control-Allow-Origin": "*"}
         return starlette_plus.FileResponse("web/docs.html", headers=headers)
 
     @starlette_plus.route("/docs")
-    async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+    async def documentation_redirect(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
         return starlette_plus.RedirectResponse("/api/documentation")
 
     @starlette_plus.route("/schema")

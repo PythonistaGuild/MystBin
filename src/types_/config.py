@@ -20,6 +20,8 @@ from typing import NotRequired, TypedDict
 
 import starlette_plus
 
+__all__ = ()
+
 
 class Server(TypedDict):
     host: str

@@ -22,6 +22,8 @@ from typing import Any
 
 import asyncpg
 
+__all__ = ("FileModel", "PasteModel")
+
 
 class BaseModel(Mapping[str, Any]):
     __slots__ = ("record",)
@@ -29,7 +31,7 @@ class BaseModel(Mapping[str, Any]):
     def __init__(self, record: asyncpg.Record | dict[str, Any], /) -> None:
         self.record: dict[str, Any] = dict(record)
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401 # this is due to the dynamic nature of the mapping and Record types.
         return self.record[key]
 
     def __iter__(self) -> Iterator[str]:
@@ -38,7 +40,9 @@ class BaseModel(Mapping[str, Any]):
     def __len__(self) -> int:
         return len(self.record)
 
-    def serialize(self, *, exclude: list[str] = ["file_index"]) -> dict[str, Any]:
+    def serialize(self, *, exclude: list[str] | None = None) -> dict[str, Any]:
+        exclude = exclude or ["file_index"]
+
         new: dict[str, Any] = {}
 
         for key, value in self.record.items():
@@ -57,6 +61,8 @@ class BaseModel(Mapping[str, Any]):
 
 
 class FileModel(BaseModel):
+    """Model that represents a mystbin File."""
+
     def __init__(self, record: asyncpg.Record | dict[str, Any]) -> None:
         super().__init__(record)
 
@@ -71,6 +77,8 @@ class FileModel(BaseModel):
 
 
 class PasteModel(BaseModel):
+    """Model that represents a mystbin Paste."""
+
     def __init__(self, record: asyncpg.Record) -> None:
         super().__init__(record)
 

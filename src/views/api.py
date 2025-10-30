@@ -25,12 +25,11 @@ from typing import TYPE_CHECKING, Any
 import asyncpg
 import starlette_plus
 
-from core import CONFIG
-from core.utils import validate_paste
-
+from src.core import CONFIG
+from src.core.utils import validate_paste
 
 if TYPE_CHECKING:
-    from core import Application
+    from src.core import Application
 
 
 class APIView(starlette_plus.View, prefix="api"):
@@ -42,7 +41,7 @@ class APIView(starlette_plus.View, prefix="api"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
     async def paste_get(self, request: starlette_plus.Request) -> starlette_plus.Response:
-        """Fetch a paste.
+        r"""Fetch a paste.
 
         ---
         summary: Fetch a paste.
@@ -52,7 +51,8 @@ class APIView(starlette_plus.View, prefix="api"):
             Fetching pastes does not include the `password` or `safety` fields. You only receive the `safety` field
             directly after creating a paste.
 
-        parameters:
+        Parameters
+        ----------
             - in: path
               name: id
               schema:
@@ -139,7 +139,7 @@ class APIView(starlette_plus.View, prefix="api"):
                                 error:
                                     type: string
                                     example: You are requesting too fast.
-        """
+        """  # noqa: DOC102, DOC201 # openapi spec is generated from this docstring
         password: str | None = request.headers.get("authorization", None)
         identifier: str = request.path_params["id"]
 
@@ -160,7 +160,7 @@ class APIView(starlette_plus.View, prefix="api"):
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post_day"])
     async def paste_post(self, request: starlette_plus.Request) -> starlette_plus.Response:
-        """Create a paste.
+        r"""Create a paste.
 
         ---
         summary: Create a paste.
@@ -250,7 +250,7 @@ class APIView(starlette_plus.View, prefix="api"):
                                 error:
                                     type: string
                                     example: You are requesting too fast.
-        """
+        """  # noqa: DOC201 # openapi spec is generated from this docstring
         content_type: str | None = request.headers.get("content-type", None)
         body: dict[str, Any] | str
         data: dict[str, Any]
@@ -272,7 +272,7 @@ class APIView(starlette_plus.View, prefix="api"):
 
         try:
             expiry: datetime.datetime | None = datetime.datetime.fromisoformat(expiry_str) if expiry_str else None
-        except Exception as e:
+        except ValueError as e:
             return starlette_plus.JSONResponse({"error": f'Unable to parse "expiry" parameter: {e}'}, status_code=400)
 
         data["expires"] = expiry
@@ -315,7 +315,7 @@ class APIView(starlette_plus.View, prefix="api"):
 
     @starlette_plus.route("/security/delete/{token}", methods=["GET"])
     async def security_delete(self, request: starlette_plus.Request) -> starlette_plus.Response:
-        """Delete a paste.
+        r"""Delete a paste.
 
         ---
         summary: Delete a paste.
@@ -324,7 +324,8 @@ class APIView(starlette_plus.View, prefix="api"):
 
             This action is not reversible.
 
-        parameters:
+        Parameters
+        ----------
             - in: path
               name: token
               schema:
@@ -351,7 +352,7 @@ class APIView(starlette_plus.View, prefix="api"):
                                 error:
                                     type: string
                                     example: Unauthorized.
-        """
+        """  # noqa: DOC102, DOC201 # openapi spec is generated from this docstring
         token: str | None = request.path_params.get("token", None)
         if not token:
             return starlette_plus.JSONResponse({"error": "Unauthorized."}, status_code=401)

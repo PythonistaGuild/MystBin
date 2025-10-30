@@ -18,10 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+import os
+import pathlib
 import tomllib
-
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types_.config import Config
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
 __all__ = ("CONFIG",)
 
+CONFIG_PATH = pathlib.Path(os.getenv("CONFIG_PATH", "./config.toml"))
 
-with open("config.toml", "rb") as fp:
-    CONFIG: Config = tomllib.load(fp)  # type: ignore
+with CONFIG_PATH.open("rb") as fp:
+    CONFIG: Config = tomllib.load(fp)  # pyright: ignore[reportAssignmentType] # bad upstream type unable to narrow

@@ -1,9 +1,18 @@
+# generated or tooling
 .git/
 .github/
-types_/
+.ruff_cache/
+.venv/
+
+# types arent needed at runtime
+src/types_/
+
+# meta and template files
+.env
+.env.template
 config.template.toml
+docker-compose.yaml
 Dockerfile
 LICENSE
 migration.sql
-pyproject.toml
 README.md

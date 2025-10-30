@@ -16,6 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .config import CONFIG as CONFIG
-from .database import Database as Database
-from .server import Application as Application
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from core.scanners import Services
+
+__all__ = ()
+
+
+class ScannerSecret(TypedDict):
+    service: Services
+    tokens: list[tuple[int, str]]

@@ -2,6 +2,8 @@ services:
   mystbin:
     image: ghcr.io/pythonistaguild/mystbin
     container_name: mystbin
+    environment:
+      - CONFIG_PATH=/app-config
     ports:
       - 8181:8181
     restart: unless-stopped
@@ -9,8 +11,8 @@ services:
       database:
         condition: service_healthy
         restart: true
-    volumes:
-      - ./config.toml:/app/config.toml:ro
+    configs:
+      - app-config
 
   database:
     image: postgres:16
@@ -24,9 +26,30 @@ services:
     env_file: .env
     environment:
       - PG_DATA=/var/lib/postgresql/data
-      - POSTGRES_DB=mystbin
     volumes:
       - mystbin_pg_data:/var/lib/postgresql/data
+    user: "1000:1000"
+
+  db-backups:
+    image: postgres:16
+    container_name: db-backups
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+    env_file:
+      - .env
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./db-backup:/backups
+      - ./db-backup/backup.sh:/backup.sh
+    entrypoint: ["/bin/bash"]
+    command: "/backup.sh"
+    restart: unless-stopped
+    user: "1000:1000"
+    profiles:
+      - backup
 
   redis:
     image: redis:latest
@@ -37,6 +60,10 @@ services:
     volumes:
       - "./redis.conf:/config/redis.conf:ro"
     command: ["redis-server", "/config/redis.conf"]
+
+configs:
+  app-config:
+    file: ./config.toml
 
 volumes:
   mystbin_pg_data:

@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import json
+import pathlib
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import unquote, urlsplit
 
@@ -28,17 +29,18 @@ import asyncpg
 import bleach
 import starlette_plus
 
-from core import CONFIG
-from core.utils import natural_time, validate_paste
-
+from src.core.config import CONFIG
+from src.core.utils import natural_time, validate_paste
 
 if TYPE_CHECKING:
     from starlette.datastructures import FormData
 
-    from core import Application
+    from src.core import Application
 
+WEB_DIR = pathlib.Path(__file__).parent.parent / "web"
+HTML_FILE = WEB_DIR / "paste.html"
 
-with open("web/paste.html") as fp:
+with HTML_FILE.open(encoding="utf-8") as fp:
     PASTE_HTML: str = fp.read()
 
 
@@ -46,14 +48,15 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     def __init__(self, app: Application) -> None:
         self.app: Application = app
 
-    def highlight_code(self, *, files: list[dict[str, Any]]) -> str:
+    @staticmethod
+    def highlight_code(*, files: list[dict[str, Any]]) -> str:
         html: str = ""
 
         for index, file in enumerate(files):
             filename = bleach.clean(file["filename"], attributes=[], tags=[])
             filename = "_".join(filename.splitlines())
 
-            raw_url: str = f'/raw/{file["parent_id"]}'
+            raw_url: str = f"/raw/{file['parent_id']}"
             annotation: str = file["annotation"] or ""
             positions: list[int] = file.get("warning_positions", [])
             original: str = file["content"]
@@ -67,9 +70,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                 else ""
             )
             annotations: str = (
-                f'<small class="annotations">❌ {annotation}{": " + extra if extra else ""}</small>'
-                if annotation
-                else ""
+                f'<small class="annotations">❌ {annotation}{": " + extra if extra else ""}</small>' if annotation else ""
             )
 
             position: int = 0
@@ -81,7 +82,9 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
                 if next_pos is not None and position <= next_pos <= position + length:
                     numbers.append(
-                        f"""<tr data-ln="{n}"><td class="lineNumRow" onclick="highlightLine(event, '{index}', '{n}')">{n}</td><td class="lineWarn"></td></tr>"""
+                        rf"""
+                        <tr data-ln="{n}"><td class="lineNumRow"
+                        onclick="highlightLine(event, '{index}', '{n}')">{n}</td><td class="lineWarn"></td></tr>"""
                     )
 
                     try:
@@ -91,7 +94,10 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
                 else:
                     numbers.append(
-                        f"""<tr data-ln="{n}"><td class="lineNumRow" onclick="highlightLine(event, '{index}', '{n}')">{n}</td></tr>"""
+                        rf"""
+                        <tr data-ln="{n}"><td class="lineNumRow"
+                        onclick="highlightLine(event, '{index}', '{n}')">{n}</td></tr>
+                        """
                     )
 
                 position += length + 1
@@ -115,28 +121,32 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                     </div>
                 </div>
                 {annotations}
-                <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;">{lines}<code>{content}</code></pre>
+                <pre id="__paste_c_{index}" class="fileContent" style="display: flex; flex-grow: 1;">
+                {lines}<code>{content}</code></pre>
             </div>"""
 
         return html
 
-    def check_discord(self, request: starlette_plus.Request) -> starlette_plus.Response | None:
+    @staticmethod
+    def check_discord(request: starlette_plus.Request) -> starlette_plus.Response | None:
         agent: str = request.headers.get("user-agent", "")
         if "discordbot" in agent.lower():
             return starlette_plus.Response(status_code=204)
+
+        return None
 
     @starlette_plus.route("/", prefix=False)
     async def home(self, request: starlette_plus.Request) -> starlette_plus.Response:
         if resp := self.check_discord(request=request):
             return resp
 
-        return starlette_plus.FileResponse("web/index.html")
+        return starlette_plus.FileResponse(WEB_DIR / "index.html")
 
     @starlette_plus.route("/protected/{id}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get_day"])
-    async def protected_paste(self, request: starlette_plus.Request) -> starlette_plus.Response:
-        return starlette_plus.FileResponse("web/password.html")
+    async def protected_paste(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
+        return starlette_plus.FileResponse(WEB_DIR / "password.html")
 
     @starlette_plus.route("/{id}", prefix=False)
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_get"])
@@ -176,8 +186,8 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
 
         data: dict[str, Any] = paste.serialize(exclude=["password", "password_ok"])
         files: list[dict[str, Any]] = data["files"]
-        created_delta: datetime.timedelta = datetime.datetime.now(tz=datetime.timezone.utc) - paste.created_at.replace(
-            tzinfo=datetime.timezone.utc
+        created_delta: datetime.timedelta = datetime.datetime.now(tz=datetime.UTC) - paste.created_at.replace(
+            tzinfo=datetime.UTC
         )
 
         url: str = f"/{identifier}"
@@ -285,16 +295,16 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
     @starlette_plus.route("/save", methods=["POST"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post"])
     @starlette_plus.limit(**CONFIG["LIMITS"]["paste_post_day"])
-    async def htmx_save(self, request: starlette_plus.Request) -> starlette_plus.Response:
+    async def htmx_save(self, request: starlette_plus.Request) -> starlette_plus.Response:  # noqa: C901, PLR0911
         if resp := self.check_discord(request=request):
             return resp
 
         form: FormData = await request.form()
         multi = form.multi_items()
 
-        password: str = cast(str, multi.pop()[1])
-        names: list[str] = cast(list[str], [i[1] for i in multi if i[0] == "fileName"])
-        contents: list[str] = cast(list[str], [i[1] for i in multi if i[0] == "fileContent"])
+        password: str = cast("str", multi.pop()[1])
+        names: list[str] = cast("list[str]", [i[1] for i in multi if i[0] == "fileName"])
+        contents: list[str] = cast("list[str]", [i[1] for i in multi if i[0] == "fileContent"])
 
         error_headers: dict[str, str] = {"HX-Retarget": "#errorResponse"}
 
@@ -314,7 +324,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
             try:
                 inner["filename"] = names[n].encode("UTF-8").decode("UTF-8") or None
                 inner["content"] = contents[n].encode("UTF-8").decode("UTF-8")
-            except Exception:
+            except (UnicodeDecodeError, UnicodeEncodeError):
                 return starlette_plus.HTMLResponse(
                     """<span id="errorResponse">400: File/Filename contains invalid characters.</span>""",
                     headers=error_headers,
@@ -334,7 +344,7 @@ class HTMXView(starlette_plus.View, prefix="htmx"):
                 headers=error_headers,
             )
 
-        data["expires"] = None  # TODO: Add this to Frontend...
+        data["expires"] = None
         data["password"] = password or None
 
         try:

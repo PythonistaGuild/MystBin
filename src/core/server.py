@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
+import pathlib
 
 import aiohttp
 import starlette_plus
@@ -25,13 +26,16 @@ from starlette.routing import Mount, Route
 from starlette.schemas import SchemaGenerator
 from starlette.staticfiles import StaticFiles
 
-from core.database import Database
-from views import *
+from src.views import APIView, DocsView, HTMXView
 
 from .config import CONFIG
+from .database import Database
+
+LOGGER = logging.getLogger(__name__)
+STATIC_DIR = pathlib.Path(__file__).parent.parent / "web" / "static"
 
 
-logger: logging.Logger = logging.getLogger(__name__)
+__all__ = ()
 
 
 class Application(starlette_plus.Application):
@@ -45,7 +49,7 @@ class Application(starlette_plus.Application):
             APIView(self),
             DocsView(self),
         ]
-        routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory="web/static"), name="static")]
+        routes: list[Mount | Route] = [Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static")]
 
         if redis_key := CONFIG.get("REDIS"):
             limit_url = redis_key["limiter"]
@@ -75,38 +79,36 @@ class Application(starlette_plus.Application):
 
         if CONFIG["SERVER"]["maintenance"]:
             # inject a catch all before any route...
-            routes.append(Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]))
-            routes.append(
-                Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
-            )
+            routes.extend((
+                Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
+                Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
+            ))
 
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
     @staticmethod
-    async def maint_mode(request: starlette_plus.Request) -> starlette_plus.Response:
+    async def maint_mode(_: starlette_plus.Request) -> starlette_plus.Response:
         return starlette_plus.FileResponse("web/maint.html")
 
     @starlette_plus.route("/docs")
     @starlette_plus.route("/documentation")
-    async def documentation_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+    async def documentation_redirect(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
         return starlette_plus.RedirectResponse("/api/documentation")
 
     @starlette_plus.route("/documents", methods=["POST"])
     @starlette_plus.route("/api/documents", methods=["POST"])
-    async def documents_redirect(self, request: starlette_plus.Request) -> starlette_plus.Response:
+    async def documents_redirect(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
         # Compat redirect route...
         return starlette_plus.RedirectResponse("/api/paste", status_code=308)
 
     async def event_ready(self) -> None:
-        self.schemas = SchemaGenerator(
-            {
-                "openapi": "3.1.0",
-                "info": {
-                    "title": "MystBin API",
-                    "version": "4.0",
-                    "summary": "API Documentation",
-                    "description": "MystBin - Easily share code and text.",
-                },
-            }
-        )
-        logger.info("MystBin application has successfully started!")
+        self.schemas = SchemaGenerator({
+            "openapi": "3.1.0",
+            "info": {
+                "title": "MystBin API",
+                "version": "4.0",
+                "summary": "API Documentation",
+                "description": "MystBin - Easily share code and text.",
+            },
+        })
+        LOGGER.info("MystBin application has successfully started!")

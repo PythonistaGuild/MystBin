@@ -16,15 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import annotations
+from . import config, github, scanner
 
-from typing import TYPE_CHECKING, TypedDict
-
-
-if TYPE_CHECKING:
-    from core.scanners import Services
-
-
-class ScannerSecret(TypedDict):
-    service: Services
-    tokens: list[tuple[int, str]]
+__all__ = ("config", "github", "scanner")

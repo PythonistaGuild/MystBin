@@ -25,12 +25,13 @@ import logging
 import re
 from typing import TYPE_CHECKING, ClassVar
 
-
 if TYPE_CHECKING:
     from types_.scanner import ScannerSecret
 
 
-logger: logging.Logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
+__all__ = ("DiscordScanner", "GitHubScanner", "PyPiScanner")
 
 
 class Services(enum.Enum):
@@ -56,11 +57,24 @@ class BaseScanner:
 
 
 class DiscordScanner(BaseScanner):
+    """Scanner to scan incoming data for Discord secrets/tokens."""
+
     REGEX = re.compile(r"[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27,}")
     SERVICE = Services.discord
 
     @staticmethod
     def validate_discord_token(token: str) -> bool:
+        """Quick validation to ensure the matched secret is a valid discord token.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The incoming matched secret token.
+
+        Returns
+        -------
+        :class:`bool`
+        """
         try:
             # Just check if the first part validates as a user ID
             (user_id, _, _) = token.split(".")
@@ -72,6 +86,17 @@ class DiscordScanner(BaseScanner):
 
     @classmethod
     def match(cls, content: str) -> ScannerSecret:
+        """Method to create an instance of a secret based on the incoming data.
+
+        Parameters
+        ----------
+        content: :class:`str`
+            The incoming data.
+
+        Returns
+        -------
+        :class:`ScannerSecret`
+        """
         matches: list[tuple[int, str]] = [
             (m.start(0), m.group(0)) for m in cls.REGEX.finditer(content) if cls.validate_discord_token(m.group(0))
         ]
@@ -85,11 +110,15 @@ class DiscordScanner(BaseScanner):
 
 
 class PyPiScanner(BaseScanner):
+    """Scanner to scan incoming data for PyPi secrets/tokens."""
+
     REGEX = re.compile(r"pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{70,}")
     SERVICE = Services.pypi
 
 
 class GitHubScanner(BaseScanner):
+    """Scanner to scan incoming data for GitHub secrets/tokens."""
+
     REGEX = re.compile(r"((ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36})")
     SERVICE = Services.github
 
@@ -114,6 +143,10 @@ class SecurityInfo:
 
         You may pass a list of allowed or disallowed Services.
         If both lists are empty (Default) all available services will be scanned.
+
+        Returns
+        -------
+        :class:`list[:class:`ScannerSecret`]`
         """
         disallowed = disallowed or []
         allowed = allowed or list(Services)
@@ -124,7 +157,7 @@ class SecurityInfo:
         for service in services:
             scanner: type[BaseScanner] | None = cls.__SERVICE_MAPPING.get(service, None)
             if not scanner:
-                logging.warning("The provided service %r is not a supported or a valid service.", service)
+                LOGGER.warning("The provided service %r is not a supported or a valid service.", service)
                 continue
 
             found: ScannerSecret = scanner.match(file)
