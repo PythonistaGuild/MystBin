@@ -1,7 +1,8 @@
 [SERVER]
 host = "localhost"
+root_url = "" # optional key, used for changing the root url in automation if domain is not https://mystb.in
 port = 8181
-session_secret = ""         # Run: import secrets; print(secrets.token_urlsafe(64))
+session_secret = "" # Run: import secrets; print(secrets.token_urlsafe(64))
 maintenance = false
 
 [DATABASE]

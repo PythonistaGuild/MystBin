@@ -44,6 +44,7 @@ else:
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA_FILE = pathlib.Path("schema.sql")
+ROOT_URL = CONFIG["SERVER"].get("root_url", "https://mystb.in")
 
 
 class Database:
@@ -119,7 +120,7 @@ class Database:
 
         for paste_id, tokens in current_tokens.items():
             filename = str(datetime.datetime.now(datetime.UTC)) + "-tokens.txt"
-            json_payload["files"][filename] = {"content": f"https://mystb.in/{paste_id}:\n{tokens}"}
+            json_payload["files"][filename] = {"content": f"{ROOT_URL}/{paste_id}:\n{tokens}"}
 
         success = False
 
