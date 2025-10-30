@@ -15,12 +15,13 @@ on:
     branches:
       - main
     paths:
-      - '**.html'
-      - '**.css'
-      - '**.js'
-      - '**.py'
-      - '**.toml'
-      - '**.svg'
+      - "**.html"
+      - "**.css"
+      - "**.js"
+      - "**.py"
+      - "**.toml"
+      - "**.svg"
+      - "**.yaml"
 
 concurrency:
   cancel-in-progress: true
@@ -69,7 +70,7 @@ jobs:
         run: |
           echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> "${GITHUB_OUTPUT}"
         env:
-          IMAGE_NAME: '${{ env.IMAGE_NAME }}'
+          IMAGE_NAME: "${{ env.IMAGE_NAME }}"
 
       - name: Get short SHA
         id: slug

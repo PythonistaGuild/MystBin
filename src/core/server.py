@@ -79,10 +79,12 @@ class Application(starlette_plus.Application):
 
         if CONFIG["SERVER"]["maintenance"]:
             # inject a catch all before any route...
-            routes.extend((
-                Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
-                Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
-            ))
+            routes.extend(
+                (
+                    Route("/", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
+                    Route("/{path:path}", self.maint_mode, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
+                )
+            )
 
         super().__init__(on_startup=[self.event_ready], views=views, routes=routes, middleware=middleware)
 
@@ -102,13 +104,15 @@ class Application(starlette_plus.Application):
         return starlette_plus.RedirectResponse("/api/paste", status_code=308)
 
     async def event_ready(self) -> None:
-        self.schemas = SchemaGenerator({
-            "openapi": "3.1.0",
-            "info": {
-                "title": "MystBin API",
-                "version": "4.0",
-                "summary": "API Documentation",
-                "description": "MystBin - Easily share code and text.",
-            },
-        })
+        self.schemas = SchemaGenerator(
+            {
+                "openapi": "3.1.0",
+                "info": {
+                    "title": "MystBin API",
+                    "version": "4.0",
+                    "summary": "API Documentation",
+                    "description": "MystBin - Easily share code and text.",
+                },
+            }
+        )
         LOGGER.info("MystBin application has successfully started!")

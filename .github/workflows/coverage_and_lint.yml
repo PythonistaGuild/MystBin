@@ -15,32 +15,39 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.x"]
+        python-version: ["3.12"]
 
     name: "Type Coverage and Linting @ ${{ matrix.python-version }}"
     steps:
       - name: "Checkout Repository"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: "true"
 
-      - name: "Setup Python @ ${{ matrix.python-version }}"
-        id: setup-python
-        uses: actions/setup-python@v4
+      - name: Setup uv @ ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: "${{ matrix.python-version }}"
-          cache: "pip"
+          activate-environment: true
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
-      - name: "Install Python deps @ ${{ matrix.python-version }}"
-        id: install-deps
+      - name: Install deps @ ${{ matrix.python-version }}
         run: |
-          pip install -Ur requirements.txt
-      - name: "Run Pyright @ ${{ matrix.python-version }}"
-        uses: jakebailey/pyright-action@v1
-        with:
-          no-comments: ${{ matrix.python-version != '3.x' }}
-          warnings: false
+          uv sync --all-extras --all-groups
 
-      - name: Lint with Ruff
-        if: ${{ always() && steps.install-deps.outcome == 'success' }}
-        uses: chartboost/ruff-action@v1
+      - name: "Run Pyright @ ${{ matrix.python-version }}"
+        uses: jakebailey/pyright-action@v2
+        with:
+          warnings: false
+          annotate: "${{ matrix.python-version != '3.x' }}"
+
+      - name: Lint check
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check .
+
+      - name: Formatting check
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check
