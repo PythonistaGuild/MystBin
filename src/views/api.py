@@ -31,6 +31,8 @@ from src.core.utils import validate_paste
 if TYPE_CHECKING:
     from src.core import Application
 
+__all__ = ()
+
 
 class APIView(starlette_plus.View, prefix="api"):
     def __init__(self, app: Application) -> None:

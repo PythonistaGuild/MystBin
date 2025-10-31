@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .api import APIView as APIView
-from .docs import DocsView as DocsView
-from .htmx import HTMXView as HTMXView
+from .api import APIView
+from .docs import DocsView
+from .htmx import HTMXView
+
+__all__ = ("APIView", "DocsView", "HTMXView")

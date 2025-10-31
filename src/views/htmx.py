@@ -43,6 +43,8 @@ HTML_FILE = WEB_DIR / "paste.html"
 with HTML_FILE.open(encoding="utf-8") as fp:
     PASTE_HTML: str = fp.read()
 
+__all__ = ()
+
 
 class HTMXView(starlette_plus.View, prefix="htmx"):
     def __init__(self, app: Application) -> None:

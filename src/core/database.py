@@ -46,6 +46,8 @@ LOGGER = logging.getLogger(__name__)
 SCHEMA_FILE = pathlib.Path("schema.sql")
 ROOT_URL = CONFIG["SERVER"].get("root_url", "https://mystb.in")
 
+__all__ = ()
+
 
 class Database:
     pool: _Pool

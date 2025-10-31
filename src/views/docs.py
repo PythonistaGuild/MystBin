@@ -18,12 +18,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import pathlib
 from typing import TYPE_CHECKING
 
 import starlette_plus
 
 if TYPE_CHECKING:
     from core import Application
+
+WEB_DIR = pathlib.Path(__file__).parent.parent / "web"
+
+__all__ = ()
 
 
 class DocsView(starlette_plus.View, prefix="api"):
@@ -33,7 +38,7 @@ class DocsView(starlette_plus.View, prefix="api"):
     @starlette_plus.route("/documentation")
     async def documentation(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
         headers = {"Access-Control-Allow-Origin": "*"}
-        return starlette_plus.FileResponse("web/docs.html", headers=headers)
+        return starlette_plus.FileResponse(WEB_DIR / "docs.html", headers=headers)
 
     @starlette_plus.route("/docs")
     async def documentation_redirect(self, _: starlette_plus.Request) -> starlette_plus.Response:  # noqa: PLR6301 # must be a bound method for decoration
