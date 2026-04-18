@@ -156,8 +156,8 @@ class Database:
             msg_ = "Failed to connect to the database... No additional information."
             raise RuntimeError(msg_)
 
-        with SCHEMA_FILE.open(encoding="utf-8") as fp:
-            await pool.execute(fp.read())
+        schema_content = SCHEMA_FILE.read_text(encoding="utf-8")  # noqa: ASYNC240 # not a trio or anyio codebase
+        await pool.execute(schema_content)
 
         self.pool = pool
         LOGGER.info("Successfully connected to the database.")
