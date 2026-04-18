@@ -8,7 +8,10 @@ while true; do
     echo "[INFO] Backup complete: ${BACKUP_FILE}";
 
     # Keep only last 7 backups
-    find /backups -type f -name 'db_backup_*.sql.zstd' -mtime +7 -delete;
+    echo "[INFO] Cleaning up backups older than 7 days. Listed below, if any:";
+    find /backups -type f -name 'db_backup_*.sql.zstd' -mtime +7 -print -delete;
     echo "[INFO] Cleanup complete. Sleeping for 24h...";
+    echo "";
+    echo "";
     sleep 86400;
 done
