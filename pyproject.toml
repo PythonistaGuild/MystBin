@@ -1,10 +1,4 @@
 [project]
-name = "mystbin"
-description = "A paste bin designed with simplicity and beauty in mind."
-authors = [
-    { name = "EvieePy", email = "29671945+evieepy@users.noreply.github.com" },
-    { name = "Alex Nørgaard", email = "umbra@abstractumbra.dev" },
-]
 dependencies = [
     "aiohttp>=3.10,<4.0",
     "aiohttp[speedups]>=3.10,<4.0; extra == \"speed\"",
@@ -12,8 +6,15 @@ dependencies = [
     "bleach>=6.1.0",
     "python-multipart>=0.0.20",
     "pyyaml>=6.0.1",
+    "starlette<1.0.0",
     "starlette-plus",
     "uvicorn>=0.29.0",
+]
+name = "mystbin"
+description = "A paste bin designed with simplicity and beauty in mind."
+authors = [
+    { name = "EvieePy", email = "29671945+evieepy@users.noreply.github.com" },
+    { name = "Alex Nørgaard", email = "umbra@abstractumbra.dev" },
 ]
 requires-python = "<4.0,>=3.11"
 readme = "README.md"
