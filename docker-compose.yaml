@@ -32,7 +32,7 @@ services:
 
   db-backups:
     image: postgres:16
-    container_name: db-backups
+    container_name: mystbin-database-backups
     depends_on:
       database:
         condition: service_healthy
