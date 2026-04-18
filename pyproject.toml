@@ -35,7 +35,6 @@ dynamic = ["version"]
 [dependency-groups]
 dev = ["asyncpg-stubs"]
 
-
 [tool.uv]
 package = false
 
@@ -58,13 +57,13 @@ preview = true
 select = ["ALL"]
 ignore = [
     "ASYNC230", # our files are small and not worth the anyio dependency
-    "D105",     # not required most of the time
+    "COM812",   # required for format
     "D101",     # this is not a public package that needs documentation
     "D102",     # this is not a public package that needs documentation
     "D103",     # this is not a public package that needs documentation
+    "D105",     # not required most of the time
     "D401",     # imperative mood makes sense in most cases but not all
     "PLR2004",  # I simply disagree with this one
-    "COM812",   # required for format
 ]
 unfixable = [
     "E501", # line length handled in other ways by ruff format
