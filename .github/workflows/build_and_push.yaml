@@ -86,3 +86,4 @@ jobs:
             ghcr.io/${{ steps.image-name.outputs.IMAGE_NAME_LC }}:${{ steps.slug.outputs.GIT_SHORT_SHA7 }}
             ghcr.io/${{ steps.image-name.outputs.IMAGE_NAME_LC }}:latest
           labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,darwin
