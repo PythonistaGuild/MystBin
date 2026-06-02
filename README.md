@@ -1,5 +1,12 @@
 # MystBin
 
+## Archival
+
+This project has been archived in favour of [pastey.gg](https://pastey.gg). Please use that tool instead, as this one will no longer receive updates.
+All data from our public instance(s) of mystbin has been migrated to pastey with the same paste ids, passwords and metadata. They can be accessed in the same manner:
+`https://<mystbin url>/:id` -> `https://pastey.gg/:id`
+
+----------
 Easily share code and text.
 
 [Website](https://mystb.in)
